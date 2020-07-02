@@ -1,0 +1,436 @@
+<template>
+    <div class="wrap">
+        <div class="nav">
+            <div class="search">
+                <p>
+                    <van-search :value="value" placeholder="搜索" />
+                </p>
+                <p @click="getAdmin" v-if="!isShow">管理</p>
+                <p v-if="isShow">
+                    <span @click="getCancel">取消</span>&nbsp;&nbsp;
+                    <span>批量操作</span>
+                </p>
+            </div>
+            <p class="yy">
+                <span @click="getBack" class="back" :class="{'active':sonShow}">
+                    绍兴第二医院
+                </span>
+                <span v-if="sonShow">
+                    <i-icon type="enter" size="20" />
+                    {{son}}
+                </span>
+
+            </p>
+        </div>
+        <div class="center" v-if="!sonShow">
+            <van-index-bar :scroll-top="scrollTop" :index-list="indexList" @select="getSelect">
+                <view class="boxWrap" v-for="(item,index) in list" :key="index">
+                    <van-index-anchor :index="item.title" />
+                    <div class="box" v-for="(v,i) in item.item" :key="i"  @click="getSubagency(v)">
+                        <p>{{v.name}}({{v.quantity}})</p>
+                    </div>
+                </view>
+                <!-- <view class="boxWrap">
+                    <van-index-anchor index="H" />
+                    <div class="box">
+                        <p>护理室(12)</p>
+                    </div>
+                     <div class="box">
+                        <p>后勤室(12)</p>
+                    </div>
+                </view>
+                <view class="boxWrap">
+                    <van-index-anchor index="J" />
+                     <div class="box">
+                        <p>监察室(12)</p>
+                    </div>
+                     <div class="box">
+                        <p>教学管理(12)</p>
+                    </div>
+                </view>
+                <view class="boxWrap">
+                    <van-index-anchor index="L" />
+                     <div class="box">
+                        <p>临床科室(12)</p>
+                    </div>
+                </view>
+                <view class="boxWrap">
+                    <van-index-anchor index="M" />
+                     <div class="box">
+                        <p>门诊室(12)</p>
+                    </div>
+                </view> -->
+            </van-index-bar>
+            <div class="content">
+                <div class="box">
+                    <p>
+                        <span>丽萍</span>
+                    </p>
+                    <div class="text">
+                        <p>张丽萍<van-tag type="primary" custom-class="tag">主管理员</van-tag></p>
+                    </div>
+                </div>
+            </div>
+             <div class="content">
+                <div class="box">
+                    <p>
+                        <span>
+                            <img src="https://wx.phxinfo.com.cn/img/wechat/05.7.Add.png" alt="">
+                        </span>
+                    </p>
+                    <div class="text">
+                        <p>邀请同事加入</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="sonCenter" v-if="sonShow">
+            <!-- <div class="departRow">
+                <div class="row" v-for="(item,index) in departmentList" :key="index" @click="getSubagency(item)">
+                    {{item.name}}(5)
+                </div>
+            </div> -->
+            <view class="boxWrap" v-for="(item,index) in unitData" :key="index">
+                <div class="box" v-for="(v,idx) in item.item" :key="idx" @click="getSubagency(v)">
+                    <p>{{v.name}}({{v.quantity}})</p>
+                </div>
+            </view>
+            <van-index-bar :scroll-top="scrollTopSon" :index-list="indexListSon" @select="getSelectSon">
+                <view class="boxWrap" v-for="(item,index) in addrData" :key="index">
+                    <van-index-anchor :index="item.title" />
+                    <div class="box" v-for="(v,idx) in item.item" :key="idx"  @click="getCardInfo(v)">
+                        <p class="name">
+                            <span>{{v.FullName}}</span>
+                        </p>
+                        <p class="text">{{v.FullName}}</p>
+                    </div>
+                </view>
+                <!-- <view class="boxWrap">
+                    <van-index-anchor index="D" />
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                </view>
+                <view class="boxWrap">
+                    <van-index-anchor index="E" />
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                </view>
+                <view class="boxWrap">
+                    <van-index-anchor index="F" />
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                    <div class="box">
+                        <p class="name">
+                            <span>碧池</span>
+                        </p>
+                        <p class="text">碧池</p>
+                    </div>
+                </view> -->
+            </van-index-bar>
+        </div>
+        <div class="footer" :class="{'model':model}" v-if="isShow">
+            <div class="box">
+                <p>添加员工</p>
+                <p @click="getAddSondepartment">添加子部门</p>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+export default {
+    data(){
+        return {
+            value:"",
+            indexList:['C','H','J','L','M','Q','R','S','X','Y','Z'],
+            scrollTop:"",
+            isShow:false,
+            son:"",
+            scrollTopSon:"",
+            indexListSon:['B','D','E','F'],
+            model:false,
+            sonShow:false,
+            list:[],
+            departmentList:[],
+            contactsList:[],
+            sessionkey:"",
+            unitData:[],
+            addrData:[]
+        }
+    },
+    onLoad(){
+        let sessionkey = wx.getStorageSync('sessionkey');
+        this.sessionkey = sessionkey;
+        wx.getSystemInfo({
+            success:(res)=>{
+                console.log(res);
+                if(res.model=="iPhone X"){
+                    this.model = true;
+                }else {
+                    this.model = false;
+                }
+            }
+        })
+        this.getQuery();
+    },
+    methods:{
+        getQuery(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:"oa.unitandaddresslist.group.list",
+                    SessionKey:this.sessionkey,
+                    parentId:"",
+                }
+            }).then(res=>{
+                console.log(res);
+                this.list = res.unitData;
+                let indexList = [];
+                this.list.forEach(item=>{
+                    indexList.push(item.title);
+                })
+                this.indexList = indexList;
+            })
+        },
+        getSelect(e){
+            console.log(e)
+            this.scrollTop = e.mp.detail;
+        },
+        getAdmin(){
+            this.isShow = true;
+        },
+        getCancel(){
+            this.isShow = false;
+        },
+        getSubagency(item){
+            this.sonShow = true;
+            if(this.sonShow){
+                this.son = item.name;
+            }
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:"oa.unitandaddresslist.group.list",
+                    SessionKey:this.sessionkey,
+                    parentId:item.id,
+                }
+            }).then(res=>{
+                console.log(res);
+                // let dataList = res;
+                // let department = [];
+                // let list = [];
+                // dataList.forEach(item=>{
+                //     if(item.datatype=='businessunit'){
+                //         department.push(item);
+                //     }else if(item.datatype=='addressList'){
+                //         list.push(item);
+                //     }
+                // })
+                // this.departmentList = department;
+                // this.contactsList = list;
+                let indexListSon = [];
+                res.addrData.forEach(item=>{
+                    console.log(item,1111);
+                    indexListSon.push(item.title)
+                })
+                this.indexListSon = indexListSon;
+                this.unitData = res.unitData;
+                this.addrData = res.addrData;
+            })
+                
+        },
+        getBack(){
+            this.sonShow = false;
+            this.son = "";
+        },
+        getSelectSon(e){
+            this.scrollTopSon = e.mp.detail;
+        },
+        getAddSondepartment(){
+            const url = "/pages/mailList/addSondepartment/main";
+            wx.navigateTo({url:url});
+        },
+        getCardInfo(item){
+            const url = "/pages/mailList/cardInfo/main?id="+item.ValueId;
+            wx.navigateTo({url:url});
+        }
+    }
+}
+</script>
+<style lang="scss">
+    @import '../../../../static/css/public.scss';
+    .wrap{
+        .nav{
+            background: #fff;
+            padding: 30rpx 20rpx;
+            .search{
+                display: flex;
+                font-size: 28rpx;
+                p:nth-child(1){
+                    width: 70%;
+                }
+                p:nth-child(2){
+                    width: 30%;
+                    color: #3399ff;
+                    text-align: center;
+                    margin-top: 30rpx;
+                }
+            }
+            .yy{
+                font-size: 28rpx;
+                color: #999999;
+                margin-left: 10px;
+                .back.active{
+                    color: #3399ff;
+                }
+            }
+        }
+        .center{
+            .boxWrap{
+                .box{
+                    background: #fff;
+                    padding: 30rpx;
+                    font-size: 28rpx;
+                    color: #666666;
+                    border-bottom: 1rpx solid #eaebeb;
+                }
+                .box:last-child{
+                    border: none;
+                }
+            }
+            .content{
+                background: #fff;
+                padding: 30rpx;
+                margin: 20px 0;
+                .box{
+                    display: flex;
+                    p{
+                        span{
+                            display: inline-block;
+                            width: 80rpx;
+                            height: 80rpx;
+                            line-height: 80rpx;
+                            border-radius: 50%;
+                            text-align: center;
+                            color: #fff;
+                            background: #3399ff;
+                            font-size: 12px;
+                            img{
+                                width: 100%;
+                                height: 100%;
+                            }
+                        }
+                    }
+                    .text{
+                        display: flex;
+                        margin-left: 10px;
+                        p{
+                            line-height: 80rpx;
+                            font-size: 28rpx;
+                            .tag{
+                                margin-left: 10rpx;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .sonCenter{
+            padding-bottom: 80px;
+            .boxWrap{
+                .box{
+                    background: #fff;
+                    padding: 30rpx;
+                    font-size: 28rpx;
+                    color: #666666;
+                    border-bottom: 1rpx solid #eaebeb;
+                }
+                .box:last-child{
+                    border: none;
+                }
+            }
+            .departRow{
+                background: #fff;
+                margin-top: 35rpx;
+                .row{
+                    padding: 30rpx;
+                    font-size: 32rpx;
+                    color: #666666;
+                    border-bottom: 2rpx solid #eaebeb;
+                }
+            }
+            .boxWrap{
+                .box{
+                    background: #fff;
+                    padding: 20rpx 30rpx;
+                    font-size: 28rpx;
+                    color: #666666;
+                    border-bottom: 1rpx solid #eaebeb;
+                    display: flex;
+                    .name{
+                        span{
+                            display: inline-block;
+                            width: 80rpx;
+                            height: 80rpx;
+                            line-height: 80rpx;
+                            border-radius: 50%;
+                            background: #3399ff;
+                            text-align: center;
+                            color: #fff;
+                            font-size: 12px;
+                        }
+                    }
+                    .text{
+                        width: 100%;
+                        line-height: 80rpx;
+                        margin-left: 20rpx;
+                    }
+                }
+                .box:last-child{
+                    border: none;
+                }
+            }
+        }
+        .footer{
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+            background: #f8f8f8;
+            .box{
+                display: flex;
+                padding: 30rpx 0;
+                justify-content: space-around;
+                p{
+                    font-size: 28rpx;
+                    color: #3399ff;
+                }
+            }
+        }
+        .footer.model{
+            bottom: 20px;
+        }
+    }
+</style>

@@ -1,0 +1,203 @@
+{
+  "pages": [
+    "pages/login/main",
+    "pages/messages/main",
+    "pages/homeSchedule/main",
+    "pages/work/main",
+    "pages/homeMailList/main",
+    "pages/my/main",
+    "pages/releaseNews/main",
+    "pages/uPan/main",
+    "pages/uPan/child/main",
+    "pages/releaseNewsTwo/main",
+    "pages/release/main",
+    "pages/my/mysetting/main",
+    "pages/my/aboutWe/main",
+    "pages/my/numberAdmin/main",
+    "pages/my/qrCode/main",
+    "pages/my/personalInfo/main",
+    "pages/my/bindingPhone/main",
+    "pages/my/replacePhone/main",
+    "pages/schedule/main",
+    "pages/schedule/newSchedule/main",
+    "pages/schedule/detail/main"
+  ],
+  "subpackages": [
+    {
+      "root":"pages/todoBusiness/",
+      "pages":[
+        "main",
+        "circulate/main",
+        "detail/main",
+        "selectRelation/main",
+        "launch/main",
+        "write/main"
+      ]
+    },
+    {
+      "root": "pages/email/",
+      "pages": [
+        "main",
+        "inbox/main",
+        "writeMail/main",
+        "detail/main",
+        "moveEmail/main",
+        "newFile/main",
+        "replyEmail/main",
+        "replyDetail/main",
+        "group/main",
+        "searchEmail/main"
+      ]
+    },
+    {
+      "root":"pages/journalism/",
+      "pages":[
+        "main",
+        "detail/main"
+      ]
+    },
+    {
+      "root": "pages/usbDrive/",
+      "pages": [
+        "main",
+        "lately/main",
+        "myFile/main",
+        "myFile/childFile/main",
+        "shareFile/main",
+        "newFolder/main",
+        "attribute/main",
+        "admin/main",
+        "copyUsb/main",
+        "myFile/classFlie/main",
+        "copyFile/main",
+        "myFile/moveFile/main",
+        "myFile/twoMoveFile/main",
+        "shareFile/detail/main"
+      ]
+    },
+    {
+      "root":"pages/clockIn/",
+      "pages":[
+        "main",
+        "detailed/main",
+        "reportForm/main",
+        "newClockInGroup/main",
+        "patchcardApply/main",
+        "patchcardApply/record/main",
+        "patchcardApply/record/detail/main",
+        "patchcardApply/record/detail/comment/main",
+        "leaveApply/main",
+        "monthly/main",
+        "mapList/main",
+        "seniorSetting/main"
+      ]
+    },
+    {
+      "root":"pages/conferenceRoom/",
+      "pages":[
+        "main",
+        "detail/main",
+        "appointment/main",
+        "appointment/remarks/main",
+        "create/main",
+        "approvalDetail/main"
+      ]
+    },
+    {
+      "root":"pages/mailList",
+      "pages":[
+        "add/main",
+        "staffOut/main",
+        "organization/main",
+        "addSondepartment/main",
+        "selectSuperior/main",
+        "cardInfo/main",
+        "myGroup/main",
+        "contacts/main"
+      ]
+    },
+    {
+      "root":"pages/meeting",
+      "pages":[
+        "main",
+        "add/main",
+        "detail/main",
+        "signin/main",
+        "signinDetail/main",
+        "joinDetail/main",
+        "newSummary/main",
+        "summaryDetail/main",
+        "receiver/main",
+        "notice/main"
+      ]
+    },
+    {
+      "root":"pages/publics",
+      "pages":[
+        "contacts/main",
+        "mailList/main",
+        "myGroup/main",
+        "Organization/main",
+        "organizer/main",
+        "pubGroup/main",
+        "pubGroup/group/main",
+        "pubGroup/department/main"
+      ]
+    },
+    {
+      "root":"pages/approval",
+      "pages":[
+        "main",
+        "my/main",
+        "circulation/main",
+        "launch/main",
+        "add/main"
+      ]
+    }
+  ],
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于小程序位置接口的效果展示"
+    }
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "WeChat",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "color": "#999",
+    "backgroundColor": "#fafafa",
+    "selectedColor": "#3399ff",
+    "borderStyle": "white",
+
+    "list": [{
+      "text": "消息",
+      "pagePath": "pages/messages/main",
+      "iconPath": "static/tabs/messages.png",
+      "selectedIconPath": "static/tabs/messages-active.png"
+    }, {
+      "text": "日程",
+      "pagePath": "pages/schedule/main",
+      "iconPath": "static/tabs/Programme.png",
+      "selectedIconPath": "static/tabs/Programme-active.png"
+    },{
+      "text": "工作",
+      "pagePath": "pages/work/main",
+      "iconPath": "static/tabs/Work.png",
+      "selectedIconPath": "static/tabs/Work-active.png"
+    },{
+      "text": "通讯录",
+      "pagePath": "pages/homeMailList/main",
+      "iconPath": "static/tabs/Address.png",
+      "selectedIconPath": "static/tabs/Address-active.png"
+    },{
+      "text": "我的",
+      "pagePath": "pages/my/main",
+      "iconPath": "static/tabs/my.png",
+      "selectedIconPath": "static/tabs/my-active.png"
+    }],
+    "position": "bottom"
+  }
+}
