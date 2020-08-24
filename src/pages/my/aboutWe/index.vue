@@ -27,7 +27,7 @@ export default {
                 width: 139rpx;
                 height: 139rpx;
                 margin: auto;
-                padding-bottom: 71rpx;
+                margin-bottom: 70rpx;
                 img{
                     width: 100%;
                     height: 100%;

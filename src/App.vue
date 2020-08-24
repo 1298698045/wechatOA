@@ -1,5 +1,17 @@
 <script>
 export default {
+  data(){
+    return {
+      isModelmes:false
+    }
+  },
+  onLaunch(){
+    let openid = wx.getStorageSync('openid');
+    // if(openid!=''){
+    //   const url = '/pages/messages/main';
+    //   wx.switchTab({url:url});
+    // }
+  },
   created () {
     // 调用API从本地缓存中获取数据
     /*
@@ -9,7 +21,19 @@ export default {
      * 百度：mpvue === swan, mpvuePlatform === 'swan'
      * 支付宝(蚂蚁)：mpvue === my, mpvuePlatform === 'my'
      */
-
+    
+    wx.getSystemInfo({
+        success: (res) => {
+            console.log(res)
+            let modelmes = res.model; //手机品牌
+            console.log('手机品牌', modelmes)
+            if (modelmes.indexOf('iPhone X') != -1) {　　//XS,XR,XS MAX均可以适配,因为indexOf()会将包含'iPhone X'的字段都查出来
+              wx.setStorageSync('isModelmes',true);
+            }else {
+              wx.setStorageSync('isModelmes',false);
+            }
+        },
+    })
     let logs
     if (mpvuePlatform === 'my') {
       logs = mpvue.getStorageSync({key: 'logs'}).data || []
@@ -32,7 +56,7 @@ export default {
 
 <style>
 page{
-  background: #f4f4f4;
+  background: #f7f7f7;
 }
 /* this rule will be remove */
 * {
@@ -40,5 +64,12 @@ page{
   -moz-transition: width 2s;
   -webkit-transition: width 2s;
   -o-transition: width 2s;
+}
+.bottomActive{
+  bottom: 0 !important;
+  padding-bottom: 50rpx !important;
+}
+.footImt{
+  bottom: 0!important;
 }
 </style>

@@ -34,19 +34,22 @@
             <div class="center">
                 <div class="content" v-for="(v,i) in list" :key="i">
                     <h3 @click="getDetail(v)">{{v.Name}}</h3>
-                    <p class="rowText">
-                        <span>{{v.tag}}</span>
-                        <!-- 投影<span>/</span>
-                        话筒<span>/</span>
-                        电脑<span>/</span>
-                        电子屏<span>/</span>
-                        其他 -->
-                    </p>
+                    <div class="tagWrap">
+                        <p class="rowText" v-for="(item,index) in v.tag" :key="index">
+                            {{item}}<span v-if="index+1<v.tag.length">/</span>
+                            <!-- 投影<span>/</span>
+                            话筒<span>/</span>
+                            电脑<span>/</span>
+                            电子屏<span>/</span>
+                            其他 -->
+                        </p>
+                    </div>
                     <p class="icon">
-                        <i class="iconfont icon-canyuren-copy">可容纳{{v.Capacity}}人</i>
+                        <i class="iconfont icon-canyuren-copy"></i>
+                        <span>可容纳{{v.Capacity}}人</span>
                     </p>
                     <div class="scrollWrap">
-                        <scroll-view class="scroll-view-list" scroll-with-animation="true" scroll-x="true" style="width: 100%">
+                        <scroll-view class="scroll-view-list" scroll-with-animation="true" :scroll-left="statusIdx" scroll-x="true" style="width: 100%">
                             <view class="swiper-item" :class="{'success':item.code==1&&item.status!=1,'overdue':item.status==1&&!item.code||item.status==1&&item.code==1,'active':item.check==true}" v-for="(item,index) in v.listTime" :key="index" @click="getSelectTime(item,v,i,index)">
                                 <div class="box">
                                     <p class="time">{{item.startTime}}</p>
@@ -67,9 +70,9 @@
                 <i class="iconfont icon-add"></i>
                 <p>添加会议室</p>
             </div>
-            <div class="footer">
+            <div class="footer"  :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
                 <div class="box">
-                    <van-button type="primary" color="#3399ff" block @click="getAppointment">立即预约</van-button>
+                    <van-button custom-class="btn" :disabled="paramsList!=''?false:true" type="primary" color="#3399ff" block @click="getAppointment">立即预约</van-button>
                 </div>
             </div>
         </div>
@@ -196,20 +199,24 @@
                     添加会议室
                 </span>
             </div>
-            <div class="content" v-for="(item,index) in adminList" :key="index" @click="getEditConference(item)">
-                <div class="head">
-                    <p class="label">{{item.Name}}</p>
-                    <!-- <p class="tag">需审批</p> -->
-                </div>
-                <div class="cont">
-                    <div class="lBox">
-                        <p>容纳人数 : {{item.Capacity}}</p>
-                        <p>关联设备 : {{item.AttachInfo}}</p>
-                        <p>办公地址 : {{item.Location}}</p>
+            <div class="containerWrap">
+                <div class="content" v-for="(item,index) in adminList" :key="index" @click="getEditConference(item)">
+                    <div class="heads">
+                        <p class="label">{{item.Name}}</p>
+                        <!-- <p class="tag">需审批</p> -->
                     </div>
-                    <div class="rBox">
-                        <div class="imgs">
-
+                    <div class="cont">
+                        <div class="lBox">
+                            <p>容纳人数 : {{item.Capacity}}</p>
+                            <p>关联设备 : {{item.AttachInfo}}</p>
+                            <p>办公地址 : {{item.Location}}</p>
+                        </div>
+                        <div class="rBox">
+                            <div class="imgs">
+                                <img class="nullImg" v-if="item.link==''" :src="imgUrl+'03.3.1conference.png'" alt="">
+                                <!-- <image  v-else class="img" :src="item.link"></image> -->
+                                <img class="img" v-else :src="item.link" alt="">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -218,6 +225,7 @@
     </div>
 </template>
 <script>
+import {mapState,mapMutations} from 'vuex';
 export default {
     data(){
         return {
@@ -257,11 +265,18 @@ export default {
             className:"",
             roomName:"",
             roomTime:"",
-            sessionkey:""
+            sessionkey:"",
+            statusIdx:"",
+            sign:""
         }
     },
     computed:{
-        
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
+        imgUrl(){
+            return this.$api.photo.url;
+        }
     },
     onShow(){
         this.scrollLeft = this.day * 50;
@@ -270,9 +285,10 @@ export default {
         this.getQuery();
         this.getConferenceAdmin();
     },
-    onLoad(){
+    onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
+        this.sign = options.sign;
         this.timestamp = Date.parse(new Date());
         var currenMyDate = new Date();     //获取当前年份(2位)
         var currenYear=currenMyDate.getFullYear();    //获取完整的年份(4位,1970-????)
@@ -373,7 +389,8 @@ export default {
                 let temp = [];
                 this.list.forEach(item=>{
                     this.$set(item,'listTime',this.getCountDate());
-                    this.$set(item,'tag',item.AttachInfo.replace(/,/g,'/'));
+                    // this.$set(item,'tag',item.AttachInfo.replace(/,/g,'/'));
+                    this.$set(item,'tag',item.AttachInfo.split(','));
                     item.Reserves.forEach(v=>{
                         temp.push({
                             ScheduledStartDate:v.ScheduledStartDate,
@@ -424,6 +441,14 @@ export default {
                     })
                 }
                 console.log(this.list);
+                let statusIdx = [];
+                this.list[0].listTime.forEach((item,idx)=>{
+                    if(item.status==1){
+                        statusIdx.push(idx);
+                    }
+                })
+                this.statusIdx = statusIdx.pop()*65;
+                console.log(statusIdx,'statusIdx');
             })
         },
         getTargetTime(t){
@@ -606,7 +631,7 @@ export default {
                 let index = this.everyDay.findIndex((item)=>item.day===this.day);
                 console.log(index);
                 this.dayIdx = index;
-                this.scrollLeft = this.day * 50;
+                this.scrollLeft = index * 50;
             }else {
                 this.dayIdx = 0;
                 this.scrollLeft = 0;
@@ -618,9 +643,18 @@ export default {
         },
         getSwitchDay(item,index){
             console.log(item);
-            this.day = item.day;
-            this.dayIdx = index;
-            this.getQuery();
+            let currenDay = new Date().getDate();
+            if(item.day<currenDay){
+                wx.showToast({
+                    title:'过去日期不可选',
+                    icon:'none',
+                    duration:2000
+                })
+            }else {
+                this.day = item.day;
+                this.dayIdx = index;
+                this.getQuery();
+            }
         },
         handleChangeTabs(e){
             this.current = e.mp.detail.key;
@@ -654,6 +688,10 @@ export default {
             const url = '/pages/conferenceRoom/detail/main?id='+item.ResourceId+'&date='+date+'&name='+item.Name;
             wx.navigateTo({url:url});
         },
+        ...mapMutations([
+            'getConferenceName',
+            'getLink'
+        ]),
         getAppointment(){
             if(this.paramsList==''){
                 wx.showToast({
@@ -662,9 +700,21 @@ export default {
                     duration:2000
                 })
             }else {
-                let date = `${this.year}-${this.month}-${this.day}`;
-                const url = '/pages/conferenceRoom/appointment/main?date='+date+'&ResourceId='+this.ResourceId+'&ScheduledStart='+this.ScheduledStart+'&ScheduledEnd='+this.ScheduledEnd+'&name='+this.name;
-                wx.navigateTo({url:url});
+                if(this.sign=='add'){
+                    this.getConferenceName({
+                        name:this.name,
+                        id:this.ResourceId,
+                        startTime:`${this.year}-${this.month}-${this.day} ${this.ScheduledStart}`,
+                        endTime:`${this.year}-${this.month}-${this.day} ${this.ScheduledEnd}`
+                    });
+                    wx.navigateBack({
+                        delta: 1
+                    })
+                }else {
+                    let date = `${this.year}-${this.month}-${this.day}`;
+                    const url = '/pages/conferenceRoom/appointment/main?date='+date+'&ResourceId='+this.ResourceId+'&ScheduledStart='+this.ScheduledStart+'&ScheduledEnd='+this.ScheduledEnd+'&name='+this.name;
+                    wx.navigateTo({url:url});
+                }
             }
         },
         getAddCreate(){
@@ -699,6 +749,7 @@ export default {
         },
         // 编辑会议室
         getEditConference(item){
+            this.getLink(item.link);
             const url = '/pages/conferenceRoom/create/main?id='+item.ResourceOrgId;
             wx.navigateTo({url:url});
         }
@@ -727,7 +778,7 @@ export default {
                 border-bottom: 2rpx solid #ebedec;
                 z-index: 999;
                 position: fixed;
-                top: 86rpx;
+                top: 84rpx;
 
                 .lBox{
                     width: 106rpx;
@@ -799,20 +850,31 @@ export default {
                         color: #333333;
                         border-bottom: 2rpx solid #ebedec;
                     }
-                    .rowText{
-                        font-size: 26rpx;
-                        color: #666666;
+                    .tagWrap{
+                        display: flex;
                         padding: 20rpx 0;
-                        span{
-                            font-size: 22rpx;
-                            color: #cccccc;
+                        .rowText{
+                            font-size: 26rpx;
+                            color: #666666;
+                            span{
+                                font-size: 22rpx;
+                                color: #cccccc;
+                                margin: 0 10rpx;
+                            }
                         }
                     }
                     .icon{
                         margin-bottom: 20rpx;
+                        display: flex;
+                        align-items: center;
                         i{
                             color: #666666;
                             font-size: 26rpx;
+                        }
+                        span{
+                            margin-left: 14rpx;
+                            font-size: 26rpx;
+                            color: #666666;
                         }
                     }
                     .scrollWrap{
@@ -839,7 +901,8 @@ export default {
                             }
                         }
                         .swiper-item.overdue{
-                            background: #e4e4e4;
+                            // background: #e4e4e4;
+                            background: #e5e5e5;
                             .box{
                                 padding: 20rpx 0;
                                 .time{
@@ -910,8 +973,16 @@ export default {
                 position: fixed;
                 bottom: 20rpx;
                 background: #fff;
+                border-top: 1rpx solid #e3e3e3;
                 .box{
-                    padding: 10rpx 33rpx;
+                    padding: 25rpx 33rpx;
+                    .btn{
+                        border-radius: 7rpx;
+                        // opacity: .4;
+                    }
+                    .btn.active{
+                        opacity: 1;
+                    }
                 }
             }
         }
@@ -1108,13 +1179,16 @@ export default {
             }
         }
         .conferenceRoom{
-            margin-top: 50px;
+            margin-top: 40px;
             .nav{
+                width: 100%;
                 background: #fff;
                 padding: 20rpx 33rpx;
                 display: flex;
                 align-items: center;
                 color: #3399ff;
+                position: fixed;
+                top:40px;
                 .icon{
                     font-weight: bold;
                 }
@@ -1124,47 +1198,63 @@ export default {
                     margin-left: 20rpx;
                 }
             }
-            .content{
-                margin-top: 35rpx;
-                background: #fff;
-                padding: 33rpx;
-                .head{
-                    display: flex;
-                    justify-content: space-between;
-                    padding-bottom: 33rpx;
-                    border-bottom: 2rpx solid #ebedec;
-                    .label{
-                        font-size: 33rpx;
-                        color: #333333;
-                        font-weight: bold;
-                    }
-                    .tag{
-                        width: 93rpx;
-                        height: 51rpx;
-                        line-height: 52rpx;
-                        text-align: center;
-                        background: #fcebe3;
-                        border-radius: 5rpx;
-                        font-size: 24rpx;
-                        color: #ff6666;
-                    }
-                }
-                .cont{
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding-top: 20rpx;
-                    .lBox{
-                        p{
+            .containerWrap{
+                margin-top: 180rpx;
+                .content{
+                    margin-top: 16rpx;
+                    background: #fff;
+                    padding: 33rpx;
+                    .heads{
+                        display: flex;
+                        justify-content: space-between;
+                        padding-bottom: 33rpx;
+                        border-bottom: 2rpx solid #ebedec;
+                        .label{
+                            font-size: 33rpx;
+                            color: #333333;
+                            font-weight: bold;
+                        }
+                        .tag{
+                            width: 93rpx;
+                            height: 51rpx;
+                            line-height: 52rpx;
+                            text-align: center;
+                            background: #fcebe3;
+                            border-radius: 5rpx;
                             font-size: 24rpx;
-                            color: #999999;
+                            color: #ff6666;
                         }
                     }
-                    .rBox{
-                        .imgs{
-                            width: 152rpx;
-                            height: 100rpx;
-                            background: #f2f2f2;
+                    .cont{
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding-top: 20rpx;
+                        .lBox{
+                            p{
+                                font-size: 24rpx;
+                                color: #999999;
+                            }
+                        }
+                        .rBox{
+                            .imgs{
+                                width: 152rpx;
+                                height: 100rpx;
+                                // background: #f2f2f2;
+                                border-radius: 9rpx;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                border:1rpx solid #eceeed;
+                                .nullImg{
+                                    width: 53rpx;
+                                    height: 53rpx;
+                                }
+                                .img{
+                                    width: 100%;
+                                    height: 100%;
+                                }
+                            }
                         }
                     }
                 }

@@ -1,5 +1,9 @@
 <template>
     <div class="wrap">
+        <div class="header">
+            <p class="cancel" @click="getCancel">取消</p>
+            <p class="submit" @click="getSubmit">完成</p>
+        </div>
         <div class="container" v-if="!isShow">
             <div class="rowContent">
                 <div class="row" v-for="(item,index) in list" :key="index" @click="getSelect(item,index)">
@@ -29,7 +33,7 @@
                         直到
                     </p>
                     <p>
-                        <span>{{typeName}}</span>
+                        <span>{{date!=''?'直到'+date+'终止重复':'永远'}}</span>
                         <i-icon type="enter" color="#999999" size="20" />
                     </p>
                 </div>
@@ -57,12 +61,12 @@
                         </p>
                     </div>
                 </picker>
-                <div class="row">
+                <div class="row" @click="getOpenChild">
                     <p>
                         直到
                     </p>
                     <p>
-                        <span>永远</span>
+                        <span>{{date!=''?'直到'+date+'终止重复':'永远'}}</span>
                         <i-icon type="enter" color="#999999" size="20" />
                     </p>
                 </div>
@@ -79,21 +83,23 @@
                         </p>
                     </div>
                 </picker>
-                <div class="row">
-                    <p>
-                        天数
-                    </p>
-                    <p>
-                        <span>15</span>
-                        <i-icon type="enter" color="#999999" size="20" />
-                    </p>
-                </div>
-                <div class="row">
+                <picker @change="pickerMonthDay" :value="monthDayIdx" :range="currenMonthDay">
+                    <div class="row">
+                        <p>
+                            天数
+                        </p>
+                        <p>
+                            <span>{{currenMonthDay[monthDayIdx]}}</span>
+                            <i-icon type="enter" color="#999999" size="20" />
+                        </p>
+                    </div>
+                </picker>
+                <div class="row" @click="getOpenChild">
                     <p>
                         直到
                     </p>
                     <p>
-                        <span>永远</span>
+                        <span>{{date!=''?'直到'+date+'终止重复':'永远'}}</span>
                         <i-icon type="enter" color="#999999" size="20" />
                     </p>
                 </div>
@@ -128,6 +134,19 @@
             </div>
         </div>
         <selectCalendar v-if="isShow" @paramsChild="getParams" />
+        <van-action-sheet
+            :show="show"
+            cancel-text="取消"
+            @close="getClose"
+            @cancel="getClose"
+        >
+            <div class="sheetWrap">
+                <p @click="getForever">永远</p>
+                <picker mode="date" :value="date"  @change="bindDateChange">
+                    <p>特定日期</p>
+                </picker>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 <script>
@@ -155,10 +174,6 @@ export default {
                 {
                     name:"每月",
                     tag:"ftm"
-                },
-                {
-                    name:"每年",
-                    tag:""
                 }
             ],
             num:0,
@@ -179,7 +194,10 @@ export default {
             isShow:false,
             typeName:"",
             dTags:"",
-            recurrenceType:""
+            recurrenceType:"",
+            show:false,
+            date:"",
+            monthDayIdx:0
         }
     },
     computed:{
@@ -207,6 +225,14 @@ export default {
             }
             return temp;
         },
+        currenMonthDay(){
+            let temp = [];
+            for(var i=1; i<=31; i++){
+                let str = i;
+                temp.push(str);
+            }
+            return temp;
+        },
         everyYearList(){
             let temp = [];
             for(var i=1; i<=10; i++){
@@ -222,14 +248,14 @@ export default {
             return Number(this.intervalIdx)+1;
         },
         weekSign(){
-            return (Number(this.dayIdx)+1)+'|'+(Number(this.weekDayIdx)+1);
+            return (Number(this.dayIdx)+1)+'|'+(Number(this.weekDayIdx));
         },
         monthSign(){
-            return 'm0|'+(Number(this.monthIdx)+1)+'|' + 2;
+            return 'm0|'+(Number(this.monthIdx)+1)+'|' + (Number(this.monthDayIdx)+1);
         }
     },
     onLoad(){
-
+        
     },
     methods:{
         getParams(v){
@@ -237,8 +263,12 @@ export default {
             this.typeName = v;
         },
         getSelect(item,index){
+            if(index==2){
+                this.weekDayIdx = new Date().getDay();
+            }
             this.num = index;
             this.dTags = item.tag+'|';
+            this.date = '';
         },
         pickerInterval(e){
             this.intervalIdx = e.mp.detail.value;
@@ -257,22 +287,49 @@ export default {
         pickerYear(e){
             this.yearIdx = e.mp.detail.value;
         },
+        pickerMonthDay(e){
+            this.monthDayIdx = e.mp.detail.value;
+        },
         getSubmit(){
             if(this.num==1){
-                this.recurrenceType = this.dTags+this.cSign;
+                if(this.date!=''){
+                    this.recurrenceType = this.dTags+this.cSign+'|'+this.date;
+                }else {
+                    this.recurrenceType = this.dTags+this.cSign;
+                }
             }else if(this.num==2){
-                this.recurrenceType = this.dTags+this.weekSign;
+                if(this.date!=''){
+                    this.recurrenceType = this.dTags+this.weekSign+'|'+this.date;
+                }else {
+                    this.recurrenceType = this.dTags+this.weekSign;
+                }
             }else if(this.num==3){
-                this.recurrenceType = this.dTags+this.monthSign;
+                if(this.date!=''){
+                    this.recurrenceType = this.dTags+this.monthSign+'|'+this.date;
+                }else {
+                    this.recurrenceType = this.dTags+this.monthSign;
+                }
             }else {
-                this.recurrenceType = '';
+                this.recurrenceType = '无';
             }
             console.log(this.recurrenceType,'this.dTags+this.cSign');
             this.$emit('childParams',this.recurrenceType)
             this.$parent.repeatShow = false;
         },
+        getCancel(){
+            this.$parent.repeatShow = false;
+        },
         getOpenChild(){
-            this.isShow = true;
+            // this.isShow = true;
+            this.show = true;
+        },
+        bindDateChange(e){
+            this.date = e.mp.detail.value;
+            this.show = false;
+        },
+        getForever(){
+            this.date = '';
+            this.show = false;
         }
     }
 }
@@ -280,43 +337,64 @@ export default {
 <style lang="scss" scoped>
 @import '../../../static/css/schedule.css';
     .wrap{
-        .rowContent{
+        .header{
+            display: flex;
+            justify-content: space-between;
             background: #fff;
-            .row{
-                display: flex;
-                justify-content: space-between;
-                padding: 33rpx;
-                border-bottom: 2rpx solid #ebedec;
-                font-size: 33rpx;
-                .label.active{
-                    color: #3399ff;
-                }
-                .label{
-                    color: #333333;
-                }
-                .iconfont{
-                    color: #3399ff;
-                }
+            padding: 32rpx 33rpx;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 99999;
+            .cancel{
+                font-size: 34rpx;
+                color: #999999;
+            }
+            .submit{
+                font-size: 34rpx;
+                color: #3399ff;
             }
         }
-        .selectWrap{
-            background: #fff;
-            margin-top: 35rpx;
-            .row{
-                display: flex;
-                justify-content: space-between;
-                padding: 33rpx;
-                border-bottom: 2rpx solid #ebedec;
-                font-size: 33rpx;
-                span{
-                    font-size: 31rpx;
+        .container{
+            margin-top: 65px;
+            .rowContent{
+                background: #fff;
+                .row{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 33rpx;
+                    border-bottom: 2rpx solid #ebedec;
+                    font-size: 33rpx;
+                    .label.active{
+                        color: #3399ff;
+                    }
+                    .label{
+                        color: #333333;
+                    }
+                    .iconfont{
+                        color: #3399ff;
+                    }
                 }
             }
-        }
-        h3{
-            font-size: 26rpx;
-            color: #999999;
-            padding: 10rpx 33rpx;
+            .selectWrap{
+                background: #fff;
+                margin-top: 35rpx;
+                .row{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 33rpx;
+                    border-bottom: 2rpx solid #ebedec;
+                    font-size: 33rpx;
+                    span{
+                        font-size: 31rpx;
+                    }
+                }
+            }
+            h3{
+                font-size: 26rpx;
+                color: #999999;
+                padding: 10rpx 33rpx;
+            }
         }
         .footer{
             width: 100%;
@@ -325,6 +403,18 @@ export default {
             background: #fff;
             .boxChild{
                 padding: 26rpx 24rpx;
+            }
+        }
+        .sheetWrap{
+            text-align: center;
+            p{
+                line-height: 112rpx;
+                font-size: 36rpx;
+                color: #333333;
+                background: #fff;
+            }
+            p:nth-child(1){
+                border-bottom: 1rpx solid #e2e3e5;
             }
         }
     }

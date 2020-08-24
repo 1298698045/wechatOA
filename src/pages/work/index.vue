@@ -1,7 +1,10 @@
 <template>
     <div class="wrap">
         <div class="banner padding">
-            <img :src="pathUrl!=''?pathUrl:'https://wx.phxinfo.com.cn/img/wechat/04.banner.png'" alt="">
+
+            <!-- <img class="img" :src="pathUrl" alt=""> -->
+            <image :src="pathUrl" mode="scaleToFill" class="img"></image>
+            <!-- <img :src="pathUrl!=''?pathUrl:'https://wx.phxinfo.com.cn/img/wechat/04.banner.png'" alt=""> -->
             <span @click="getOpenPhoto">
                 更换封面
             </span>
@@ -14,25 +17,25 @@
             <div class="boxWrap">
                 <div class="box">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/Add.png" alt="">
+                        <img :src="imgUrls+'04.Organizational_Structure.png'" alt="">
                     </p>
                     <p>组织架构</p>
                 </div>
                 <div class="box">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/Add.png" alt="">
+                        <img :src="imgUrls+'04.User_Manual.png'" alt="">
                     </p>
                     <p>使用手册</p>
                 </div>
                 <div class="box">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/Add.png" alt="">
+                        <img :src="imgUrls+'04.Customer_Servicel.png'" alt="">
                     </p>
                     <p>我的客服</p>
                 </div>
                 <div class="box">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/Add.png" alt="">
+                        <img :src="imgUrls+'04.Setup_Workbench.png'" alt="">
                     </p>
                     <p>设置工作台</p>
                 </div>
@@ -41,30 +44,41 @@
         <div class="center">
             <h3 class="padding">最近使用</h3>
             <div class="box">
-                <p v-for="(item,index) in rowImgs" :key="index" @click="getOpenDetail(index)">
-                    <img :src="item" alt="">
+                <p class="imgBox" :class="{'acitve':item.icon==''}" v-for="(item,index) in rowImgs" :key="index" @click="getRouter(item,0)">
+                    <img :src="imgUrl+item.icon" alt="">
                 </p>
             </div>
         </div>
         <div class="content" v-for="(item,index) in list" :key="index">
-            <h3 class="padding" @click="getOpen(index)">
+            <h3 class="padding" @click="item.items.length>4?getOpen(index):''">
                 <p>{{item.name}}</p>
-                <p>{{item.showContent?'收起':'展开'}}</p>
+                <p v-if="item.items.length>4">{{item.showContent?'收起':'展开'}}</p>
             </h3>
-            <div class="row" v-if="item.showContent">
-                <div class="box" v-for="(v,i) in item.items" :key="i" @click="getRouter(v)">
-                    <p>
-                        <img :src="imgUrl+v.icon" alt="">
+            <div class="row">
+                <div class="box" v-for="(v,i) in item.showContent?item.items:item.array" :key="i" @click="getRouter(v,1)">
+                    <p :class="v.icon==''?'active':''">
+                        <img :src="imgUrl+v.icon" alt="" v-if="item.icon!=''">
                     </p>
                     <p>{{v.label}}</p>
                 </div>
             </div>
         </div>
+        <vue-tab-bar
+          @fetch-index="clickIndexNav"
+          :selectNavIndex="selectNavIndex"
+          :needButton="needButton"
+          :handButton="handButton"
+          :btnText="btnText">
+      </vue-tab-bar>
     </div>
 </template>
 <script>
 import { mapState } from 'vuex';
+import vueTabBar from '../../components/vueTabBar';
 export default {
+    components:{
+        vueTabBar
+    },
     data(){
         return {
             rowImgs:[
@@ -80,17 +94,24 @@ export default {
             show:false,
             pathUrl:"",
             sessionkey:"",
-            organizationName:""
+            organizationName:"",
+            imgUrls:this.$api.photo.url,
+            selectNavIndex:2,
+            needButton:false,
+            handButton:'',
+            btnText:''
         }
     },
     onLoad(){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.organizationName = wx.getStorageSync('organizationName');
+        this.pathUrl = 'https://wx.phxinfo.com.cn/img/banner/work_banner.png?'+ new Date().getTime();
         wx.setNavigationBarTitle({
             title: this.organizationName
         })
-
+        // this.getBanner();
+        this.getLatelyModule();
         this.getQuery();
     },
     computed:{
@@ -108,6 +129,40 @@ export default {
             this.list[index].showContent = !this.list[index].showContent;
             console.log(this.list[index].showContent);
         },
+        getLatelyModule(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.work.latelyModule,
+                    SessionKey:this.sessionkey
+                }
+            }).then(res=>{
+                this.rowImgs = res.data;
+            })
+        },
+        getBanner(){
+            // this.$httpWX.get({
+            //     url:this.$api.message.queryList,
+            //     data:{
+            //         method:this.$api.work.banner,
+            //         SessionKey:this.sessionkey
+            //     }
+            // }).then(res=>{
+            //     cosnole.log(res);
+            // })
+            let that = this;
+            let url = `${that.$api.upload.url}?method=${that.$api.work.banner}&SessionKey=${that.sessionkey}`;
+            wx.downloadFile({
+                url: url, //仅为示例，并非真实的资源
+                success (res) {
+                    console.log(res);
+                    // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+                    if (res.statusCode === 200) {
+                        that.pathUrl = res.tempFilePath;
+                    }
+                }
+            })
+        },
         getQuery(){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
@@ -119,12 +174,12 @@ export default {
                 console.log(res);
                 this.list = res.listData;
                 this.list.map(item=>{
-                    // const showContent = false;
-                    // item.showContent = showContent;
-                    // return item;
                     this.$set(item,'showContent',false)
+                    const array = item.items.slice(0,4);
+                    this.$set(item,'array',array);
                 })
-                this.list[0].showContent = true;
+                console.log(this.list,'list');
+                // this.list[0].showContent = true;
             })
         },
         getOpenDetail(index){
@@ -148,8 +203,21 @@ export default {
                 wx.switchTab({url:url});
             }
         },
-        getRouter(item){
+        getRouter(item,str){
             console.log(item);
+            if(str==1){
+                this.$httpWX.get({
+                    url:this.$api.message.queryList,
+                    data:{
+                        method:this.$api.work.upLatelyModule,
+                        SessionKey:this.sessionkey,
+                        ModuleId:item.id
+                    }
+                }).then(res=>{
+                    console.log(res);
+                    this.getLatelyModule();
+                })
+            }
             // 107邮件 101待办事务 104新闻
             if(item.id==107){
                 const url  = '/pages/email/main';
@@ -183,6 +251,12 @@ export default {
             }else if(item.id==112){
                 const url = '/pages/meeting/notice/main';
                 wx.navigateTo({url:url});
+            }else if(item.id==111){
+                const url = '/pages/meetingEntry/main';
+                wx.navigateTo({url:url});
+            }else if(item.id==102){
+                const url = '/pages/homeMailList/main';
+                wx.switchTab({url:url});
             }
         },
         getOpenPhoto(){
@@ -195,6 +269,21 @@ export default {
                     // tempFilePath可以作为img标签的src属性显示图片
                     const tempFilePaths = res.tempFilePaths;
                     that.pathUrl = tempFilePaths[0];
+                    console.log(`${that.$api.upload.url}?method=${that.$api.work.uploadFile}&SessionKey=${that.sessionkey}`,'000');
+                    wx.uploadFile({
+                        url: `${that.$api.upload.url}?method=${that.$api.work.uploadFile}&SessionKey=${that.sessionkey}`, //仅为示例，非真实的接口地址
+                        filePath: tempFilePaths[0],
+                        name: 'file',
+                        formData: {
+                            'user': 'test'
+                        },
+                        success (res){
+                            console.log(res);
+                            that.pathUrl = '';
+                            that.pathUrl = 'https://wx.phxinfo.com.cn/img/banner/work_banner.png?'+ new Date().getTime();
+                            // that.getBanner();
+                        }
+                    })
                 }
             })
         }
@@ -205,15 +294,16 @@ export default {
     @import '../../../static/css/public.scss';
     .wrap{
         background: #fff;
+        padding-bottom: 80px;
         .banner{
             background: #fff;
-            height: 130px;
+            height: 272rpx;
             position: relative;
-            img{
+            .img{
                 width: 100%;
                 height: 100%;
                 vertical-align: middle;
-                border-radius: 10px;
+                border-radius: 12rpx;
             }
             span{
                 display: inline-block;
@@ -224,7 +314,7 @@ export default {
                 line-height: 52rpx;
                 text-align: center;
                 position: absolute;
-                top:50px;
+                top:60rpx;
                 background: #000000;
                 right: 30rpx;
                 opacity: .5;
@@ -237,7 +327,7 @@ export default {
             display: flex;
             justify-content: space-between;
             p:nth-child(1){
-                font-size: 28rpx;
+                font-size: 33rpx;
                 font-weight: bold;
                 span{
                     font-size: 12px;
@@ -245,7 +335,7 @@ export default {
                 }
             }
             p:nth-child(2){
-                font-size: 12px;
+                font-size: 25rpx;
                 color: #3399ff;
             }
         }
@@ -283,16 +373,20 @@ export default {
             }
             .box{
                 display: flex;
-                justify-content: space-around;
-                padding: 20rpx 0 ;
-                p{
-                    width: 80rpx;
-                    height: 80rpx;
+                padding: 20rpx 0;
+                .imgBox{
+                    width: 75rpx;
+                    height: 75rpx;
+                    margin-left: 44rpx;
                     img{
                         width: 100%;
                         height: 100%;
                         vertical-align: middle;
                     }
+                }
+                .imgBox.acitve{
+                    background: #eef0f2;
+                    border-radius: 15rpx;
                 }
             }
         }
@@ -306,7 +400,7 @@ export default {
                     font-weight: bold;
                 }
                 p:nth-child(2){
-                    font-size: 20rpx;
+                    font-size: 25rpx;
                     color: #a3a3a3;
                 }
             }
@@ -317,8 +411,8 @@ export default {
                     width: 25%;
                     margin: 20rpx 0;
                     p:nth-child(1){
-                        width: 100rpx;
-                        height: 100rpx;
+                        width: 116rpx;
+                        height: 116rpx;
                         margin: 0 auto;
                         img{
                             width: 100%;
@@ -326,10 +420,15 @@ export default {
                             vertical-align: middle;
                         }
                     }
+                    p:nth-child(1).active{
+                        background: #eef0f2;
+                        border-radius: 25rpx;
+                    }
                     p:nth-child(2){
-                        font-size: 12px;
+                        font-size: 24rpx;
                         color: #333333;
                         text-align: center;
+                        margin-top: 20rpx;
                     }
                 }
             }

@@ -4,7 +4,7 @@
             <div class="rowWrap" v-for="(item,index) in list" :key="index" @click="getSel(item,index)">
                 <div class="colLeft">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/Shared_files.png" alt="">
+                        <img :src="item.imgUrl" alt="">
                     </p>
                 </div>
                 <div class="colRight">
@@ -78,7 +78,23 @@ export default {
             sessionkey:"",
             newFolderShow:false,
             name:"",
-            list:[],
+            list:[
+                {
+                    Name:"收件箱",
+                    num:"",
+                    imgUrl:"https://wx.phxinfo.com.cn/img/wechat/02.4.Inbox.png"
+                },
+                {
+                    Name:"已发送",
+                    num:"",
+                    imgUrl:"https://wx.phxinfo.com.cn/img/wechat/02.4.Sendout.png"
+                },
+                {
+                    Name:"已删除",
+                    num:"",
+                    imgUrl:"https://wx.phxinfo.com.cn/img/wechat/02.4.Delete.png"
+                }
+            ],
             num:-1,
             folderId:"",
             id:""
@@ -101,7 +117,12 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
-                this.list = res.data;
+                let data = res.data.map(item=>({
+                    Name:item.Name,
+                    Id:item.Id,
+                    imgUrl:"https://wx.phxinfo.com.cn/img/wechat/02.4.GroupMail.png"
+                }))
+                this.list = this.list.concat(data);
             })
         },
         getSel(item,index){
@@ -144,6 +165,18 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
+                wx.showToast({
+                    title:res.msg,
+                    icon:"none",
+                    duration:2000,
+                    success:res=>{
+                        setTimeout(()=>{
+                            wx.navigateBack({
+                                delta: 2
+                            })
+                        },1000)
+                    }
+                })
             })
         }
     }

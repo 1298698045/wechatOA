@@ -1,12 +1,16 @@
 <template>
     <div class="wrap">
+        <div class="header"  v-if="!isShow&&!repeatShow">
+            <p class="cancel" @click="getBack">取消</p>
+            <p class="submit" @click="getSubmit">完成</p>
+        </div>
         <div class="boxWrap" v-if="!isShow&&!repeatShow">
             <p class="icon">
-                <i class="iconfont icon-richeng1"></i>
+                <i class="iconfont icon-richeng"></i>
                 <!-- <i-icon type="activity" color="#3c3c3c" size="20" /> -->
             </p>
             <p class="cont">
-                <textarea v-model="title" name="" id="" cols="30" rows="10" placeholder="添加日程、会议、活动等标题"></textarea>
+                <textarea placeholder-class="placeholder" v-model="title" name="" id="" cols="30" rows="10" placeholder="添加日程、会议、活动等标题"></textarea>
             </p>
         </div>
         <div class="center"  v-if="!isShow&&!repeatShow">
@@ -18,13 +22,13 @@
                     </p>
                     <p class="cont">{{array[index]}}</p>
                     <p>
-                        <i-icon type="enter" size="20" color="#666666" />
+                        <i-icon type="enter" size="20" color="#a3a4a6" />
                     </p>
                 </div>
            </picker>
             <div class="row">
                 <p class="icon">
-                    <i class="iconfont icon-shijian1"></i>
+                    <i class="iconfont icon-shijian"></i>
                 </p>
                 <p class="cont">全天</p>
                 <p>
@@ -33,81 +37,74 @@
             </div>
             <div class="timeWrap">
                     <picker class="picker" mode="multiSelector" :value="multiIndex" @change="bindMultiPickerChange"
-								:range="newMultiArray">
+							:disabled="checked" :range="newMultiArray">
                         <input type="text" v-if="month==''" placeholder="开始时间" disabled>
                         <div class="box">
-                            <p>{{month}}{{day}} {{startDay}}</p>
-                            <p>{{hours}}</p>
+                            <p>{{month}}{{day}} <span v-if="!checked">{{startDay}}</span></p>
+                            <p>{{!checked?hours:startDay}}</p>
                         </div>
                     </picker>
                 <div class="imgBox">
                     <img src="https://wx.phxinfo.com.cn/img/wechat/2845.png" alt="">
                 </div>
-                <picker class="picker" mode="multiSelector" :value="endmultiIndex" @change="endbindMultiPickerChange" :range="newMultiArray">
+                <picker class="picker" mode="multiSelector" :value="endmultiIndex" @change="endbindMultiPickerChange" :disabled="checked" :range="newMultiArray">
                     <input type="text" v-if="endMonth==''" placeholder="结束时间" disabled>                    
-                    <div class="box">
-                        <p>{{endMonth}}{{endDay}} {{endWeek}}</p>
-                        <p>{{endHours}}</p>
+                    <div class="box rBox">
+                        <p>{{endMonth}}{{endDay}} <span v-if="!checked">{{endWeek}}</span></p>
+                        <p>{{!checked?endHours:endWeek}}</p>
                     </div>
                 </picker>
             </div>
-            <div class="row" @click="getRepeat" v-if="index==0&&repeatisShow">
-                <p class="icon">
-                    <i class="iconfont icon-zhongfu1"></i>
-                </p>
-                <p class="cont">每天重复</p>
-                <p>
-                    <i-icon type="close" size="20" color="#666666" />
-                </p>
-            </div>
-            <picker @change="pickerCalendar" :value="calendarIdx" :range="calendarList">
+            <picker v-if="index==0" @change="pickerCalendar" :value="calendarIdx" :range="calendarList">
                 <div class="row">
                     <p class="icon">
-                        <i class="iconfont icon-type"></i>
+                        <i class="iconfont icon-leixing"></i>
                     </p>
                     <p class="cont">日历：{{calendarList[calendarIdx]}}</p>
                     <p>
-                        <i-icon type="enter" size="20" color="#666666" />
+                        <i-icon type="enter" size="20" color="#a3a4a6" />
                     </p>
                 </div>
             </picker>
-            <picker @change="pickerShow" :value="showIdx" :range="showList">
+            <picker v-if="index==0" @change="pickerShow" :value="showIdx" :range="showList">
                 <div class="row">
                     <p class="icon">
                         <i class="iconfont icon-gongzuozhuangtai"></i>
                     </p>
                     <p class="cont">显示为：{{showList[showIdx]}}</p>
                     <p>
-                        <i-icon type="enter" size="20" color="#666666" />
+                        <i-icon type="enter" size="20" color="#a3a4a6" />
                     </p>
                 </div>
             </picker>
-            <div class="row" v-if="locationShow">
+            <div class="row">
                 <p class="icon">
-                    <i class="iconfont icon-shiliangzhinengduixiang"></i>
+                    <i class="iconfont icon-dizhi"></i>
                 </p>
                 <p class="cont">
-                    <input type="text" v-model="location" placeholder="输入地点">
+                    <input placeholder-class="placeholder" type="text" v-model="location" placeholder="输入地点">
                 </p>
                 <p>
-                    <i-icon type="coordinates" @click="getOpenLocation" size="20" color="#666666" />
+                    <i class="iconfont icon-dizhi1" @click="getOpenLocation"></i>
+                    <!-- <i-icon type="coordinates" @click="getOpenLocation" size="20" color="#666666" /> -->
                 </p>
             </div>
-            <div class="contacts" @click="getOrganizer" v-if="index==1">
+            <div class="contacts" @click="getOrganizer" v-if="index==1&&selectListName!=''">
                 <div class="row">
                     <div class="l">
-                        <i class="iconfont icon-richeng1"></i>
+                        <i class="iconfont icon-zuzhiren"></i>
                     </div>
                     <div class="r">
                         <p>
                             <span class="avatar">{{organizer.FullName}}</span>
                             <span class="name">{{organizer.FullName}}</span>
-                            <span class="tag">审批人</span>
+                            <span class="tag">组织人</span>
                         </p>
                     </div>
                 </div>
             </div>
-            <div class="row" v-if="index==1" @click="getDesignee">
+            <!-- 会议纪要指派人： -->
+            <!-- <div class="row" v-if="index==1" @click="getDesignee">
                 <p class="icon">
                     <i class="iconfont icon-zuzhiren"></i>
                 </p>
@@ -117,25 +114,35 @@
                 <p>
                     <i-icon type="enter" size="20" color="#666666" />
                 </p>
-            </div>
+            </div> -->
             <div class="row" @click="getInvitation">
                 <p class="icon">
-                    <i class="iconfont icon-zuzhiren"></i>
+                    <i class="iconfont icon-canyuren"></i>
                 </p>
                 <p class="cont">
-                    <input type="text" :disabled="true" v-model="value"  placeholder="邀请参与人">
+                    <input placeholder-class="placeholder" type="text" :disabled="true" v-model="value"  placeholder="邀请参与人">
                 </p>
                 <p>
-                    <i-icon type="enter" size="20" color="#666666" />
+                    <i-icon type="enter" size="20" color="#a3a4a6" />
                 </p>
             </div>
             <div class="row">
                 <p class="icon">
-                    <i class="iconfont icon-tixing1"></i>
+                    <i class="iconfont icon-tixing"></i>
                 </p>
                 <p class="cont">15分钟前，应用内提醒</p>
                 <p>
-                    <i-icon type="enter" size="20" color="#666666" />
+                    <i-icon type="enter" size="20" color="#a3a4a6" />
+                </p>
+            </div>
+            <!-- 会议室 -->
+            <div class="row" v-if="index==1&&conference.name" @click="getCheckConference">
+                <p class="icon">
+                    <i class="iconfont icon-huiyishi"></i>
+                </p>
+                <p class="cont">{{conference.name}}</p>
+                <p>
+                    <i-icon type="close" color="#a3a4a6" size="20" @click.stop="getDelConference" />
                 </p>
             </div>
             <div class="row" v-if="noticeShow">
@@ -147,7 +154,36 @@
                     <p>
                         <span class="l">应用内</span>
                         <span class="r">短信</span>
-                        <i-icon type="close" color="#666666" size="20" @click="getDelNotice" />
+                        <i-icon type="close" color="#a3a4a6" size="20" @click="getDelNotice" />
+                    </p>
+                </div>
+            </div>
+            <div class="row" @click="getRepeat" v-if="index==0&&repeatStr!=''">
+                <p class="icon">
+                    <i class="iconfont icon-zhongfu"></i>
+                </p>
+                <p class="cont">{{repeatStr}}</p>
+                <p>
+                    <i-icon type="close" size="20" color="#a3a4a6" @click.stop="getRepeatShow" />
+                </p>
+            </div>
+            <div class="row" v-if="index==1&&selectFiles!=''" @click="getUpan">
+                <p class="icon">
+                    <i class="iconfont icon-fujian"></i>
+                </p>
+                <p class="cont">附件</p>
+                <p>
+                    <i class="iconfont icon-tianjia" style="color:#3399ff;"></i>
+                </p>
+            </div>
+            <div class="enclosure">
+                <div class="rows" v-for="(item,index) in selectFiles" :key="index">
+                    <p>
+                        <img :src="item.link" alt="">
+                    </p>
+                    <p>{{item.name}}</p>
+                    <p @click="getDelFiles(item)">
+                        <i-icon type="close" size="20" color="#a3a4a6" />
                     </p>
                 </div>
             </div>
@@ -166,61 +202,41 @@
                     />
                 </p>
                 <p>
-                    <i-icon type="close" size="20" color="#666666" />
+                    <i-icon type="close" size="20" color="#a3a4a6" @click.stop="getDescriptionShow" />
                 </p>
-            </div>
-            <div class="row" v-if="fileShow" @click="getUpan">
-                <p class="icon">
-                    <i class="iconfont icon-fujian"></i>
-                </p>
-                <p class="cont">附件</p>
-                <p>
-                    <i class="iconfont icon-add" style="color:#3399ff;"></i>
-                </p>
-            </div>
-            <div class="enclosure" v-if="fileShow">
-                <div class="rows" v-for="(item,index) in selectFiles" :key="index">
-                    <p>
-                        <img :src="item.link" alt="">
-                    </p>
-                    <p>{{item.name}}</p>
-                    <p @click="getDelFiles(item)">
-                        <i-icon type="close" size="20" color="#666666" />
-                    </p>
-                </div>
             </div>
             <div class="iconRow">
-                <div class="box" @click="getLocationShow">
+                <!-- <div class="box" @click="getLocationShow">
                     <p>
-                        <i class="iconfont icon-shiliangzhinengduixiang"></i>
+                        <i class="iconfont icon-dizhi"></i>
                     </p>
                     <p class="name">地点</p>
-                </div>
-                <div class="box">
+                </div> -->
+                <div class="box" v-if="index==1&&!conference.name!=''" @click="getConference">
                     <p>
                         <i class="iconfont icon-huiyishi"></i>
                     </p>
                     <p class="name">会议室</p>
                 </div>
-                <div class="box" @click="getNoticeShow">
+                <div class="box" @click="getNoticeShow" v-if="!noticeShow">
                     <p>
                         <i class="iconfont icon-shanguangdeng"></i>
                     </p>
                     <p class="name">通知</p>
                 </div>
-                <div class="box" @click="getRepeatShow" v-if="index==0">
+                <div class="box" @click="getRepeat" v-if="index==0&&recurrenceType==''">
                     <p>
-                        <i class="iconfont icon-zhongfu1"></i>
+                        <i class="iconfont icon-zhongfu"></i>
                     </p>
                     <p class="name">重复</p>
                 </div>
-                <div class="box" @click="getFileShow">
+                <div class="box" v-if="index==1&&selectFiles==''" @click="getUpan">
                     <p>
                         <i class="iconfont  icon-fujian"></i>
                     </p>
                     <p class="name">附件</p>
                 </div>
-                <div class="box" @click="getDescriptionShow">
+                <div class="box" v-if="!descriptionShow" @click="getDescriptionShow">
                     <p>
                         <i class="iconfont  icon-beizhu"></i>
                     </p>
@@ -228,13 +244,13 @@
                 </div>
             </div>
         </div>
-        <div class="footer"  v-if="!isShow&&!repeatShow">
+        <!-- <div class="footer"  v-if="!isShow&&!repeatShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="btnWrap">
                 <van-button type="primary" @click="getSubmit" color="#3399ff" block>完成</van-button>
             </div>
-        </div>
+        </div> -->
         <mapList @childFn="getChildFn" @cancel="getCancelChild" v-if="isShow" /> 
-        <repeat v-if="repeatShow" @childParams="getChildParams" />       
+        <repeat v-if="repeatShow" @childParams="getChildParams" />
     </div>
 </template>
 <script>
@@ -296,10 +312,45 @@ export default {
             noticeShow:false,
             locationShow:false,
             MeetingId:"",
-            recurrenceType:""
+            recurrenceType:"",
+            scheduleId:"", // 日程id
+            copyStartTime:"",
+            copyEndTime:"",
+            isConference:false
         }
     },
     computed:{
+        repeatStr(){
+            let str = '';
+            if(this.recurrenceType!='无'){
+                let temp = this.recurrenceType.split('|');
+                if(temp[0]=='ftd'){
+                    if(temp[1]=='d0'){
+                        str = temp[2]?`每天重复,直到${temp[2]}终止重复`:'每天重复';
+                    }else {
+                        str = temp[3]?`每${temp[2]}天重复,直到${temp[3]}终止重复`:`每${temp[2]}天重复`;
+                    }
+                }else if(temp[0]=='ftw'){
+                    if(temp[1]==1){
+                        str = temp[3]?`每周的周${temp[2]==0?'日':temp[2]}重复,直到${temp[3]}终止重复`:`每周的周${temp[2]==0?'日':temp[2]}重复`
+                    }else {
+                        str = temp[3]?`每${temp[1]}周的周${temp[2]==0?'日':temp[2]}重复,直到${temp[3]}终止重复`:`每${temp[1]}周的周${temp[2]==0?'日':temp[2]}重复`;
+                    }
+                }else if(temp[0]=='ftm'){
+                    if(temp[2]==1){
+                        str = temp[4]?`每个月的第${temp[3]}天重复,直到${temp[4]}终止重复`:`每个月的第${temp[3]}天重复`
+                    }else {
+                        str = temp[4]?`每${temp[2]}个月的第${temp[3]}天重复,直到${temp[4]}终止重复`:`每${temp[2]}个月的第${temp[3]}天重复`;
+                    }
+                }
+            }else {
+                str = this.recurrenceType;
+            }
+            return str;
+        },
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
         isAllDayEvent(){
             return this.checked==true?1:0;
         },
@@ -362,35 +413,90 @@ export default {
             },
             selectFiles:state=>{
                 return state.usb.selectFiles;
+            },
+            // 会议室
+            conference:state=>{
+                return state.publics.conference;
             }
         }),
         value(){
             return this.selectListName!=''?'邀请'+this.selectListName[0].FullName+'等'+this.selectListName.length+'人':''
+        },
+        FileIds(){
+            let temp = [];
+            this.selectFiles.forEach(item=>{
+                temp.push(item.id);
+            })
+            return temp;
         }
     },
     onUnload(){
         this.getClear([]);
+        this.clearFile([]);
+        this.clearConferce({});
     },
     onShow(){
-        console.log(this.selectListName,'selectListName')
+        console.log(this.selectListName,'selectListName');
+        if(this.conference.name){
+            this.getCurrent(this.conference.startTime,this.conference.endTime);
+            this.getPickerDefault(this.conference.startTime,this.conference.endTime);
+            this.startTime = this.conference.startTime;
+            this.endTime = this.conference.endTime;
+        }
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
+        this.getClear([]);
+        this.clearFile([]);
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.startTime = options.startTime;
         this.endTime = options.endTime;
+        this.copyStartTime = options.startTime;
+        this.copyEndTime = options.endTime;
+        this.organizer.FullName = wx.getStorageSync('fullName');
+        this.organizer.id = wx.getStorageSync('userId');
         if(options.startTime){
-            let date = new Date(options.startTime.replace(/-/g,'/'));
-            this.month = date.getMonth()+1+'月';
-            this.day = date.getDate()+'日';
-            this.hours = `${date.getHours()}时${date.getMinutes()}秒`;
-            this.startDay = this.getWeekDay(options.startTime.replace(/-/g,'/'));
-            let endDate = new Date(options.endTime.replace(/-/g,'/'));
-            this.endMonth = endDate.getMonth()+1+'月';
-            this.endDay = endDate.getDate()+'日';
-            this.endHours = `${endDate.getHours()}时${endDate.getMinutes()}秒`;
-            this.endWeek = this.getWeekDay(options.endTime.replace(/-/g,'/'));
+            this.getCurrent(options.startTime,options.endTime);
+            this.getPickerDefault(options.startTime,options.endTime);
+        }else {
+            let date = new Date();
+            let years = date.getFullYear();
+            let month = date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1):date.getMonth()+1;
+            console.log(month,'month')
+            let d = date.getDate()<10?'0'+date.getDate():date.getDate();
+            let hours = date.getHours()<10?'0'+date.getHours():date.getHours();
+            let minutes = date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes();
+            let s = date.getSeconds();
+            // console.log(years,month,d,hours,minutes,s,'--------------');
+            let startTime = `${years}-${month}-${d} ${hours}:${minutes}`;
+            let endTime = `${years}-${month}-${d} ${Number(hours)+Number(1)}:${minutes}`;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.copyStartTime = startTime;
+            this.copyEndTime = endTime; 
+            this.getCurrent(startTime,endTime);
+            console.log(this.newMultiArray);
+            const yIdx = this.newMultiArray[0].findIndex(item=>item==years+'年');
+            const mIdx = this.newMultiArray[1].findIndex(item=>item==month+'月');
+            const dIdx = this.newMultiArray[2].findIndex(item=>item==d+'日');
+            const hIdx = this.newMultiArray[3].findIndex(item=>item==hours+'时');
+            const minIdx = this.newMultiArray[4].findIndex(item=>item==minutes+'分');
+            const endHidx = this.newMultiArray[3].findIndex(item=>item==hours+1+'时');
+            console.log(yIdx,mIdx,dIdx,hIdx,minIdx,'nian');
+            this.multiIndex[0] = yIdx;
+            this.multiIndex[1] = mIdx;
+            this.multiIndex[2] = dIdx;
+            this.multiIndex[3] = hIdx;
+            this.multiIndex[4] = minIdx;
+
+            this.endmultiIndex[0] = yIdx;
+            this.endmultiIndex[1] = mIdx;
+            this.endmultiIndex[2] = dIdx;
+            this.endmultiIndex[3] = endHidx;
+            this.endmultiIndex[4] = minIdx;
+            // console.log(this.multiIndex,'multiIndex')
+            
         }
         // this.id = options.id;
         if(options.id){
@@ -411,14 +517,108 @@ export default {
         
     },
     methods:{
+        // 默认日期
+        getCurrent(startTime,endTime){
+            console.log(startTime,endTime,'========')
+            let date = new Date(startTime.replace(/-/g,'/'));
+            this.month = date.getMonth()+1+'月';
+            this.day = date.getDate()+'日';
+            this.hours = `${date.getHours()}:${date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes()}`;
+            this.startDay = this.getWeekDay(startTime.replace(/-/g,'/'));
+            let endDate = new Date(endTime.replace(/-/g,'/'));
+            this.endMonth = endDate.getMonth()+1+'月';
+            this.endDay = endDate.getDate()+'日';
+            this.endHours = `${endDate.getHours()}:${endDate.getMinutes()<10?'0'+endDate.getMinutes():endDate.getMinutes()}`;
+            this.endWeek = this.getWeekDay(endTime.replace(/-/g,'/'));
+        },
+        // 日期组建默认选中
+        getPickerDefault(startTime,endTime){
+            console.log(startTime,endTime);
+            let date = new Date(startTime);
+            let years = date.getFullYear();
+            let month = date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1):date.getMonth()+1;
+            let d = date.getDate()<10?'0'+date.getDate():date.getDate();
+            let hours = date.getHours()<10?'0'+date.getHours():date.getHours();
+            let minutes = date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes();
+
+            const yIdx = this.newMultiArray[0].findIndex(item=>item==years+'年');
+            const mIdx = this.newMultiArray[1].findIndex(item=>item==month+'月');
+            const dIdx = this.newMultiArray[2].findIndex(item=>item==d+'日');
+            const hIdx = this.newMultiArray[3].findIndex(item=>item==hours+'时');
+            const minIdx = this.newMultiArray[4].findIndex(item=>item==minutes+'分');
+            this.multiIndex[0] = yIdx;
+            this.multiIndex[1] = mIdx;
+            this.multiIndex[2] = dIdx;
+            this.multiIndex[3] = hIdx;
+            this.multiIndex[4] = minIdx;
+
+            let endDate = new Date(endTime);
+            let endYears = endDate.getFullYear();
+            let endMonth = endDate.getMonth()+1 < 10 ? '0'+(endDate.getMonth()+1):endDate.getMonth()+1;
+            let endD = endDate.getDate()<10?'0'+endDate.getDate():endDate.getDate();
+            let endHours = endDate.getHours()<10?'0'+endDate.getHours():endDate.getHours();
+            let endMinutes = endDate.getMinutes()<10?'0'+endDate.getMinutes():endDate.getMinutes();
+            const endyIdx = this.newMultiArray[0].findIndex(item=>item==endYears+'年');
+            const endmIdx = this.newMultiArray[1].findIndex(item=>item==endMonth+'月');
+            const enddIdx = this.newMultiArray[2].findIndex(item=>item==endD+'日');
+            const endhIdx = this.newMultiArray[3].findIndex(item=>item==endHours+'时');
+            const endminIdx = this.newMultiArray[4].findIndex(item=>item==endMinutes+'分');
+            this.endmultiIndex[0] = endyIdx;
+            this.endmultiIndex[1] = endmIdx;
+            this.endmultiIndex[2] = enddIdx;
+            this.endmultiIndex[3] = endhIdx;
+            this.endmultiIndex[4] = endminIdx;
+            
+        },
         ...mapMutations([
             'getClear',
-            'delete'
+            'delete',
+            'clearFile',
+            'clearConferce'
         ]),
         // 接收重复组件传过来的参数
         getChildParams(val){
             console.log(val,'val');
             this.recurrenceType = val;
+        },
+        // 更换会议室 
+        getCheckConference(){
+            wx.showModal({
+                title: '修改会议室',
+                content: '修改会议室将撤销已预订的会议室',
+                confirmText:"修改预订",
+                cancelColor:"#3399ff",
+                success:res=>{
+                    if (res.confirm) {
+                        console.log('用户点击确定')
+                        const url = '/pages/conferenceRoom/main?sign='+'add';
+                        wx.navigateTo({url:url});
+                    } else if (res.cancel) {
+                        console.log('用户点击取消')
+                    }
+                }
+            })
+        },
+        getDelConference(){
+            wx.showModal({
+                title: '撤销预订',
+                content: '会议室不支持重复预订，是否撤销已预订的会议室',
+                confirmText:"撤销预订",
+                success:res=>{
+                    if (res.confirm) {
+                        console.log('用户点击确定')
+                        this.clearConferce({});
+                    } else if (res.cancel) {
+                        console.log('用户点击取消')
+                    }
+                }
+            })
+        },
+        // 会议室
+        getConference(){
+            const url = '/pages/conferenceRoom/main?sign='+'add';
+            wx.navigateTo({url:url});
+            // this.isConference = !this.isConference;
         },
         // 附件
         getUpan(){
@@ -435,10 +635,14 @@ export default {
         getFileShow(){
             this.fileShow = !this.fileShow;
         },
+        // 重复
         getRepeatShow(){
-            this.repeatisShow = !this.repeatShow;
+            this.recurrenceType = '';
         },
         getNoticeShow(){
+            this.noticeShow = !this.noticeShow;
+        },
+        getDelNotice(){
             this.noticeShow = !this.noticeShow;
         },
         getLocationShow(){
@@ -479,12 +683,12 @@ export default {
                 let date = new Date(detail.scheduledStart);
                 this.month = date.getMonth()+1+'月';
                 this.day = date.getDate()+'日';
-                this.hours = `${date.getHours()}时${date.getMinutes()}秒`;
+                this.hours = `${date.getHours()}:${date.getMinutes()}`;
                 this.startDay = this.getWeekDay(detail.scheduledStart);
                 let endDate = new Date(detail.scheduledEnd);
                 this.endMonth = endDate.getMonth()+1+'月';
                 this.endDay = endDate.getDate()+'日';
-                this.endHours = `${endDate.getHours()}时${endDate.getMinutes()}秒`;
+                this.endHours = `${endDate.getHours()}:${endDate.getMinutes()}`;
                 this.endWeek = this.getWeekDay(detail.scheduledEnd);
             })
         },
@@ -512,12 +716,12 @@ export default {
                 let date = new Date(detail.scheduledStart);
                 this.month = date.getMonth()+1+'月';
                 this.day = date.getDate()+'日';
-                this.hours = `${date.getHours()}时${date.getMinutes()}秒`;
+                this.hours = `${date.getHours()}:${date.getMinutes()}`;
                 this.startDay = this.getWeekDay(detail.scheduledStart);
                 let endDate = new Date(detail.scheduledEnd);
                 this.endMonth = endDate.getMonth()+1+'月';
                 this.endDay = endDate.getDate()+'日';
-                this.endHours = `${endDate.getHours()}时${endDate.getMinutes()}秒`;
+                this.endHours = `${endDate.getHours()}:${endDate.getMinutes()}`;
                 this.endWeek = this.getWeekDay(detail.scheduledEnd);
                 console.log(this.checked,'1111')
                 setTimeout(()=>{
@@ -550,8 +754,17 @@ export default {
             this.checked = e.mp.detail;
             if(this.checked){
                 this.isAllDayEvent = 1;
+                let date = new Date(this.startTime);
+                let y = date.getFullYear();
+                let m = date.getMonth()+1;
+                let d = date.getDate();
+                let currentDate = `${y}-${m}-${d}`;
+                this.startTime = `${currentDate} 00:00`;
+                this.endTime = `${currentDate} 23:59`;
             }else {
                 this.isAllDayEvent = 0;
+                this.startTime = this.copyStartTime;
+                this.endTime = this.copyEndTime;
             }
         },
         changeDescription(e){
@@ -573,9 +786,11 @@ export default {
             this.time = year + "-" + month + "-" + day + " " + hour + ":" + minute;
             this.month = month;
             this.day = day;
-            this.hours = hour + ":" + minute;
+            this.hours = this.RemoveChinese(hour) + ":" + this.RemoveChinese(minute);
             this.time = this.RemoveChinese(this.time);
             this.startTime = this.RemoveChinese(this.time);
+            this.copyStartTime = year + "-" + month + "-" + day + " " + hour + ":" + minute;
+            this.copyStartTime = this.RemoveChinese(this.copyStartTime);
             let startTime = year + "-" + month + "-" + day ;
             startTime = this.RemoveChinese(startTime);
             this.startDay = this.getWeekDay(startTime);
@@ -593,8 +808,10 @@ export default {
                 this.endTime = year + "-" + month + "-" + day + " " + hour + ":" + minute;
                 this.endMonth = month;
                 this.endDay = day;
-                this.endHours = hour + ":" + minute;
+                this.endHours = this.RemoveChinese(hour) + ":" + this.RemoveChinese(minute);
                 this.endTime = this.RemoveChinese(this.endTime);
+                this.copyEndTime = year + "-" + month + "-" + day + " " + hour + ":" + minute;
+                this.copyEndTime = this.RemoveChinese(this.copyEndTime);
                 let endTime = year + "-" + month + "-" + day ;
                 endTime = this.RemoveChinese(endTime);
                 this.endWeek = this.getWeekDay(endTime);
@@ -611,11 +828,35 @@ export default {
         getWeekDay(date){
             var dt = new Date(date).getDay();
         //     var dt = new Date(date.split("-")[0], date.split("-")[1]-1,date = date.split("-")[2]);
-            var weekDay = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+            var weekDay = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
             return weekDay[dt];
         },
         getRepeat(){
             this.repeatShow = true;
+        },
+        // 添加附件
+        // selectListName
+        getAddFile(id){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.usb.addFile,
+                    SessionKey:this.sessionkey,
+                    FileIds:this.FileIds.join(','),
+                    ObjectTypeCode:5000,
+                    ObjectId:id
+                }
+            }).then(res=>{
+                console.log(res);
+                wx.navigateBack({
+                    delta: 1
+                })
+            })
+        },
+        getBack(){
+            wx.navigateBack({
+                delta: 1
+            })
         },
         getSubmit(){
             if(this.index==0){
@@ -639,9 +880,16 @@ export default {
                     }
                 }).then(res=>{
                     console.log(res);
-                    wx.navigateBack({
-                        delta: 1
-                    })
+                    debugger
+                    const id = res.data.scheduleId;
+                    if(this.FileIds!=""){
+                        this.getAddFile(id);
+                    }else {
+                        wx.navigateBack({
+                            delta: 1
+                        })
+                    }
+                        
                 })
             }else {
                 // 新建会议
@@ -676,13 +924,17 @@ export default {
                     invtee:this.filterList.join(),
                     id:id,
                     owningUser:this.organizer.id,
-                    meetingMgrId:this.designee.id
+                    // meetingMgrId:this.designee.id,
+                    RoomId:this.conference.id
                 }
             }).then(res=>{
                 console.log(res);
-                wx.navigateBack({
-                    delta: 1
-                })
+                debugger
+                const id = res.data[0].ValueId;
+                this.getAddFile(id);
+                // wx.navigateBack({
+                //     delta: 1
+                // })
             })
         }
     }
@@ -694,11 +946,32 @@ export default {
         width: 100%;
         height: 100%;
         overflow: hidden;
+        .placeholder{
+            color:#cccccc;
+        }
+        .header{
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            padding: 32rpx 33rpx;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 99999;
+            .cancel{
+                font-size: 34rpx;
+                color: #999999;
+            }
+            .submit{
+                font-size: 34rpx;
+                color: #3399ff;
+            }
+        }
         .boxWrap{
             display: flex;
             padding: 33rpx;
             background: #fff;
-            margin-top: 35rpx;
+            margin-top: 135rpx;
             .icon{
                 margin-top: 10rpx;
             }
@@ -713,9 +986,9 @@ export default {
             }
         }
         .center{
-            padding-bottom: 80px;
+            padding-bottom: 100px;
             .contacts{
-                margin-top: 35rpx;
+                margin-top: 24rpx;
                 .row{
                     display: flex;
                     align-items: center;
@@ -772,6 +1045,9 @@ export default {
                 background: #fff;
                 margin-top: 24rpx;
                 align-items: center;
+                i{
+                    color: #666666;
+                }
                 .icon{
                     span{
                         width: 20rpx;
@@ -822,7 +1098,7 @@ export default {
                 display: flex;
                 padding: 10rpx 33rpx;
                 background: #fff;
-                border-top: 2rpx solid #e3e3e3;
+                border-top: 1rpx solid #e2e3e5;
                 // justify-content: space-around;
                 input{
                     text-align: center;
@@ -840,6 +1116,9 @@ export default {
                     p:nth-child(2){
                         margin-top: 10rpx;
                     }
+                }
+                .rBox{
+                    margin-left: 20rpx;
                 }
                 .imgBox{
                     width: 14rpx;
@@ -886,8 +1165,9 @@ export default {
                 background: #fff;
                 margin-top: 35rpx;
                 align-items: center;
+                justify-content: space-around;
                 .box{
-                    width: 25%;
+                    // width: 25%;
                     text-align: center;
                     .name{
                         font-size: 19rpx;

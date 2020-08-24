@@ -13,20 +13,20 @@
                 </div>
                 <div class="rowTime">
                     <div class="lMin">
-                        <p>05月25日</p>
-                        <p>周一</p>
+                        <p>{{startMonth}}月{{startDate}}日</p>
+                        <p>{{startDay}}</p>
                     </div>
                     <div class="num">
-                        <span></span><p>1天</p><span></span>
+                        <span></span><p>{{mathNum}}</p><span></span>
                     </div>
                     <div class="lMin">
-                        <p>05月26日</p>
-                        <p>周二</p>
+                        <p>{{endMonth}}月{{endDate}}日</p>
+                        <p>{{endDay}}</p>
                     </div>
                 </div>
                 <div class="rows">
                     <div class="l">
-                        <i class="iconfont icon-zhongfu1"></i>
+                        <i class="iconfont icon-zhongfu"></i>
                     </div>
                     <div class="r">
                         <p>每周重复</p>
@@ -63,11 +63,11 @@
                         <i class="iconfont icon-beizhu"></i>
                     </div>
                     <div class="r">
-                        <p>绍兴第二医院布置职工创新奖真实性及两个效益审核环节工作</p>
+                        <p>{{detail.description}}</p>
                     </div>
                 </div>
             </div>
-            <div class="moveRow">
+            <!-- <div class="moveRow">
                 <p>
                     <i class="iconfont icon-zuzhiren"></i>
                 </p>
@@ -75,10 +75,10 @@
                     <input type="text" placeholder="邀请参与人">
                 </p>
                 <p>
-                    <i-icon type="enter" color="#999999" size="20" />
+                    <i-icon type="enter" color="#a3a4a6" size="20" />
                 </p>
-            </div>
-            <div class="moveRow">
+            </div> -->
+            <div class="moveRow" @click="getUsb">
                 <p>
                     <i class="iconfont icon-fujian"></i>
                 </p>
@@ -86,8 +86,19 @@
                     附件
                 </p>
                 <p>
-                    <i class="iconfont icon-add"></i>
+                    <i class="iconfont icon-tianjia"></i>
                 </p>
+            </div>
+            <div class="enclosure">
+                <div class="rows" v-for="(item,index) in listFile" :key="index">
+                    <p>
+                        <img :src="item.link" alt="">
+                    </p>
+                    <p>{{item.name}}</p>
+                    <p @click="getDelFiles(item)">
+                        <i-icon type="close" size="20" color="#666666" />
+                    </p>
+                </div>
             </div>
             <div class="moveRow">
                 <p>
@@ -97,9 +108,9 @@
                     更多
                 </p>
             </div>
-            <h3>回复 2</h3>
+            <h3 v-if="commentList!=''">回复 {{commentList.length}}</h3>
             <div class="commentWrap">
-                <div class="comment">
+                <!-- <div class="comment">
                     <div class="lBox">
                         <p>卫辉</p>
                     </div>
@@ -108,24 +119,23 @@
                         <div class="imgBox">
                             <p></p>
                         </div>
-                        <!-- <p class="text"></p> -->
                     </div>
-                </div>
+                </div> -->
                 <div class="comment items" v-for="(item,index) in commentList" :key="index">
                     <div class="lBox">
                         <p>{{item.CreatedByName}}</p>
                     </div>
                     <div class="rBox">
-                        <p class="info">{{item.CreatedByName}} <span>信息中心</span><span>{{item.CreatedOn}}</span></p>
+                        <p class="info">{{item.CreatedByName}} <span>{{item.BusinessUnitName}}</span><span>{{item.CreatedOn}}</span></p>
                         <p class="text">{{item.Comment}}</p>
                     </div>
                 </div>
                 <div class="comment">
                     <div class="lBox">
-                        <i class="iconfont icon-tixing1"></i>
+                        <i class="iconfont icon-tixing"></i>
                     </div>
                     <div class="rBox items">
-                        <p class="info"><span>崔曼 创建了 日程</span><span>05月25日 11:23</span></p>
+                        <p class="info"><span>{{detail.CreatedByName}} 创建了 日程</span><span>{{detail.createdOn}}</span></p>
                     </div>
                 </div>
             </div>
@@ -148,23 +158,23 @@
                 </div>
             </div>
         </div>
-        <div class="footer" v-if="!overlayShow">
+        <div class="footer" v-if="!overlayShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="boxWrap">
                 <div class="box" @click="getComment">
                     <p>
-                        <i class="iconfont icon-pinglun1"></i>
+                        <i class="iconfont icon-pinglun"></i>
                     </p>
                     <p>评论</p>
                 </div>
-                <div class="box">
+                <!-- <div class="box">
                     <p>
-                        <i class="iconfont icon-bianzu"></i>
+                        <i class="iconfont icon-zhuanfa"></i>
                     </p>
                     <p>发送</p>
-                </div>
+                </div> -->
                 <div class="box" @click="getMove">
                     <p>
-                        <i class="iconfont icon-elipples"></i>
+                        <i class="iconfont icon-gengduo1"></i>
                     </p>
                     <p>更多</p>
                 </div>
@@ -183,6 +193,7 @@
     </div>
 </template>
 <script>
+import { mapState, mapMutations } from 'vuex';
 export default {
     data(){
         return {
@@ -205,13 +216,36 @@ export default {
             id:"",
             sessionkey:"",
             detail:{},
-            commentList:[]
+            commentList:[],
+            listFile:[],
+            startMonth:"",
+            startDate:"",
+            startDay:"",
+            endMonth:"",
+            endDate:"",
+            endDay:"",
+            mathNum:"",
         }
     },
     computed:{
         contentSize(){
             return this.comment.length || 0;
         },
+        ...mapState({
+            selectFiles:state=>{
+                return state.usb.selectFiles;
+            }
+        }),
+        FileIds(){
+            let temp = [];
+            this.selectFiles.forEach(item=>{
+                temp.push(item.id);
+            })
+            return temp;
+        },
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        }
     },
     onLoad(options){
         this.id = options.id;
@@ -220,8 +254,48 @@ export default {
         this.height = wx.getSystemInfoSync().windowHeight;
         this.getQuery();
         this.getCommentQuery();
+        this.getFileList();
+    },
+    onShow(){
+        this.getAddFile();
+        this.getFileList();
     },
     methods:{
+        ...mapMutations([
+            'delete'
+        ]),
+        getFileList(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.getFile,
+                    SessionKey:this.sessionKey,
+                    pid:this.id,
+                    ObjTypeCode:4200
+                }
+            }).then(res=>{
+                console.log(res);
+                this.listFile = res.listData;
+                this.listFile = this.listFile.concat(this.selectFiles);
+                console.log(this.listFile,'listData');
+            })
+        },
+        getAddFile(){
+            if(this.FileIds!=""){
+                this.$httpWX.get({
+                    url:this.$api.message.queryList,
+                    data:{
+                        method:this.$api.usb.addFile,
+                        SessionKey:this.sessionKey,
+                        FileIds:this.FileIds.join(','),
+                        ObjectTypeCode:4200,
+                        ObjectId:this.id
+                    }
+                }).then(res=>{
+                    console.log(res);
+                })
+            }
+        },
         getQuery(){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
@@ -233,6 +307,65 @@ export default {
             }).then(res=>{
                 console.log(res);
                 this.detail = res.data;
+                let date = new Date(this.detail.scheduledStart.replace(/-/g,'/'));
+                let endDate = new Date(this.detail.scheduledEnd.replace(/-/g,'/'));
+                this.startMonth = date.getMonth()+1<10?'0'+(date.getMonth()+1):date.getMonth()+1;
+                this.startDate = date.getDate()<10?'0'+date.getDate():date.getDate();
+                this.endMonth =  endDate.getMonth()+1<10?'0'+(endDate.getMonth()+1):endDate.getMonth()+1;
+                this.endDate = endDate.getDate()<10?'0'+endDate.getDate():endDate.getDate();            
+                this.startDay = this.getWeekDay(date);
+                this.endDay = this.getWeekDay(endDate);
+                this.mathNum = this.intervalTime(date,endDate);
+            })
+        },
+        getWeekDay(date){
+            let week = ['周日','周一','周二','周三','周四','周五','周六'];
+            let day = week[date.getDay()];
+            return day;
+        },
+        intervalTime(date,endDate){
+            let startTime = new Date(date).getTime();
+            let endTime = new Date(endDate).getTime();
+            let date3 = endTime - startTime;
+            //计算出相差天数
+            let days = Math.floor(date3 / (24 * 3600 * 1000));
+            console.log(days,'12131233');
+            //计算出小时数
+
+            var leave1 = date3 % (24 * 3600 * 1000);    //计算天数后剩余的毫秒数
+            var hours = Math.floor(leave1 / (3600 * 1000));
+            //计算相差分钟数
+            var leave2 = leave1 % (3600 * 1000);        //计算小时数后剩余的毫秒数
+            var minutes = Math.floor(leave2 / (60 * 1000));
+
+            //计算相差秒数
+
+            var leave3 = leave2 % (60 * 1000);      //计算分钟数后剩余的毫秒数
+            var seconds = Math.round(leave3 / 1000);
+            let diff = 
+                days>0&&hours>0?`${days}天${hours}小时`
+                :days>0&&hours==0?`${days}天`
+                :`${hours}小时`;
+            return diff;
+        },
+        // 添加附件
+        getUsb(){
+            const url = '/pages/uPan/main';
+            wx.navigateTo({url:url});
+        },
+        getDelFiles(item){
+            this.delete(item.id);  
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.delete,
+                    SessionKey:this.sessionKey,
+                    Id:item.id,
+                    ObjTypeCode:1001
+                }
+            }).then(res=>{
+                console.log(res);
+                this.getFileList();
             })
         },
         getCommentQuery(){
@@ -271,6 +404,9 @@ export default {
                 wx.navigateTo({url:url});
             }else if(name=='删除'){
                 this.getDelete();
+            }else if(name=='添加参与人'){
+                // const url = '/pages/publics/mailList/main?admin='+1;
+                // wx.navigateTo({url:url});
             }
         },
         getSendout(){
@@ -301,7 +437,12 @@ export default {
                 wx.showToast({
                     title:res.msg,
                     icon:"success",
-                    duration:2000
+                    duration:2000,
+                    success:res=>{
+                        wx.navigateBack({
+                            delta: 1
+                        })
+                    }
                 })
             })
         }
@@ -333,11 +474,16 @@ export default {
                         width: 100%;
                         padding: 20rpx 0;
                         margin-left: 20rpx;
-                        border-bottom: 2rpx solid #e3e3e3;
+                        border-bottom: 1rpx solid #e2e3e5;
                         p:nth-child(1){
-                            font-size: 33rpx;
+                            width: 100%;
+                            overflow: hidden;
+                            word-break: break-word;
+                            line-height: 1;
+                            font-size: 34rpx;
                             color: #333333;
                             line-height: 1.5;
+                            font-weight: bold;
                         }
                         p:nth-child(2){
                             font-size: 26rpx;
@@ -351,7 +497,7 @@ export default {
                     align-items: center;
                     padding: 20rpx 0;
                     .lMin{
-                        width: 35%;
+                        // width: 35%;
                         p:nth-child(1){
                             font-size: 40rpx;
                             font-weight: bold;
@@ -374,13 +520,14 @@ export default {
                         }
                         p{
                             font-size: 24rpx;
-                            width: 82rpx;
+                            // width: 82rpx;
                             height: 48rpx;
                             text-align: center;
                             line-height: 48rpx;
                             color: #999999;
                             background: #eef0f2;
                             border-radius: 26rpx;
+                            padding: 0 20rpx;
                         }
                     }
                 }
@@ -395,7 +542,7 @@ export default {
                     }
                     .r{
                         padding: 30rpx 0;
-                        border-top: 2rpx solid #e3e3e3;
+                        border-top: 1rpx solid #e2e3e5;
                         flex: 1;
                         margin-left: 20rpx;
                         font-size: 34rpx;
@@ -421,6 +568,12 @@ export default {
                         margin-left: 20rpx;
                         font-size: 34rpx;
                         color: #333333;
+                        p{
+                            width: 100%;
+                            overflow: hidden;
+                            word-break: break-word;
+                            line-height: 1;
+                        }
                     }
                 }
             }
@@ -436,6 +589,35 @@ export default {
                 }
                 .move{
                     color: #999999;
+                }
+            }
+            .enclosure{
+                background: #fff;
+                .rows{
+                    display: flex;
+                    padding: 33rpx;
+                    align-items: center;
+                    p:nth-child(1){
+                        width: 96rpx;
+                        height: 96rpx;
+                        // background: #e5e5e5;
+                        border-radius: 12rpx;
+                        img{
+                            width: 100%;
+                            height: 100%;
+                            overflow: hidden;
+                        }
+                    }
+                    p:nth-child(2){
+                        flex: 1;
+                        margin-left: 20rpx;
+                        font-size: 34rpx;
+                        color: #333333;
+                        width: 300rpx;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: nowrap;
+                    }
                 }
             }
             h3{
@@ -473,7 +655,7 @@ export default {
                         flex: 1;
                         margin-left: 20rpx;
                         padding: 20rpx 0;
-                        border-bottom: 2rpx solid #e3e3e3;
+                        border-bottom: 1rpx solid #e2e3e5;
                         .imgBox{
                             display: flex;
                             margin-top: 10rpx;
@@ -566,11 +748,11 @@ export default {
                     text-align: center;
                     p:nth-child(1){
                         i{
-                            color: #3399ff;
+                            color: #666666;
                         }
                     }
                     p:nth-child(2){
-                        color: #3399ff;
+                        color: #666666;
                         font-size: 21rpx;
                         margin-top: 10rpx;
                     }

@@ -22,7 +22,8 @@
                     </div>
                 </div>
             </div>
-            <h3>
+            <!-- 第一版本暂且不做 -->
+            <!-- <h3>
                 30天内无消息的群组
             </h3>
             <div class="content">
@@ -35,7 +36,7 @@
                         <p class="num">56人</p>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </template>
@@ -65,7 +66,7 @@ export default {
                     method:"sys.groups.search",
                     SessionKey:this.sessionkey,
                     search:this.value,
-                    // scope:this.scope
+                    scope:this.scope
                 }
             }).then(res=>{
                 console.log(res);
@@ -78,6 +79,8 @@ export default {
         },
         handleChangeTab(e){
             this.current = e.mp.detail.key;
+            this.scope = this.current=='tab1'?'owner':'join';
+            this.getQuery();
         },
         getDetail(item){
             const url = '/pages/mailList/contacts/main?id='+item.groupId+'&name='+item.name;

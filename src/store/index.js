@@ -7,12 +7,14 @@ import email from './module/email';
 import loginUser from './module/loginUser';
 import mailList from './module/mailList';
 import usb from './module/usb';
+import publics from './module/public';
 export default new Vuex.Store({
   modules: {
     user,
     email,
     loginUser,
     mailList,
-    usb
+    usb,
+    publics
   }
 })

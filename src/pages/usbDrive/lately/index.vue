@@ -4,7 +4,12 @@
             <div class="content" v-for="(item,index) in list" :key="index">
                 <div class="img" @click="getOpen(item)">
                     <p>
-                        <img src="https://wx.phxinfo.com.cn/img/wechat/My_Files.png" alt="">
+                        <img v-if="item.fileExtension=='jpg'||item.fileExtension=='png'" :src="item.link" alt="">
+                        <img v-if="item.fileExtension=='rar'" src="https://wx.phxinfo.com.cn/img/wechat/rar.png" alt="">
+                        <img v-if="item.fileExtension=='txt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Txt.png" alt="">
+                        <img v-if="item.fileExtension=='pdf'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Pdf.png" alt="">
+                        <img v-if="item.fileExtension=='ppt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.PPT.png" alt="">
+                        <img v-if="item.fileExtension=='word'" src="https://wx.phxinfo.com.cn/img/wechat/word.png" alt="">
                     </p>
                 </div>
                 <div class="cont">
@@ -12,38 +17,52 @@
                         <p class="title overflow">{{item.name}}.{{item.fileExtension}}</p>
                         <p class="text">我的文件/新技术、新项目中期工作报告.docx</p>
                     </div>
-                    <p class="icon" @click="getOperation(item)">
+                    <p class="icon" @click.stop="getOperation(item)">
                         <i class="iconfont icon-gengduo"></i>
                     </p>
                 </div>
             </div>
-            <div class="footer">
+            <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
                 <van-button type="primary" custom-class="btn" @click="getClear" block>清除记录</van-button>
             </div>
         </div>
         <van-popup
         :show="show"
         :round="false"
-        position="center"
-        custom-style="width:80%;height: auto;border-radius:10rpx;"
+        position="bottom"
+        custom-style="width:100%;height: auto;border-top-left-radius: 23rpx;border-top-right-radius: 23rpx;"
         @close="onClose"
         >
             <div class="popup">
-                <h3 class="overflow">{{name}}</h3>
-                <p @click="getSendOut">发送</p>
-                <p>发邮件</p>
+                <h3 class="overflows">{{name}}</h3>
+                <p>发送</p>
+                <p @click="getSendOut">发邮件</p>
+                <p>打开目录</p>
+                <p @click="getRowClear">清除记录</p>
+                <p class="row"></p>
+                <p @click="onClose">取消</p>
             </div>
         </van-popup>
     </div>
 </template>
 <script>
+import {mapState,mapMutations} from 'vuex';
 export default {
     data(){
         return {
             list:[],
             show:false,
             name:"",
-            sessionkey:""
+            sessionkey:"",
+            files:[]
+        }
+    },
+    onUnload(){
+        this.clearFile([]);
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(){
@@ -52,6 +71,7 @@ export default {
         this.getQuery();
     },
     methods:{
+        ...mapMutations(['handleFiles','clearFile']),
         getQuery(){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
@@ -73,6 +93,8 @@ export default {
                 title: '清除使用记录',
                 content: '是否清除最近使用的全部记录，清空后记录将无法恢复',
                 confirmText:'清除',
+                cancelColor:"#3399ff",
+                confirmColor:"#3399ff",
                 success:res=> {
                     if (res.confirm) {
                         that.clear();
@@ -98,13 +120,35 @@ export default {
         getOperation(item){
             this.name = `${item.name}.${item.fileExtension}`;
             this.id = item.id;
+            this.files.push({
+                id:item.id,
+                name:item.name,
+                link:item.link,
+                fileExtension:item.fileExtension
+            })
             this.show = true;
         },
+        getRowClear(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.usb.latelyClear,
+                    SessionKey:this.sessionkey,
+                    fileId:this.id
+                }
+            }).then(res=>{
+                this.show = false;
+                this.getQuery();
+            })
+        },
         getSendOut(){
-            const url = '/pages/publics/contacts/main?file='+'lately'+'&id='+this.id+'&method='+'file.share';
+            this.handleFiles(this.files);
+            const url = '/pages/email/writeMail/main';
+            // const url = '/pages/publics/contacts/main?file='+'lately'+'&id='+this.id+'&method='+'file.share';
             wx.navigateTo({
                 url:url
             })
+            this.show = false;
         },
         getOpen(item){
             wx.downloadFile({
@@ -164,6 +208,7 @@ export default {
                     margin-top: 20rpx;
                     color: #a4a4a4;
                     font-size: 20px;
+                    transform: rotate(90deg);
                 }
             }
         }
@@ -180,17 +225,30 @@ export default {
         }
     }
     .popup{
-        padding: 0 30rpx;
+        // padding: 0 30rpx;
+        text-align: center;
+        .overflows{
+            width: 500rpx;
+            margin: 0 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         h3{
             font-size: 12px;
             color: #999999;
-            padding: 30rpx 0;
+            padding: 20rpx 0;
         }
         p{
+            padding:25rpx 0;
             font-size: 28rpx;
+            border-top: 1rpx solid #e2e3e5;
         }
-        p:nth-child(3){
-            padding: 30rpx 0;
+        .row{
+            height: 16rpx;
+            background: #eceded;
+            border: none;
+            padding: 0;
         }
     }
 </style>

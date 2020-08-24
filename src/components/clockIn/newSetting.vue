@@ -52,6 +52,32 @@
                             <p>通过手机定位，精确到50～300米的定位方式</p>
                         </div>
                     </div>
+                    <div class="row" @click="getAddWorkLocation">
+                        <div class="lBox">
+                            <p class="font blue">
+                                添加办公地点
+                            </p>
+                            <p class="code">在此范围内即可打卡</p>
+                        </div>
+                        <div class="rBox">
+                            <p>
+                                <img src="https://wx.phxinfo.com.cn/img/wechat/04.2.4.Add_.png" alt="">
+                            </p>
+                        </div>
+                    </div>
+                    <picker @change="bindPickerChange" :value="riceIdx" :range="riceList">
+                        <div class="row">
+                            <div class="lBox">
+                                <p class="font">
+                                    {{riceList[riceIdx]}}米
+                                </p>
+                                <p class="code">允许打卡范围</p>
+                            </div>
+                            <div class="rBox">
+                                <i-icon type="enter" color="#999999" />
+                            </div>
+                        </div>
+                    </picker>
                     <div class="row" v-for="(item,index) in adressList" :key="index">
                         <div class="lBox">
                             <p class="font">
@@ -71,30 +97,7 @@
                             <i-icon type="enter" color="#999999" />
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="lBox">
-                            <p class="font">
-                                100米
-                            </p>
-                            <p class="code">允许打卡范围</p>
-                        </div>
-                        <div class="rBox">
-                            <i-icon type="enter" color="#999999" />
-                        </div>
-                    </div>
-                    <div class="row" @click="getAddWorkLocation">
-                        <div class="lBox">
-                            <p class="font blue">
-                                添加办公地点
-                            </p>
-                            <p class="code">在此范围内即可打卡</p>
-                        </div>
-                        <div class="rBox">
-                            <p>
-                                <img src="https://wx.phxinfo.com.cn/img/wechat/04.2.4.Add_.png" alt="">
-                            </p>
-                        </div>
-                    </div>
+                    
                 </div>
                 <div class="content">
                     <div class="row rowActive" @click="getSeniorSetting">
@@ -133,6 +136,29 @@
                 </div>
             </div>
         </van-action-sheet>
+        <van-popup
+            :show="editShow"
+            position="center"
+            custom-style="width:540rpx;height: auto;border-radius:28rpx;"
+            @close="onCloseEdit"
+        >
+            <div class="editPopup">
+                <p class="title">
+                    完善考勤地点名称
+                </p>
+                <p class="address">
+                    详细地址：{{Address}}
+                </p>
+                <div class="inpWrap">
+                    <input class="inp" type="text" v-model="Name">
+                    <i-icon v-if="Name!=''" @click="getDelName" type="delete_fill" class="icon-del" size="20" color="#646464" />
+                </div>
+                <div class="moreBtn">
+                    <p @click="onCloseEdit">取消</p>
+                    <p @click="getSubmit">确认</p>
+                </div>
+            </div>
+        </van-popup>
     </div>
 </template>
 <script>
@@ -152,14 +178,43 @@ export default {
             wifiList:[],
             adressList:"",
             show:false,
-            isMore:false
+            isMore:false,
+            riceList:[],
+            riceIdx:0,
+            sessionkey:"",
+            editShow:false,
+            Name:"",
+            Address:"",
+            Latitude:"",
+            Longitude:"",
+            FlexTime:"",
+            LateTime:"",
+            AbsenceTime:"",
+            RemindCheckIn:"",
+            RemindCheckOut:"",
+            AdvancedCheckIn:"",
+            LateCheckOut:"",
+            RemindLeaveWorkCheck:"",
+            NeedPhoto:"",
+            FastCheckIn:""
         }
+    },
+    computed:{
+
     },
     onShow(){
         this.getQueryWIFi();
         this.getQueryAdress();
     },
     onLoad(){
+        this.sessionkey = wx.getStorageSync('sessionkey');
+        let arr = [];
+        for(var i=1;i<=30;i++){
+            arr.push(`${i*100}`);
+        }
+        this.riceList = arr;
+        
+        this.getQuery();
         this.getQueryWIFi();
         this.getQueryAdress();
         // wx.startWifi({
@@ -176,6 +231,52 @@ export default {
         // })
     },
     methods:{
+        getQuery(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.clockIn.querySetting,
+                    SessionKey:this.sessionkey
+                }
+            }).then(res=>{
+                console.log(res);
+                this.DistanceRange = res.data.globalSettings.DistanceRange;
+                this.FlexTime = res.data.globalSettings.FlexTime;
+                this.LateTime = res.data.globalSettings.LateTime;
+                this.AbsenceTime = res.data.globalSettings.AbsenceTime;
+                this.RemindCheckIn = res.data.globalSettings.RemindCheckIn;
+                this.RemindCheckOut = res.data.globalSettings.RemindCheckOut;
+                this.AdvancedCheckIn = res.data.globalSettings.AdvancedCheckIn;
+                this.LateCheckOut = res.data.globalSettings.LateCheckOut;
+                this.RemindLeaveWorkCheck = res.data.globalSettings.RemindLeaveWorkCheck;
+                this.NeedPhoto = res.data.globalSettings.NeedPhoto;
+                this.FastCheckIn = res.data.globalSettings.FastCheckIn;
+                this.riceIdx = this.riceList.findIndex(item=>item===this.DistanceRange);
+            })
+        },
+        bindPickerChange(e){
+            this.riceIdx = e.mp.detail.value;
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.clockIn.seniorSetting,
+                    SessionKey:this.sessionkey,
+                    DistanceRange:this.riceList[this.riceIdx],
+                    FlexTime:this.FlexTime,
+                    LateTime:this.LateTime,
+                    AbsenceTime:this.AbsenceTime,
+                    RemindCheckIn:this.RemindCheckIn,
+                    RemindCheckOut:this.RemindCheckOut,
+                    AdvancedCheckIn:this.AdvancedCheckIn,
+                    LateCheckOut:this.LateCheckOut,
+                    RemindLeaveWorkCheck:this.RemindLeaveWorkCheck,
+                    NeedPhoto:this.NeedPhoto,
+                    FastCheckIn:this.FastCheckIn
+                }
+            }).then(res=>{
+                console.log(res);
+            })
+        },
         // 查看更多
         getSeeMore(){
             this.isMore = true;
@@ -185,7 +286,7 @@ export default {
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
-                    SessionKey:"207A11C0-12E3-4F7E-8033-F61B6883FFD8",
+                    SessionKey:this.sessionkey,
                     method:"hr.attendwifis.getlist"
                 }
             }).then(res=>{
@@ -197,7 +298,7 @@ export default {
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
-                    SessionKey:"207A11C0-12E3-4F7E-8033-F61B6883FFD8",
+                    SessionKey:this.sessionkey,
                     method:"entity.info.delete",
                     Id:item.attendwifiid,
                     ObjTypeCode:30093
@@ -212,7 +313,7 @@ export default {
                 url:this.$api.message.queryList,
                 data:{
                     method:"hr.attendlocations.getlist",
-                    SessionKey:"207A11C0-12E3-4F7E-8033-F61B6883FFD8"
+                    SessionKey:this.sessionkey
                 }
             }).then(res=>{
                 console.log(res);
@@ -224,10 +325,26 @@ export default {
             })
         },
         getDeleteAdress(item){
+            let that = this;
+            wx.showModal({
+                title: '',
+                content:`确定删除${item.name}吗？`,
+                success:res=> {
+                    if (res.confirm) {
+                        that.deleteAdress(item);
+                        console.log('用户点击确定')
+                    } else if (res.cancel) {
+                    console.log('用户点击取消')
+                    }
+                }
+            })
+            
+        },
+        deleteAdress(item){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
-                    SessionKey:"207A11C0-12E3-4F7E-8033-F61B6883FFD8",
+                    SessionKey:this.sessionkey,
                     method:"entity.info.delete",
                     Id:item.attendlocationid,
                     ObjTypeCode:30092
@@ -239,8 +356,21 @@ export default {
         },
         // 添加办公地点
         getAddWorkLocation(){
-            const url = '/pages/clockIn/mapList/main';
-            wx.navigateTo({url:url});
+            let that = this;
+            wx.chooseLocation({
+                success:res=>{
+                    console.log(res);
+                    that.Name = res.name;
+                    that.Address = res.address;
+                    that.Latitude = res.latitude;
+                    that.Longitude = res.longitude;
+                    that.editShow = true;
+                },fail(error){
+
+                }
+            })
+            // const url = '/pages/clockIn/mapList/main';
+            // wx.navigateTo({url:url});
         },
         getClose(){
             this.show = false;
@@ -265,6 +395,29 @@ export default {
         getSeniorSetting(){
             const url = '/pages/clockIn/seniorSetting/main';
             wx.navigateTo({url:url});
+        },
+        onCloseEdit(){
+            this.editShow = false;
+        },
+        getDelName(){
+            this.Name = '';
+        },
+        getSubmit(){
+            this.$httpWX.get({
+              url:this.$api.message.queryList,
+              data:{
+                  SessionKey:this.sessionkey,
+                  method:"entity.create",
+                  ObjTypeCode:30092,
+                  Name:this.Name,
+                  Location:this.Address,
+                  Longitude:this.Longitude,
+                  Latitude:this.Latitude
+              }
+            }).then(res=>{
+                console.log(res);
+                this.editShow = false;
+            })
         }
     }
 }
@@ -379,6 +532,57 @@ export default {
                 font-size: 32rpx;
                 color: #fff;
                 border-radius: 42rpx;
+            }
+        }
+    }
+    .editPopup{
+        .title{
+            text-align: center;
+            font-size: 34rpx;
+            color: #000000;
+            font-weight: bold;
+            padding-top: 44rpx;
+        }
+        .address{
+            text-align: center;
+            color: #666666;
+            font-size: 26rpx;
+            padding: 20rpx 0;
+        }
+        .inpWrap{
+            width: 476rpx;
+            margin: 0 auto;
+            position: relative;
+        }
+        .inp{
+            width: 476rpx;
+            height: 59rpx;
+            line-height: 59rpx;
+            background: #f2f3f4;
+            font-size: 26rpx;
+            color: #333333;
+            margin: 0 auto;
+            border-radius: 30rpx;
+            padding: 0 20rpx;
+        }
+        .icon-del{
+            position: absolute;
+            right: 15rpx;
+            top: 10rpx;
+        }
+        .moreBtn{
+            display: flex;
+            font-size: 34rpx;
+            color: #3399ff;
+            border-top: 1rpx solid #b3b3b2;
+            margin-top: 20rpx;
+            p{
+                flex: 1;
+                text-align: center;
+                padding: 22rpx 0;
+            }
+            p:nth-child(1){
+                border-right: 1rpx solid #b3b3b2;
             }
         }
     }

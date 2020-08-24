@@ -110,6 +110,9 @@ export default {
         height: 100%;
         .nav{
             background: #fff;
+            .van-search__content{
+                border-radius: 38rpx;
+            }
         }
         .content{
             background: #fff;

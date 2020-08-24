@@ -26,7 +26,7 @@
             </div>
         </div>
     </div>
-    <div class="footer">
+    <div class="footer"  :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
         <div class="box">
             <p @click="getAddNewFolders">新建文件夹</p>
             <p @click="getSubmit">移动到当前目录</p>
@@ -54,6 +54,11 @@ export default {
       newSign:0,
       sessionkey:""
     };
+  },
+  computed:{
+    isModelmes(){
+        return wx.getStorageSync('isModelmes');
+    }
   },
   onLoad(options) {
     let sessionkey = wx.getStorageSync('sessionkey');

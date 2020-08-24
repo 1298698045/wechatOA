@@ -35,7 +35,7 @@
                             </p>
                         </div>
                         <div class="rBox">
-                            <p class="sign">绍兴第二医院
+                            <p class="sign">{{organizationName||''}}
                                 <i class="iconfont icon-renzheng2"></i>
                             </p>
                         </div>
@@ -82,7 +82,7 @@
                 </div>
             </div>
             <Contacts v-if="isShow" :cc="cc" />
-            <Public :total="total" :cc="cc" />
+            <Public :total="total" :cc="cc" :admin="admin" :foldersId="foldersId" :RightCode="RightCode" :meetingId="meetingId" />
             <!-- <div class="footer">
                 <div class="boxWrap">
                     <p class="l">
@@ -118,12 +118,24 @@ export default {
             list:[],
             isShow:false,
             maxShow:false,
-            cc:''
+            cc:'',
+            admin:"",
+            foldersId:"",
+            RightCode:"",
+            meetingId:"" // 会议id
         }
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
-        this.cc = options.cc;
+        if(options.cc){
+            this.cc = options.cc;
+        }else {
+            this.cc = '';
+        }
+        this.admin = options.admin;
+        this.foldersId = options.foldersId;
+        this.RightCode = options.RightCode;
+        this.meetingId = options.meetingId;
         this.width = wx.getSystemInfoSync().windowWidth-60;
         this.sessionkey = wx.getStorageSync('sessionkey');
         this.queryList();
@@ -136,7 +148,10 @@ export default {
         }),
         ...mapGetters([
             'filterList'
-        ])
+        ]),
+        organizationName(){
+            return wx.getStorageSync('organizationName');
+        }
     },
     watch:{
         selectId(value){
@@ -149,7 +164,8 @@ export default {
             'getListName',
             'getSingleDelete',
             'getListNameCC',
-            'getSingleDeleteCC'
+            'getSingleDeleteCC',
+            'getSign'
         ]),
         changeGroup(e){
             this.result = e.mp.detail;
@@ -210,12 +226,14 @@ export default {
         },
         // 我的群组
         getMyGroup(){
-            const url = '/pages/publics/myGroup/main?cc='+this.cc;
+            this.getSign('delta');
+            const url = '/pages/publics/myGroup/main?cc='+this.cc+'&foldersId='+this.foldersId+'&RightCode='+this.RightCode+'&admin='+this.admin+'&meetingId='+this.meetingId;
             wx.navigateTo({url:url});
         },
         // 组织架构
         getOrganization(){
-            const url = '/pages/publics/Organization/main?cc='+this.cc;
+            this.getSign('delta');
+            const url = '/pages/publics/Organization/main?cc='+this.cc+'&foldersId='+this.foldersId+'&RightCode='+this.RightCode+'&admin='+this.admin+'&meetingId='+this.meetingId;
             wx.navigateTo({
                 url:url
             })

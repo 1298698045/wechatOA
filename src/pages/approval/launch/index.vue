@@ -17,7 +17,7 @@
                 </div>
             </div>
         </div>
-        <div class="center">
+        <div class="center" :class="{'martop':childShow=='0'}">
             <!-- <div class="searchWrap" v-if="isBlock">
                 <div class="navs">
                     <p>
@@ -110,7 +110,7 @@
                 </div>
             </div> -->
             <NavShow v-if="isBlock" ref="childs" @childFn="getChildFn" :childShow="childShow" />
-            <div class="content">
+            <div class="content" v-if="!isBlock||isBlock&&childShow==0">
                 <div class="row" v-for="(item,index) in list" :key="index" @click="getDetail(item)">
                     <div class="lBox">
                         <p>{{item.createdByName}}</p>
@@ -118,9 +118,10 @@
                     <div class="rBox">
                         <div class="title">
                             <p>{{item.createdByName}}提交的会议纪要申请</p>
-                            <p class="time" @click.stop="getMore(item)">
+                            <!-- 更多操作隐藏 -->
+                            <!-- <p class="time" @click.stop="getMore(item)">
                                 <i-icon type="more" size="20" color="#999999" />
-                            </p>
+                            </p> -->
                         </div>
                         <div class="level">
                             <p>
@@ -130,11 +131,22 @@
                         </div>
                         <!-- <p class="text">标题：<span>{{item.name}}</span></p>
                         <p class="text">级别: <span>{{item.priority==0?'普通':item.priority==1?'中级':'高级'}}</span> </p>   -->
-                        <div class="box">
+                        <!-- <div class="box">
                             <p class="time">
                                 {{item.createdOn}} · 来自{{item.createdByName}} {{item.businessUnitIdName}}
                             </p>
                             <p v-if="item.StateCode" class="status" :class="item.StateCode==0?'blue':item.StateCode==3?'success':item.StateCode==5?'error':''">{{item.StateCode==0?'草稿':item.StateCode==1?'审批中':item.StateCode==3?'已完成':'已拒绝'}}</p>
+                        </div> -->
+                        <div class="statusBottom">
+                            <p class="time">{{item.createdOn}} · 来自{{item.createdByName}} {{item.businessUnitIdName}}</p>
+                            <div class="right">
+                                <div class="tag" :class="item.className">
+                                    {{item.stateCode==1?'审批中':item.stateCode==3?'已通过':item.stateCode==5?'已拒绝':item.stateCode==4?'已撤销':item.stateCode==0?'草稿':item.stateCode==2?'挂起':''}}
+                                </div>
+                                <div class="icon" v-if="item.stateCode==1" @click.stop="getNewUrging(item)">
+                                    <img :src="imgUrl+'urging.png'" alt="">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -169,6 +181,16 @@
                 <h3>催办</h3>
                 <div class="text">
                     <textarea class="textarea" v-model="content" placeholder="请输入留言" name="" id="" cols="30" rows="10"></textarea>
+                </div>
+                <div class="rowCheck">
+                    <div class="notice">通知方式：</div>
+                    <van-checkbox-group :value="resultTag" @change="changeTag">
+                        <div class="checkboxGroup">
+                            <van-checkbox :name="item" v-for="(item,index) in tagList" :key="index" custom-class="check" label-class="labels"  shape="square">
+                                {{item}}
+                            </van-checkbox>
+                        </div>
+                    </van-checkbox-group>
                 </div>
                 <div class="btn">
                     <p class="cancel" @click="onClosePupupShow">取消</p>
@@ -235,7 +257,9 @@ export default {
             timeSort:['时间排序','优先级排序'],
             timeSortIdx:0,
             childShow:"",
-            isBook:false
+            isBook:false,
+            tagList:['短信','应用内'],
+            resultTag:[]
         }
     },
     onLoad(){
@@ -248,6 +272,17 @@ export default {
         sort(){
             let sort = this.timeSortIdx==0?'CreatedOn':'Priority';
             return sort;
+        },
+        imgUrl(){
+            return this.$api.photo.url
+        },
+        notifySms(){
+           let isBol = this.resultTag.indexOf('短信')!==-1?true:false;
+           return isBol;
+        },
+        notifyMessager(){
+            let isBol = this.resultTag.indexOf('应用内')!==-1?true:false;
+            return isBol;
         }
     },
     methods:{
@@ -264,13 +299,19 @@ export default {
                     sort:this.sort,
                     search:this.isBook?this.$refs.childs.searchValue:'',
                     processId:this.isBook?this.$refs.childs.processId:'',
-                    stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    // stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    stateCode:this.isBook?this.$refs.childs.stateCode:'',
                     deptIds:this.isBook?this.$refs.childs.deptIds.join(','):'',
                     createdByIds:this.isBook?(this.$refs.childs.designee.hasOwnProperty('id')?this.$refs.childs.designee.id:''):""
                 }
             }).then(res=>{
                 console.log(res);
                 this.list = res.listData;
+                this.list.forEach(item=>{
+                    let className = item.stateCode==1?'approvalIng':item.stateCode==3?'tag':item.stateCode==5?'error':item.stateCode==4?'revoke'
+                    :item.stateCode==0?'draft':item.stateCode==2?'挂起':'';
+                    this.$set(item,'className',className);
+                })
             })
         },
         bindPickerChange(e){
@@ -343,7 +384,9 @@ export default {
                     method:'flow.instance.pushmessage',
                     SessionKey:this.sessionkey,
                     processInstanceId:this.id,
-                    Message:this.content
+                    Message:this.content,
+                    notifySms:this.notifySms,
+                    notifyMessager:this.notifyMessager
                 }
             }).then(res=>{
                 console.log(res);
@@ -358,6 +401,14 @@ export default {
                     }
                 })
             })
+        },
+        // 催办
+        getNewUrging(item){
+            this.id = item.processInstanceId;
+            this.urgingShow = true;
+        },
+        changeTag(e){
+            this.resultTag = e.mp.detail;
         }
     }
 }
@@ -399,6 +450,9 @@ export default {
                     }
                 }
             }
+        }
+        .martop{
+            margin-top: 50px;
         }
         .center{
             flex: 1;
@@ -585,6 +639,54 @@ export default {
                                 margin-left: 20rpx;
                             }
                         }
+                        .statusBottom{
+                            display: flex;
+                            justify-content: space-between;
+                            margin-top: 20rpx;
+                            .time{
+                                color: #999999;
+                                font-size: 12px;
+                            }
+                            .right{
+                                display: flex;
+                                align-items: center;
+                                .tag{
+                                    width: 80rpx;
+                                    height: 32rpx;
+                                    line-height: 32rpx;
+                                    text-align: center;
+                                    font-size: 20rpx;
+                                    background: #e6f6f0;
+                                    color: #57b987;
+                                    border-radius: 7rpx;
+                                }
+                                .tag.draft{
+                                    background: #e6f0f6;
+                                    color: #3399ff;
+                                }
+                                .tag.error{
+                                    background: #faebe9;
+                                    color: #ff6666;
+                                }
+                                .tag.revoke{
+                                    background: #ebecf2;
+                                    color: #5b6991;
+                                }
+                                .tag.approvalIng{
+                                    background: #fcf2e9;
+                                    color: #f09951;
+                                }
+                                .icon{
+                                    width: 27rpx;
+                                    height: 27rpx;
+                                    margin-left: 20rpx;
+                                    img{
+                                        width: 100%;
+                                        height: 100%;
+                                    }
+                                }
+                            }
+                        }
                         .text{
                             font-size: 26rpx;
                             color: #999999;
@@ -592,29 +694,29 @@ export default {
                                 color: #333333;
                             }
                         }
-                        .box{
-                            display: flex;
-                            justify-content: space-between;
-                            margin-top: 30rpx;
-                            .time{
-                                font-size: 22rpx;
-                                color: #999999;
-                            }    
-                            .status{
-                                font-size: 22rpx;
-                                color: #dea75c;
+                        // .box{
+                        //     display: flex;
+                        //     justify-content: space-between;
+                        //     margin-top: 30rpx;
+                        //     .time{
+                        //         font-size: 22rpx;
+                        //         color: #999999;
+                        //     }    
+                        //     .status{
+                        //         font-size: 22rpx;
+                        //         color: #dea75c;
 
-                            }
-                            .status.blue{
-                                color: #3399ff;
-                            }
-                            .status.success{
-                                color: #39c1b3;
-                            }
-                            .status.error{
-                                color: #ff6666;
-                            }
-                        }
+                        //     }
+                        //     .status.blue{
+                        //         color: #3399ff;
+                        //     }
+                        //     .status.success{
+                        //         color: #39c1b3;
+                        //     }
+                        //     .status.error{
+                        //         color: #ff6666;
+                        //     }
+                        // }
                     }
                 }
             }
@@ -638,19 +740,38 @@ export default {
         .popup{
             h3{
                 font-size: 30rpx;
-                color: #3399ff;
-                border-bottom: 2rpx solid #3399ff;
+                color: #333333;
+                // border-bottom: 2rpx solid #3399ff;
                 text-align: center;
                 padding: 20rpx 0;
             }
             .text{
                 .textarea{
-                    background: #e4e4e4;
+                    // background: #e4e4e4;
+                    background: #fff;
                     height: 80px;
                     padding: 10px;
                     border-radius: 10rpx;
                     width: 85%;
+                    height: 221rpx;
                     margin: 20px auto;
+                    border: 1rpx solid #a6a6a6;
+                }
+            }
+            .rowCheck{
+                display: flex;
+                align-items: center;
+                padding: 0 30rpx 30rpx 30rpx;
+                .notice{
+                    color: #999999;
+                    font-size: 25rpx;
+                }
+                .checkboxGroup{
+                    display: flex;
+                    .check{
+                        margin-right: 20rpx;
+                        font-size: 28rpx;
+                    }
                 }
             }
             .btn{

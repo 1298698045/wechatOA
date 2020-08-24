@@ -55,12 +55,18 @@
                 </div>
             </div>
         </div>
-        <div class="footers">
+        <div class="footers" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="box">
                 <p>
                     <i class="iconfont icon-shenpi"></i>
                 </p>
                 <p>审批</p>
+            </div>
+            <div class="box" @click="getProcess">
+                <p>
+                    <i class="iconfont icon-xiaoshuai-copy"></i>
+                </p>
+                <p>流程效率</p>
             </div>
             <div class="box">
                 <p>
@@ -82,6 +88,11 @@ export default {
             MainCur:0,
             load: true,
             list:[]
+        }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(){
@@ -190,6 +201,10 @@ export default {
         },
         getLaunch(item){
             const url = '/pages/approval/add/main?name='+item.Name+'&ProcessId='+item.ProcessId;
+            wx.navigateTo({url:url});
+        },
+        getProcess(){
+            const url = '/pages/approval/process/main';
             wx.navigateTo({url:url});
         }
     }
@@ -325,6 +340,10 @@ export default {
                 color: #3399ff;
                 font-size: 21rpx;
                 padding: 20rpx 0;
+                .iconfont{
+                    font-size: 20px;
+                    padding-bottom: 10rpx;
+                }
             }
         }
     }

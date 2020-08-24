@@ -72,7 +72,7 @@
                     <p class="time">{{item.CreatedOn}}</p>
                 </div>
             </div>
-            <div class="fixed">
+            <div class="fixed" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
                 <div class="box">
                     <p>
                         <input class="inp" v-model="commentVal" placeholder="请输入评论内容" type="text">
@@ -86,8 +86,8 @@
                 </div>
             </div>
         </div>
-        <div class="footer" v-if="current=='tab1'||current=='tab2'">
-            <div class="bottom">
+        <div class="footer" v-if="current=='tab1'||current=='tab2'" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
+            <div class="bottoms">
                 <div class="icon">
                     <div>
                         <p>
@@ -261,7 +261,10 @@ export default {
             instanceId:state=>{
                 return state.user.instanceId
             }
-        })
+        }),
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        }
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
@@ -497,7 +500,7 @@ export default {
             position: fixed;
             bottom: 0;
             background: #fff;
-            .bottom{
+            .bottoms{
                 display: flex;
                 padding: 10rpx 30rpx;
                 justify-content: center;

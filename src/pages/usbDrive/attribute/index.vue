@@ -18,15 +18,15 @@
          <div class="content">
             <div class="row" @click="getAdmin('0')">
                 <p>谁可以管理</p>
-                <p><span>1人</span><i-icon type="enter" size="20" color="#ababab" /></p>
+                <p><span>{{oneTotal}}人</span><i-icon type="enter" size="20" color="#ababab" /></p>
             </div>
-            <div class="row" @click="getAdmin('0')">
+            <div class="row" @click="getAdmin('1')">
                 <p>谁可以编辑/上传</p>
-                <p><span>0人</span><i-icon type="enter" size="20" color="#ababab" /></p>
+                <p><span>{{twoTotal}}人</span><i-icon type="enter" size="20" color="#ababab" /></p>
             </div>
-            <div class="row" @click="getAdmin('0')">
+            <div class="row" @click="getAdmin('2')">
                 <p>谁可以查看</p>
-                <p><span>0人</span><i-icon type="enter" size="20" color="#ababab" /></p>
+                <p><span>{{threeTotal}}人</span><i-icon type="enter" size="20" color="#ababab" /></p>
             </div>
         </div>
     </div>
@@ -37,17 +37,45 @@ export default {
         return {
             checked:false,
             id:"",
-            sessionkey:""
+            sessionkey:"",
+            oneTotal:"",
+            twoTotal:"",
+            threeTotal:""
         }
     },
     onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.id = options.id;
+        this.getQuery();
+    },
+    onShow(){
+        this.getQuery();
     },
     methods:{
+        getQuery(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.usb.stat,
+                    SessionKey:this.sessionkey,
+                    id:this.id
+                }
+            }).then(res=>{
+                console.log(res);
+                this.list = res.data;
+                this.oneTotal = this.getTotal(32);
+                this.twoTotal = this.getTotal(4);
+                this.threeTotal = this.getTotal(2);
+            })
+        },
+        getTotal(Right){
+            const v = this.list.find(item=>item.Right===Right);
+            return v.Count;
+        },
         getAdmin(index){
-            const url = '/pages/usbDrive/admin/main?index='+index+'&id='+this.id;
+            let RightCode = index==0?32:index==1?4:2;
+            const url = '/pages/usbDrive/admin/main?index='+index+'&id='+this.id+'&RightCode='+RightCode;
             wx.navigateTo({url:url});
         },
         changeSwitch(e){

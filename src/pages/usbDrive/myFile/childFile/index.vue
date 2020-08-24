@@ -31,24 +31,30 @@
                             <img src="https://wx.phxinfo.com.cn/img/wechat/Folder.png" alt="">
                         </p>
                     </div>
-                    <div class="cont" @click="getOpenFolder">
+                    <div class="cont" @click="getOpenFolder(item)">
                         <div>
                             <p class="title">{{item.name}}</p>
                             <p class="text">{{item.createdOn}}</p>
                         </div>
                         <p class="icon">
-                            <i class="iconfont icon-gengduo" @click="getEditFile(item,'folders')"></i>
+                            <i class="iconfont icon-gengduo" @click.stop="getEditFile(item,'folders')"></i>
                         </p>
                     </div>
                 </div>
                 <!-- files -->
-                <div class="content" v-for="(item,index) in files" :key="index">
+                <div class="content" v-for="(item,index) in files" :key="index"  @click="getPreviewImage(item)">
                     <div class="radioWrap" v-if="electionShow">
                         <van-checkbox :name="item.id+item.str" custom-class="radio"></van-checkbox>
                     </div>
                     <div class="img">
-                        <p @click="getPreviewImage(item)">
-                            <img :src="item.fileExtension=='jpg'?item.link:'https://wx.phxinfo.com.cn/img/wechat/rar.png'" alt="">
+                        <p>
+                            <!-- <img :src="item.fileExtension=='jpg'?item.link:'https://wx.phxinfo.com.cn/img/wechat/rar.png'" alt=""> -->
+                            <img v-if="item.fileExtension=='jpg'||item.fileExtension=='png'" :src="item.link" alt="">
+                            <img v-if="item.fileExtension=='rar'" src="https://wx.phxinfo.com.cn/img/wechat/rar.png" alt="">
+                            <img v-if="item.fileExtension=='txt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Txt.png" alt="">
+                            <img v-if="item.fileExtension=='pdf'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Pdf.png" alt="">
+                            <img v-if="item.fileExtension=='ppt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.PPT.png" alt="">
+                            <img v-if="item.fileExtension=='word'" src="https://wx.phxinfo.com.cn/img/wechat/word.png" alt="">
                         </p>
                     </div>
                     <div class="cont">
@@ -57,7 +63,7 @@
                             <p class="text">{{item.createdOn}}</p>
                         </div>
                         <p class="icon">
-                            <i class="iconfont icon-gengduo" @click="getEditFile(item,'files')"></i>
+                            <i class="iconfont icon-gengduo" @click.stop="getEditFile(item,'files')"></i>
                         </p>
                     </div>
                 </div>
@@ -84,7 +90,7 @@
                 </div>
                 <div class="content">
                     <p v-if="str=='files'">发送给联系人</p>
-                    <p v-if="str=='files'">发邮件</p>
+                    <p v-if="str=='files'" @click="getSendEmail">发邮件</p>
                     <p @click="getObtainLink">获取分享链接</p>
                     <p @click="getRename">重命名</p>
                     <p>移动到</p>
@@ -135,9 +141,9 @@
             </div>
         </van-popup>
 
-        <i-divider content="没有更多了"></i-divider>
+        <!-- <i-divider content="没有更多了"></i-divider> -->
         <div class="clues-add-button" v-if="!showSheet" @click="onCluesAddBtnClick">
-            +
+            <van-icon name="plus" size="20px" />
         </div>
         <div class="footer" v-if="electionShow">
             <div class="operation">
@@ -152,6 +158,8 @@
 </template>
 <script>
 import newFolder from '../../../../components/newFolder';
+import openFiles from '@/utils/openFiles';
+import { mapMutations } from 'vuex';
 export default {
     components:{
         newFolder
@@ -189,7 +197,8 @@ export default {
             fileId:"",
             editSheet:false,
             newShow:false,
-            sessionkey:""
+            sessionkey:"",
+            paramsList:[]
         }
     },
     onLoad(options){
@@ -222,7 +231,7 @@ export default {
                 console.log(res);
                 this.files = res.files;
                 this.files.forEach(item=>{
-                    if(item.fileExtension=='jpg'){
+                    if(item.fileExtension=='jpg'||item.fileExtension=='png'){
                         this.imgList.push(item.link);
                     }
                 })
@@ -256,7 +265,21 @@ export default {
             this.fileId = item.id;
             this.createdByName = item.createdByName;
             this.createdOn = item.createdOn;
+            this.paramsList.push({
+                id:item.id,
+                name:item.name,
+                link:item.link,
+                fileExtension:item.fileExtension
+            })
             this.editSheet = true;
+        },
+        ...mapMutations([
+            'handleFiles'
+        ]),
+        getSendEmail(){
+            this.handleFiles(this.paramsList);
+            const url = '/pages/email/writeMail/main';
+            wx.navigateTo({url:url});
         },
         onSelect(e){
             let id = e.mp.detail.id;
@@ -307,40 +330,34 @@ export default {
         },
         // 图片预览
         getPreviewImage(item){
-            let fs = wx.getFileSystemManager(); 
-            let url = item.link;
-            if(item.fileExtension=='jpg'){
-                let that = this;
-                wx.previewImage({
-                    current: item.link, // 当前显示图片的http链接
-                    urls: that.imgList// 需要预览的图片http链接列表
-                })
-            }else {
-                wx.downloadFile({
-                    url: url, 
-                    success (res) {
-                        if (res.statusCode === 200) {
-                            debugger
-                            var filePath = res.tempFilePath;
-                        }
-                        // fs.readFile({
-                        //     filePath:filePath,
-                        //     encoding:'utf8',
-                        //     complete(res){
-                        //         console.log(111);
-                        //         console.log(res.data); 
-                        //     }
-                        // })
-                        wx.openDocument({
-                            filePath: filePath,
-                            success: function (res) {
-                                debugger
-                                console.log('打开文档成功')
-                            }
-                        })
-                    }
-                })
-            }
+            const openImgs = JSON.stringify(this.imgList);
+            openFiles(item,openImgs);
+            // let fs = wx.getFileSystemManager(); 
+            // let url = item.link;
+            // if(item.fileExtension=='jpg'){
+            //     let that = this;
+            //     wx.previewImage({
+            //         current: item.link, // 当前显示图片的http链接
+            //         urls: that.imgList// 需要预览的图片http链接列表
+            //     })
+            // }else {
+            //     wx.downloadFile({
+            //         url: url, 
+            //         success (res) {
+            //             if (res.statusCode === 200) {
+            //                 debugger
+            //                 var filePath = res.tempFilePath;
+            //             }
+            //             wx.openDocument({
+            //                 filePath: filePath,
+            //                 success: function (res) {
+            //                     debugger
+            //                     console.log('打开文档成功')
+            //                 }
+            //             })
+            //         }
+            //     })
+            // }
         },
         getClose(){
             this.screenShow = false;
@@ -376,6 +393,12 @@ export default {
                 })
             })
         },
+        getOpenFolder(item){
+            const url = '/pages/usbDrive/myFile/childFile/main?id='+item.id+'&name='+item.name;
+            wx.navigateTo({
+                url:url
+            })
+        }
     }
 }
 </script>
@@ -454,16 +477,22 @@ export default {
     .clues-add-button {
         position: fixed;
         right: 20px;
-        bottom: 80px;
+        bottom: 40px;
         background: #049bfb;
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
+        line-height: 48px;
         z-index: 1002;
         border-radius: 50%;
         color: #fff;
         text-align: center;
-        opacity: 0.8;
-        font-size: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0rpx 5rpx 12rpx 0rpx rgba(0, 0, 0, 0.3);
+        i{
+            font-size: 35rpx;
+        }
     }
     .footer{
         width: 100%;
@@ -525,7 +554,7 @@ export default {
         }
     }
     .titleSheet{
-        background: #f4f4f4;
+        background: #f8f8f8;
         padding: 30rpx 0;
         text-align: center;
         color: #666666;
@@ -534,7 +563,7 @@ export default {
     .sheetContent{
         display: flex;
         justify-content: space-around;
-        background: #f4f4f4;
+        background: #f8f8f8;
         padding: 30rpx 0;
         .box{
             p:nth-child(1){

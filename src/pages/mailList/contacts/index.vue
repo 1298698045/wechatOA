@@ -3,7 +3,7 @@
         <div class="header">
             <van-search :value="keyWord" @change="changeSearch" placeholder="搜索：群组" />
         </div>
-        <div class="rowWrap">
+        <!-- <div class="rowWrap">
             <div class="lBox">
                 <p>方圆</p>
             </div>
@@ -14,7 +14,7 @@
             <div class="rBox">
                 <p>群主</p>
             </div>
-        </div>
+        </div> -->
         <div class="center">
             <van-index-bar sticky @select="getSelect" :index-list="indexList">
                 <view class="boxWrap" v-for="(item,index) in list" :key="index">

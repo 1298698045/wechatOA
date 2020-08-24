@@ -20,7 +20,10 @@
     "pages/my/replacePhone/main",
     "pages/schedule/main",
     "pages/schedule/newSchedule/main",
-    "pages/schedule/detail/main"
+    "pages/schedule/detail/main",
+    "pages/meetingEntry/main",
+    "pages/work/admin/main",
+    "pages/wagesQuery/main"
   ],
   "subpackages": [
     {
@@ -89,7 +92,8 @@
         "leaveApply/main",
         "monthly/main",
         "mapList/main",
-        "seniorSetting/main"
+        "seniorSetting/main",
+        "monthTotalDetail/main"
       ]
     },
     {
@@ -128,7 +132,8 @@
         "newSummary/main",
         "summaryDetail/main",
         "receiver/main",
-        "notice/main"
+        "notice/main",
+        "signResult/main"
       ]
     },
     {
@@ -151,7 +156,8 @@
         "my/main",
         "circulation/main",
         "launch/main",
-        "add/main"
+        "add/main",
+        "process/main"
       ]
     }
   ],
@@ -175,28 +181,28 @@
     "list": [{
       "text": "消息",
       "pagePath": "pages/messages/main",
-      "iconPath": "static/tabs/messages.png",
-      "selectedIconPath": "static/tabs/messages-active.png"
+      "iconPath": "static/tabs/02.Messages.png",
+      "selectedIconPath": "static/tabs/02.Messages_1.png"
     }, {
       "text": "日程",
       "pagePath": "pages/schedule/main",
-      "iconPath": "static/tabs/Programme.png",
-      "selectedIconPath": "static/tabs/Programme-active.png"
+      "iconPath": "static/tabs/02.Programme.png",
+      "selectedIconPath": "static/tabs/02.Programme_1.png"
     },{
-      "text": "工作",
+      "text": "工作台",
       "pagePath": "pages/work/main",
-      "iconPath": "static/tabs/Work.png",
-      "selectedIconPath": "static/tabs/Work-active.png"
+      "iconPath": "static/tabs/02.Work.png",
+      "selectedIconPath": "static/tabs/02.Work_1.png"
     },{
       "text": "通讯录",
       "pagePath": "pages/homeMailList/main",
-      "iconPath": "static/tabs/Address.png",
-      "selectedIconPath": "static/tabs/Address-active.png"
+      "iconPath": "static/tabs/02.Address.png",
+      "selectedIconPath": "static/tabs/02.Address_1.png"
     },{
       "text": "我的",
       "pagePath": "pages/my/main",
-      "iconPath": "static/tabs/my.png",
-      "selectedIconPath": "static/tabs/my-active.png"
+      "iconPath": "static/tabs/02.Personal-center.png",
+      "selectedIconPath": "static/tabs/02.Personal-center_1.png"
     }],
     "position": "bottom"
   }

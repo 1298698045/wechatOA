@@ -8,7 +8,10 @@
             <van-search :value="search" placeholder="搜索" @change="changeSearch" />
         </div>
         <div class="header">
-            <h3 v-if="electionShow">选择一下文件</h3>
+            <h3 v-if="electionShow">
+                <span v-if="resultTotal>0">已选择 {{resultTotal}} 项</span>
+                <span v-else>选择以下文件</span>
+            </h3>
             <div v-if="!electionShow">
                 <picker class="pickers" v-model="columnIdx" :range="column" @change="changeColumn">
                     <p>{{column[columnIdx]}}<i-icon type="unfold" /></p>
@@ -39,7 +42,7 @@
                     <div class="cont">
                         <div  @click="getOpenFolder(item)">
                             <p class="title">{{item.name}}</p>
-                            <p class="text">{{item.createdOn}}</p>
+                            <p class="text">{{!item.isToday?item.createdOn:'今日'}}</p>
                         </div>
                         <p class="icon">
                             <i class="iconfont icon-gengduo" @click="getEditFile(item,'folders')"></i>
@@ -47,22 +50,27 @@
                     </div>
                 </div>
                 <!-- files -->
-                <div class="content" :class="electionShow?'contentActive':''" v-for="(item,index) in files" :key="index">
+                <div class="content" :class="electionShow?'contentActive':''" v-for="(item,index) in files" :key="index"  @click="getPreviewImage(item)">
                     <div class="radioWrap" v-if="electionShow">
                         <van-checkbox :name="item.id+item.str" custom-class="radio"></van-checkbox>
                     </div>
                     <div class="img">
-                        <p @click="getPreviewImage(item.link)">
-                            <img :src="item.fileExtension=='jpg'?item.link:'https://wx.phxinfo.com.cn/img/wechat/rar.png'" alt="">
+                        <p>
+                            <img v-if="item.fileExtension=='jpg'||item.fileExtension=='png'" :src="item.link" alt="">
+                            <img v-if="item.fileExtension=='rar'" src="https://wx.phxinfo.com.cn/img/wechat/rar.png" alt="">
+                            <img v-if="item.fileExtension=='txt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Txt.png" alt="">
+                            <img v-if="item.fileExtension=='pdf'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Pdf.png" alt="">
+                            <img v-if="item.fileExtension=='ppt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.PPT.png" alt="">
+                            <img v-if="item.fileExtension=='word'" src="https://wx.phxinfo.com.cn/img/wechat/word.png" alt="">
                         </p>
                     </div>
                     <div class="cont">
                         <div>
                             <p class="title information-title">{{item.name}}.{{item.fileExtension}}</p>
-                            <p class="text">{{item.createdOn}}</p>
+                            <p class="text">{{!item.isToday?item.createdOn:'今日'}}&nbsp;&nbsp;{{item.conver}}</p>
                         </div>
                         <p class="icon">
-                            <i class="iconfont icon-gengduo" @click="getEditFile(item,'files')"></i>
+                            <i class="iconfont icon-gengduo" @click.stop="getEditFile(item,'files')"></i>
                         </p>
                     </div>
                 </div>
@@ -137,7 +145,7 @@
                 </div>
                 <div class="content">
                     <p v-if="str=='files'">发送给联系人</p>
-                    <p v-if="str=='files'">发邮件</p>
+                    <p v-if="str=='files'" @click="getSendEmail">发邮件</p>
                     <p @click="getObtainLink">获取分享链接</p>
                     <p @click="getRename">重命名</p>
                     <p @click="getMoveFile">移动到</p>
@@ -186,15 +194,15 @@
             </div>
         </van-popup>
 
-        <i-divider content="没有更多了"></i-divider>
+        <!-- <i-divider content="没有更多了"></i-divider> -->
         <div class="clues-add-button" v-if="!showSheet&&!electionShow" @click="onCluesAddBtnClick">
-            +
+            <van-icon name="plus" size="20px" />
         </div>
-        <div class="footer" v-if="electionShow">
+        <div class="footer" v-if="electionShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="operation">
                 <p class="cancel" @click="getCancelAll">取消</p>
-                <p class="all" @click="getSelectAll" v-if="resultId==''">全选</p>
-                <p class="all" v-if="resultId!=''" @click="getAllCancel">取消全选</p>
+                <p class="all" @click="getSelectAll" v-if="resultTotal<listLength">全选</p>
+                <p class="all" v-if="resultTotal==listLength" @click="getAllCancel">取消全选</p>
                 <p class="move" :class="{'active':result!=''}">移动</p>
                 <p class="delete" @click="getDeleteFile" :class="{'active':result!=''}">删除</p>
             </div>
@@ -205,6 +213,8 @@
 </template>
 <script>
 import newFolder from '../../../components/newFolder';
+import { mapMutations } from 'vuex';
+import openFiles from '@/utils/openFiles';
 export default {
     components:{
         newFolder
@@ -249,23 +259,59 @@ export default {
             srchType:"",
             ParentId:"10010000-0000-0000-0000-000000000001",
             shareFileName:"",
-            sessionkey:""
+            sessionkey:"",
+            paramsList:[],
+            openImgs:[], // 所有图片
+            listLength:""
         }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
+        resultTotal(){
+            return this.resultId.length;
+        }
+    },
+    onShow(){
+        this.files = [];
+        this.folders = [];
+        const pages = getCurrentPages();
+        const currPage = pages[pages.length-1]
+        console.log(pages,currPage.options.id,'--');
+        // debugger
+        if(currPage.options.id!==undefined){
+            this.ParentId = currPage.options.id;
+        }else {
+            currPage.ParentId = this.ParentId;
+        }
+        this.getQuery();
+
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.srchType = options.srchType;
-        if(this.srchType=='my'){
-            this.ParentId = "10010000-0000-0000-0000-000000000001";
-        }else if(this.srchType=='share'){
-            this.ParentId = options.Folderid;
-            this.shareFileName = options.shareFileName;
-        }
-        this.getQuery();
+        // if(this.srchType=='my'){
+        //     // this.ParentId = "10010000-0000-0000-0000-000000000001";
+        //     this.ParentId = options.id;
+        // }else if(this.srchType=='share'){
+        //     this.ParentId = options.Folderid;
+        //     this.shareFileName = options.shareFileName;
+        // }
+        // this.getQuery();
     },
     methods:{
+        ...mapMutations([
+            'handleFiles'
+        ]),
+        // 发邮件
+        getSendEmail(){
+            this.handleFiles(this.paramsList);
+            const url = '/pages/email/writeMail/main';
+            wx.navigateTo({url:url});
+        },
         changeSearch(e){
             console.log(e);
             this.search = e.mp.detail;
@@ -292,33 +338,83 @@ export default {
                 console.log(res);
                 this.files = res.files;
                 this.folders = res.folders;
+                this.listLength = res.files.length+res.folders.length;
                 if(this.sort=='Name'){
                     this.files.forEach(item=>{
+                        // console.log(this.conver(item.fileSize),'fileSize')
+                        const conver = this.conver(item.fileSize);
+                        this.$set(item,'conver',conver)
                         this.$set(item,'str',' files');
+                        const isToday = this.isToday(item.createdOn);
+                        this.$set(item,'isToday',isToday);
                         if(item.fileExtension=='jpg'){
                             this.imgList.push(item.link)
                         }
                     })
                     this.folders.forEach(item=>{
+                        const isToday = this.isToday(item.createdOn);
+                        this.$set(item,'isToday',isToday);
                         this.$set(item,'str',' folders');
                     })
                 }else {
                     this.folders.forEach(item=>{
+                        const isToday = this.isToday(item.createdOn);
+                        this.$set(item,'isToday',isToday);
                         this.$set(item,'str',' folders');
                     })
                     this.files.forEach(item=>{
                         console.log(item,'---')
+                        const isToday = this.isToday(item.createdOn);
+                        this.$set(item,'isToday',isToday);
+                        const conver = this.conver(item.fileSize);
+                        this.$set(item,'conver',conver)
                         item.FileList.forEach(v=>{
                             this.$set(v,'str',' files');
                         })
                     })
                     console.log(this.files,'123132123');
                 }
+                this.files.forEach(item=>{
+                    if(item.fileExtension=='png'||item.fileExtension=='jpg'){
+                        this.openImgs.push(item.link);
+                    }
+                })
             })
+        },
+        isToday(str){
+            var d = new Date(str.replace(/-/g,"/"));
+            var todaysDate = new Date();
+            if(d.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0)){
+                return true;
+            } else {
+                return false;
+            }
+        },
+        // 文件大小字节换算
+        conver(limit){  
+            var size = "";  
+            if( limit < 0.1 * 1024 ){ //如果小于0.1KB转化成B  
+                size = limit.toFixed(2) + "B";    
+            }else if(limit < 0.1 * 1024 * 1024 ){//如果小于0.1MB转化成KB  
+                size = (limit / 1024).toFixed(2) + "KB";              
+            }else if(limit < 0.1 * 1024 * 1024 * 1024){ //如果小于0.1GB转化成MB  
+                size = (limit / (1024 * 1024)).toFixed(2) + "MB";  
+            }else{ //其他转化成GB  
+                size = (limit / (1024 * 1024 * 1024)).toFixed(2) + "GB";  
+            }  
+              
+            var sizestr = size + "";   
+            var len = sizestr.indexOf("\.");  
+            var dec = sizestr.substr(len + 1, 2);  
+            if(dec == "00"){//当小数点后为00时 去掉小数部分  
+                return sizestr.substring(0,len) + sizestr.substr(len + 3,2);  
+            }  
+            return sizestr;  
         },
         changeGroup(e){
             console.log(e);
             this.result = e.mp.detail;
+            this.resultId = e.mp.detail;
             // this.result.map(item=>{
             //     console.log(item.split(' '));
             //     let result = item.split(' ');
@@ -544,6 +640,12 @@ export default {
             console.log(this.fileId);
             this.createdByName = item.createdByName;
             this.createdOn = item.createdOn;
+            this.paramsList.push({
+                id:item.id,
+                name:item.name,
+                link:item.link,
+                fileExtension:item.fileExtension
+            })
             this.editSheet = true;
         },
         getEditCancel(){
@@ -592,7 +694,7 @@ export default {
             })
         },
         getOpenFolder(item){
-            const url = '/pages/usbDrive/myFile/childFile/main?id='+item.id+'&name='+item.name;
+            const url = '/pages/usbDrive/myFile/main?id='+item.id+'&name='+item.name+'&srchType='+this.srchType;
             wx.navigateTo({
                 url:url
             })
@@ -624,12 +726,14 @@ export default {
             wx.navigateTo({url:url});
             this.editSheet = false;
         },
-        getPreviewImage(url){
-            let that = this;
-            wx.previewImage({
-                current: url, // 当前显示图片的http链接
-                urls: that.imgList// 需要预览的图片http链接列表
-            })
+        getPreviewImage(item){
+            const openImgs = JSON.stringify(this.openImgs);
+            openFiles(item,openImgs);
+            // let that = this;
+            // wx.previewImage({
+            //     current: url, // 当前显示图片的http链接
+            //     urls: that.imgList// 需要预览的图片http链接列表
+            // })
         },
         getRouterClass(item){
             const url = '/pages/usbDrive/myFile/classFlie/main?fileType='+item;
@@ -773,6 +877,7 @@ export default {
                     overflow: hidden;
                     white-space: nowrap;
                     text-overflow:ellipsis;
+                    padding-bottom: 20rpx;
                 }
                 .text{
                     font-size: 12px;
@@ -791,16 +896,19 @@ export default {
     .clues-add-button {
         position: fixed;
         right: 20px;
-        bottom: 80px;
+        bottom: 40px;
         background: #049bfb;
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
+        line-height: 48px;
         z-index: 1002;
         border-radius: 50%;
         color: #fff;
         text-align: center;
-        opacity: 0.8;
-        font-size: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0rpx 5rpx 12rpx 0rpx rgba(0, 0, 0, 0.3);
     }
     .footer{
         width: 100%;
@@ -862,7 +970,7 @@ export default {
         }
     }
     .titleSheet{
-        background: #f4f4f4;
+        background: #f8f8f8;
         padding: 30rpx 0;
         text-align: center;
         color: #666666;
@@ -871,7 +979,7 @@ export default {
     .sheetContent{
         display: flex;
         justify-content: space-around;
-        background: #f4f4f4;
+        background: #f8f8f8;
         padding: 30rpx 0;
         .box{
             p:nth-child(1){

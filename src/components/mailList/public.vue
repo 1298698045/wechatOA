@@ -1,9 +1,9 @@
 <template>
   <div class="wrap">
-    <div class="footer">
+    <div class="footer"  v-if="!isShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
       <div class="boxWrap">
         <p class="l" @click="getDetail">
-          已选择:{{cc?selectListNameCC.length:filterList.length}}人
+          已选择:{{cc=='cc'?selectListNameCC.length:filterList.length}}人
           <i-icon type="unfold" />
         </p>
         <p class="r" @click="getSubmit">确定</p>
@@ -15,7 +15,7 @@
 import {mapState,mapGetters} from 'vuex';
 export default {
     name:"Public",
-    props:['total','sign','cc'],
+    props:['total','sign','cc','admin','foldersId','RightCode','meetingId'],
     computed:{
       ...mapState({
         selectId:state=>{
@@ -26,12 +26,20 @@ export default {
         }
       }),
       ...mapGetters([
-          'doneTodos',
-          'filterList'
-        ])
+        'doneTodos',
+        'filterList'
+      ]),
+      isModelmes(){
+          return wx.getStorageSync('isModelmes');
+      },
     },
   data() {
-    return {};
+    return {
+      sessionkey:""
+    };
+  },
+  onLoad(){
+    this.sessionkey = wx.getStorageSync('sessionkey');
   },
   methods:{
     getDetail(){
@@ -39,7 +47,35 @@ export default {
     },
     getSubmit(){
       console.log(this.sign,'123123');
-      if(this.sign=='release'||this.sign=='writeMail'){
+      // admin 0: 共享文件添加权限 1: 日程详情添加参与人
+      if(this.admin=="0"){
+        this.$httpWX.get({
+          url:this.$api.message.queryList,
+          data:{
+            method:this.$api.usb.fileAdmin,
+            SessionKey:this.sessionkey,
+            Id:this.foldersId,
+            RightCode:this.RightCode,
+            ObjectTypeCode:8,
+            ObjectId:this.filterList.join(',')
+          }
+        }).then(res=>{
+          console.log(res);
+        })
+      }else if(this.admin==1){
+        this.$httpWX.get({
+          url:this.$api.message.queryList,
+          data:{
+            method:this.$api.meeting.addPeople,
+            SessionKey:this.sessionkey,
+            invitee:this.filterList.join(','),
+            meetingId:this.meetingId
+          }
+        }).then(res=>{
+          console.log(res);
+        })
+      }
+      if(this.sign=='release'||this.sign=='writeMail'||this.sign=='delta'){
         wx.navigateBack({
           delta: 2
         })

@@ -9,6 +9,9 @@ const usb = {
         delete(state,id){
             const index = state.selectFiles.findIndex(item=>item.id==id);
             state.selectFiles.splice(index,1);
+        },
+        clearFile(state,list){
+            state.selectFiles = list;
         }
     },
     actions:{

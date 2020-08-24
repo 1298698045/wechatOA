@@ -18,7 +18,7 @@
                 </p> -->
             </div>
         </div>
-        <div class="center">
+        <div class="center" v-if="!isTime">
             <!-- <div class="rows"  @click="getAddFolder">
                 <p class="imgs">
                     <img src="https://wx.phxinfo.com.cn/img/wechat/02.3.3.New_folder.png" alt="">
@@ -70,6 +70,54 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="centerActive" v-if="isTime">
+            <van-checkbox-group :value="result" @change="changeGroup">
+                <div class="rowWrap">
+                    <h3>文件夹</h3>
+                    <div class="row" v-for="(item,index) in folders" :key="index">
+                        <div class="radioWrap" v-if="electionShow">
+                            <van-checkbox :name="item.id+item.str" custom-class="radio"></van-checkbox>
+                        </div>
+                        <div class="l">
+                            <p>
+                                <img src="https://wx.phxinfo.com.cn/img/wechat/Folder.png" alt="">
+                            </p>
+                        </div>
+                        <div class="r">
+                            <div class="text">
+                                <p>{{item.name}}</p>
+                                <p>{{item.createdOn}}</p>
+                            </div>
+                            <p class="icon" @click="getEditFile(item,'folders')">
+                                <i class="iconfont icon-gengduo"></i>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="rowWrap" v-for="(item,index) in files" :key="index">
+                    <h3>{{item.DateTypeName}}</h3>
+                    <div class="row" v-for="(v,i) in item.FileList" :key="i">
+                        <div class="radioWrap" v-if="electionShow">
+                            <van-checkbox :name="v.id+v.str" custom-class="radio"></van-checkbox>
+                        </div>
+                        <div class="l">
+                            <p>
+                                <img :src="v.link" alt="">
+                            </p>
+                        </div>
+                        <div class="r">
+                            <div class="text">
+                                <p>{{v.name}}</p>
+                                <p>{{v.createdOn}}</p>
+                            </div>
+                            <p class="icon" @click="getEditFile(v,'files')">
+                                <i class="iconfont icon-gengduo"></i>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </van-checkbox-group>
         </div>
         <van-action-sheet
             :show="showSheet"
@@ -143,7 +191,7 @@
             </div>
         </div>
         <div class="clues-add-button" @click="getAddFolder">
-            +
+            <van-icon name="plus" size="20px" />
         </div>
         <van-popup
             :show="pupupShow"
@@ -158,7 +206,7 @@
                 </h3>
                 <div class="content">
                     <input type="text" class="inp" v-model="titleName">
-                    <p class="default">归属：绍兴第二医院</p>
+                    <p class="default">归属：{{organizationName}}</p>
                 </div>
                 <div class="tips">
                     默认仅自己可见，通过“权限设置”可共享给他人
@@ -212,13 +260,16 @@ export default {
             newSign:1,
             str:"folders",
             sessionkey:"",
-            sort:"Name"
+            sort:"Name",
+            isTime:false,
+            organizationName:""
 
         }
     },
     onLoad(){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
+        this.organizationName = wx.getStorageSync('organizationName');
         this.getQuery();
     },
     methods:{
@@ -242,13 +293,35 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
-                this.fileObject = res;
-                this.files = res.files;
-                this.folders = res.folders;
+                if(this.sort=='Name'){        
+                    this.fileObject = res;
+                    this.files = res.files;
+                    this.folders = res.folders;
+                }else {
+                    this.files = res.files;
+                    this.folders = res.folders;
+                    this.folders.forEach(item=>{
+                        this.$set(item,'str',' folders');
+                    })
+                    this.files.forEach(item=>{
+                        console.log(item,'---')
+                        item.FileList.forEach(v=>{
+                            this.$set(v,'str',' files');
+                        })
+                    })
+                }
             })
         },
         changeColumn(e){
             this.columnIdx = e.mp.detail.value;
+            if(this.columnIdx==0){
+                this.sort = 'Name';
+                this.isTime = false;
+            }else {
+                this.sort = 'Createdon'
+                this.isTime = true;
+            }
+            this.getQuery();
         },
         onSelect(e){
             console.log(e);
@@ -372,7 +445,7 @@ export default {
         },
         getFlodersDetail(item){
             // const url = '/pages/usbDrive/shareFile/detail/main?Folderid='+item.id;
-            const url = '/pages/usbDrive/myFile/main?Folderid='+item.id+'&srchType='+'share'+'&shareFileName='+item.name;
+            const url = '/pages/usbDrive/myFile/main?id='+item.id+'&srchType='+'share'+'&shareFileName='+item.name;
             wx.navigateTo({url:url});
         }
     }
@@ -465,6 +538,7 @@ export default {
                     overflow: hidden;
                     text-overflow:ellipsis;
                     white-space: nowrap;
+                    padding-bottom: 20rpx;
                 }
                 .text{
                     font-size: 12px;
@@ -480,19 +554,79 @@ export default {
             }
         }
     }
+    .centerActive{
+        padding-bottom: 80px;
+        .rowWrap{
+            background: #fff;
+            padding: 0 33rpx;
+            border-top: 1rpx solid #e2e4e3;
+            h3{
+                color: #a3a3a3;
+                font-size: 25rpx;
+                padding: 25rpx 0;
+            }
+            .row{
+                display: flex;
+                .radioWrap{
+                    .radio{
+                        margin-top: 20rpx;
+                        margin-right: 20rpx;
+                    }
+                }
+                .l{
+                    p{
+                        width: 80rpx;
+                        height: 80rpx;
+                        img{
+                            width: 100%;
+                            height: 100%;
+                            vertical-align: middle;
+                        }
+                    }
+                }
+                .r{
+                    flex: 1;
+                    overflow: hidden;
+                    margin-left: 25rpx;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-bottom: 25rpx;
+                    .text{
+                        p:nth-child(1){
+                            font-size: 32rpx;
+                            color: #333333;
+                            width:300rpx; 
+                            white-space:nowrap; 
+                            overflow:hidden; 
+                            text-overflow:ellipsis;
+                        }
+                        p:nth-child(2){
+                            font-size: 24rpx;
+                            color: #999999;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
     .clues-add-button {
         position: fixed;
         right: 20px;
-        bottom: 80px;
+        bottom: 40px;
         background: #049bfb;
-        width: 50px;
-        height: 50px;
+        width: 48px;
+        height: 48px;
+        line-height: 48px;
         z-index: 1002;
         border-radius: 50%;
         color: #fff;
         text-align: center;
-        opacity: 0.8;
-        font-size: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0rpx 5rpx 12rpx 0rpx rgba(0, 0, 0, 0.3);
     }
     .footer{
         width: 100%;

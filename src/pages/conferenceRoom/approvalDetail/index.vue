@@ -120,7 +120,7 @@
                 </div>
             </div>
         </div> -->
-        <div class="adminFooter">
+        <div class="adminFooter" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="boxWrap">
                 <div class="lBox">
                     <!-- <div class="box">
@@ -191,6 +191,11 @@ export default {
     },
     onShow(){
         this.getQuery();
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        }
     },
     onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');

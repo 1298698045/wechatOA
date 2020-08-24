@@ -80,6 +80,7 @@ const mailList = {
         getClear(state,temp){
             state.selectId = temp;
             state.selectListName = temp;
+            state.selectListNameCC = temp; // 抄送人
         },
         getDeleteAll(state,temp){
             temp.map(item=>{

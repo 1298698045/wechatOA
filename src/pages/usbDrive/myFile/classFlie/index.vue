@@ -4,22 +4,30 @@
             “我的文件”中的所有文档
         </div>
         <div class="center">
-            <div class="rowWrap" v-for="(item,index) in files" :key="index">
-                <h3>{{item.DateTypeName}}</h3>
-                <div class="row" v-for="(v,i) in item.FileList" :key="i">
-                    <div class="l">
-                        <p>
-                            <img :src="v.imgUrl" alt="">
-                        </p>
-                    </div>
-                    <div class="r">
-                        <div class="text">
-                            <p>{{v.name}}.{{v.fileExtension}}</p>
-                            <p>{{v.createdOn}}</p>
+            <div class="nullWrap" v-if="files==''">
+                <div class="box">
+                    <p><img :src="'https://wx.phxinfo.com.cn/img/wechat/02.1-1Affair.png'" alt=""></p>
+                    <p>暂无文件</p>
+                </div>
+            </div>
+            <div>
+                <div class="rowWrap" v-for="(item,index) in files" :key="index">
+                    <h3>{{item.DateTypeName}}</h3>
+                    <div class="row" v-for="(v,i) in item.FileList" :key="i">
+                        <div class="l">
+                            <p>
+                                <img :src="v.imgUrl" alt="">
+                            </p>
                         </div>
-                        <p class="icon" @click="getEditFile(v,'files')">
-                            <i class="iconfont icon-gengduo"></i>
-                        </p>
+                        <div class="r">
+                            <div class="text">
+                                <p>{{v.name}}.{{v.fileExtension}}</p>
+                                <p>{{v.createdOn}}</p>
+                            </div>
+                            <p class="icon" @click="getEditFile(v,'files')">
+                                <i class="iconfont icon-gengduo"></i>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -70,6 +78,11 @@ export default {
             sessionkey:""
         }
     },
+    computed:{
+        imgUrl(){
+            return this.$api.photo.url;
+        }
+    },
     onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
@@ -96,16 +109,23 @@ export default {
                         let imgUrl = '';
                         if(v.fileExtension=='png'||v.fileExtension=='jpg'){
                             imgUrl = v.link;
+                            this.$set(v,'imgUrl',imgUrl);
                         }else if(v.fileExtension=='doc'){
                             imgUrl = 'https://wx.phxinfo.com.cn/img/wechat/02.3.1.Word.png';
+                            this.$set(v,'imgUrl',imgUrl);
                         }else if(v.fileExtension=='rar'){
                             imgUrl = 'https://wx.phxinfo.com.cn/img/wechat/rar.png';
+                            this.$set(v,'imgUrl',imgUrl);
                         }else if(v.fileExtension=='pdf'){
                             imgUrl = 'https://wx.phxinfo.com.cn/img/wechat/02.3.1.Pdf.png';
+                            this.$set(v,'imgUrl',imgUrl);
                         }else if(v.fileExtension=='ppt'){
                             imgUrl = 'https://wx.phxinfo.com.cn/img/wechat/02.3.1.PPT.png';
+                            this.$set(v,'imgUrl',imgUrl);
+                        }else if(v.fileExtension='txt'){
+                            imgUrl = 'https://wx.phxinfo.com.cn/img/wechat/02.3.1.Txt.png';
+                            this.$set(v,'imgUrl',imgUrl);
                         }
-                        this.$set(v,'imgUrl',imgUrl);
                     })
                 })
             })
@@ -187,10 +207,35 @@ export default {
             color: #999999;
         }
         .center{
+            height: auto;
+            .nullWrap{
+                display: flex;
+                justify-content: center;
+                height: 100vh;
+                background: #fff;
+                .box{
+                    margin-top: 20%;
+                    p:nth-child(1){
+                        width: 156rpx;
+                        height: 156rp;
+                        img{
+                            width: 156rpx;
+                            height: 156rpx;
+                        }
+                    }
+                    p:nth-child(2){
+                        font-size: 32rpx;
+                        color: #999999;
+                        text-align: center;
+                        margin-top: 20rpx;
+                    }
+                }
+            }
             .rowWrap{
             background: #fff;
             padding: 0 33rpx;
             border-top: 1rpx solid #e2e4e3;
+            border-bottom: 1rpx solid #e2e4e3;
             h3{
                 color: #a3a3a3;
                 font-size: 25rpx;
@@ -198,6 +243,7 @@ export default {
             }
             .row{
                 display: flex;
+                padding: 10rpx 0;
                 .l{
                     p{
                         width: 80rpx;
@@ -218,6 +264,10 @@ export default {
                     align-items: center;
                     padding-bottom: 25rpx;
                     .text{
+                        width: 500rpx;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        white-space: normal;
                         p:nth-child(1){
                             font-size: 32rpx;
                             color: #333333;

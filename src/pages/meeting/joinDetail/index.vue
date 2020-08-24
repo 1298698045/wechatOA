@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" v-if="isEdit=='true'" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="box" v-if="current=='tab1'">
                 <p @click="getRemind">提醒</p>
                 <p>修改参与人</p>
@@ -64,13 +64,20 @@ export default {
             sessionkey:"",
             status:0,
             list:[],
-            userIds:""
+            userIds:"",
+            isEdit:false
+        }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.id = options.id;
+        this.isEdit = options.isEdit;
         this.getQueryList();
     },
     methods:{

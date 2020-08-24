@@ -6,42 +6,42 @@
             </p>
             <!-- <p @click="getReport">报表</p> -->
         </div>
-        <i-tabs :current="current" @change="handleChangeTabs">
-            <i-tab key="tab1" title="日统计"></i-tab>
+        <i-tabs :current="current" @change="handleChangeTabs" v-if="attendAdmin">
+            <i-tab key="tab1" title="实时统计"></i-tab>
             <i-tab key="tab2" title="月统计"></i-tab>
             <i-tab key="tab3" title="我的"></i-tab>
         </i-tabs>
-        <div class="currentOne" v-if="current=='tab1'">
+        <div class="currentOne" v-if="current=='tab1'&&attendAdmin">
             <div class="centerWrap">
                 <picker mode="date" :value="date" @change="bindDateChange">
                     <h3>{{date}}<i-icon type="unfold" color="#3399ff" /></h3>
                 </picker>
                 <div class="circle">
-                    <van-circle layer-color="#ececec" size="150" :value="value" stroke-width="6">
+                    <van-circle layer-color="#ececec" size="150" :value="value" stroke-width="6"  @click="getClockInDetail('tab1','Check')">
                         <div Slots="fill" class="fill">
                             <p>打卡人数/应到人数</p>
                             <p>{{info.Check}}/{{info.Total}}</p>
-                            <p @click="getClockInDetail">打卡明细<i-icon type="enter" color="#3399ff" /></p>
+                            <p>打卡明细<i-icon type="enter" color="#3399ff" /></p>
                         </div>
                     </van-circle>
                 </div>
                 <div class="boxWrap">
-                    <div class="box">
-                        <p class="num">{{info.NotCheck}}</p>
-                        <p class="name">未打卡</p>
+                    <div class="box"  @click="getClockInDetail('tab2','Notcheck')">
+                        <p class="num" :class="{'default':info.NotCheck==0}">{{info.NotCheck}}</p>
+                        <p class="name" :class="{'default':info.NotCheck==0}">未打卡</p>
                     </div>
-                    <div class="box">
-                        <p class="num">{{info.Late}}</p>
-                        <p class="name">迟到</p>
+                    <div class="box" @click="getClockInDetail('tab1','Late')">
+                        <p class="num" :class="{'default':info.Late==0}">{{info.Late}}</p>
+                        <p class="name" :class="{'default':info.Late==0}">迟到</p>
                     </div>
-                    <div class="box">
-                        <p class="num">{{info.Out}}</p>
-                        <p class="name">外勤</p>
+                    <div class="box"  @click="getClockInDetail('tab1','Out')">
+                        <p class="num" :class="{'default':info.Out==0}">{{info.Out}}</p>
+                        <p class="name" :class="{'default':info.Out==0}">外勤</p>
                     </div>
-                    <div class="box">
+                    <!-- <div class="box">
                         <p class="num">{{info.NotActive}}</p>
                         <p class="name">未激活</p>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <div class="footerRow" @click="getReport">
@@ -67,7 +67,7 @@
                 </p>
             </div>
         </div>
-        <div class="monthWrap" v-if="current=='tab2'">
+        <div class="monthWrap" v-if="current=='tab2'&&attendAdmin">
             <div class="head">
                 <p>{{monthTotal}}人出勤</p>
                 <p class="r">
@@ -76,19 +76,29 @@
                     <i-icon type="enter" color="#cccccc" @click="getAddTime" />
                 </p>
             </div>
-            <div class="row" v-for="(item,index) in monthList" :key="index">
-                <p>{{item.Name}}</p>
-                <p>
-                    {{item.Value}}人
-                    <i-icon type="enter" color="#cccccc" />
-                </p>
-            </div>
-            <div class="cent">
-                <p>本月考勤尚未结束</p>
+            <div class="vheight">
+                <div class="row" v-for="(item,index) in monthList" :key="index" @click="getDetail(item)">
+                    <p>{{item.Name}}</p>
+                    <p :class="{'default':item.Value==0}">
+                        {{item.Value}}
+                        <i-icon type="enter" color="#cccccc" />
+                    </p>
+                </div>
+                <div class="cent">
+                    <p>本月考勤尚未结束</p>
+                </div>
             </div>
         </div>
         <div class="currentMy" v-if="current=='tab3'">
-            <h3 @click="changeMyDate">{{myDate}}<i-icon type="unfold" color="#526992" size="20" /></h3>
+            <!-- <h3 @click="changeMyDate">{{myDate}}<i-icon type="unfold" color="#526992" size="20" /></h3> -->
+            <div class="head">
+                <p>月度汇总</p>
+                <p class="r">
+                    <i-icon type="return" color="#cccccc" />
+                    <span @click="changeMyDate">{{myDate}}</span>
+                    <i-icon type="enter" color="#cccccc" />
+                </p>
+            </div>
             <div class="headers">
                 <div class="nav">
                     <div class="radiusLeft">
@@ -98,18 +108,19 @@
                         <p class="name">{{userInfo.fullName}}</p>
                         <p class="group">考勤组：{{userInfo.deptName}}</p>
                     </div>
-                    <div class="time">
+                    <!-- 第一版暂且不用 -->
+                    <!-- <div class="time">
                         <p @click="getClockInMonthly">
                             <i-icon type="activity" size="20" />
                             打卡月历
                         </p>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <div class="center">
                 <van-collapse :value="activeNames" @change="changeCollapse">
-                    <van-collapse-item v-for="(item,index) in list" :key="index" :title="item.fieldName" :name="index">
-                        <view slot="value"><span>{{item.Attend}}次</span></view>
+                    <van-collapse-item :disabled="item.Attend==0?true:false" v-for="(item,index) in list" :key="index" :title="item.fieldName" :name="index">
+                        <view slot="value"><span :class="{'active':item.Attend==0}">{{item.Attend}}次</span></view>
                         <div class="collapse" v-for="(v,i) in item.days" :key="i">
                             <p>{{v}}({{}})</p>
                             <p>1天</p>
@@ -142,6 +153,7 @@
 <script>
 export default {
     name:'statistics',
+    props:['attendAdmin'],
     data(){
         return {
             keyWord:"",
@@ -234,6 +246,7 @@ export default {
     onLoad(){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
+        
     },
     mounted(){
         let myDate = new Date();
@@ -248,8 +261,26 @@ export default {
         this.lastYear = y;
         this.lastMonth = m;
         this.queryAll();
+        if(!this.attendAdmin){
+            this.dataArr = this.getMonths();
+            this.current = 'tab3';
+            this.getUserInfo();
+            this.myQuery();
+        }else {
+            this.current = 'tab1';
+        }
+    },
+    computed:{
+        currentTime(){
+            let time = new Date().getTime();
+            return time;
+        }
     },
     methods:{
+        getDetail(item){
+            const url = '/pages/clockIn/monthTotalDetail/main?name='+item.Name+'&RuleCode='+item.RuleCode+'&year='+this.lastYear+'&month='+this.lastMonth;
+            wx.navigateTo({url:url});
+        },
         getReduce(){
             let currentDate = this.monthTime;
             currentDate = new Date(currentDate); 
@@ -273,10 +304,18 @@ export default {
             let lastMonth = this.checkMonth(lastDate.getMonth() + 1); // 因日期中的月份表示为0-11，所以要显示正确的月份，需要 + 1
             lastDate = lastYear + '-' + lastMonth;
             // console.log(lastDate);
-            this.lastYear = lastYear;
-            this.lastMonth = lastMonth;
-            this.monthTime = lastDate;
-            this.getMonthTotal();
+            if(this.lastMonth<new Date().getMonth()+1){
+                this.lastYear = lastYear;
+                this.lastMonth = lastMonth;
+                this.monthTime = lastDate;
+                this.getMonthTotal();
+            }else {
+                wx.showToast({
+                    title:'不能选择未来的日子',
+                    icon:'none',
+                    duration:2000
+                })
+            }
         },
         checkMonth (i) {
             if (i<10){
@@ -368,16 +407,25 @@ export default {
                 this.queryAll();
             }else if(this.current=='tab2'){
                 this.getMonthTotal();
-            }
-            else  if(this.current=='tab3'){
+            }else  if(this.current=='tab3'){
                 this.dataArr = this.getMonths();
                 this.getUserInfo();
                 this.myQuery();
             }
         },
         bindDateChange(e){
-            this.date = e.mp.detail.value;
-            this.queryAll();
+            let value = e.mp.detail.value;
+            if(new Date(value).getTime()<=this.currentTime){
+                this.date = e.mp.detail.value;
+                this.queryAll();
+            }else {
+                wx.showToast({
+                    title:'不能选择未来的日子',
+                    icon:'none',
+                    duration:2000
+                })
+            }
+            
         },
         changeMyDate(){
             this.myIsShow = true;
@@ -410,9 +458,32 @@ export default {
             return dataArr;
         },
         // 打卡明细
-        getClockInDetail(){
-            const url = '/pages/clockIn/detailed/main?date='+this.date;
-            wx.navigateTo({url:url});
+        getClockInDetail(tab,str){
+            if(str=='Late'&&this.info.Late==0){
+                wx.showToast({
+                    title:"大家都很准时哦！",
+                    icon:'none',
+                    duration:2000
+                })
+                return false;
+            }else if(str=='Out'&&this.info.Out==0){
+                wx.showToast({
+                    title:"没有人在考勤范围外打卡",
+                    icon:'none',
+                    duration:2000
+                })
+                return false;
+            }else if(str=='Notcheck'&&this.info.NotCheck==0){
+                wx.showToast({
+                    title:"员工都已经打卡啦！",
+                    icon:'none',
+                    duration:2000
+                })
+                return false;
+            }else {
+                const url = '/pages/clockIn/detailed/main?date='+this.date+'&scope='+str+'&tab='+tab;
+                wx.navigateTo({url:url});
+            }
         },
         // 报表
         getReport(){
@@ -487,6 +558,9 @@ export default {
                             font-size: 24rpx;
                             color: #333333;
                         }
+                        .default{
+                            color: #999999;
+                        }
                     }
                 }
             }
@@ -510,6 +584,7 @@ export default {
                 justify-content: space-between;
                 align-items: center;
                 padding: 33rpx;
+                margin-bottom: 21rpx;
                 p:nth-child(1){
                     font-size: 26rpx;
                     color: #666666;
@@ -522,36 +597,60 @@ export default {
                     }
                 }
             }
-            .row:last-child{
-                border: none;
-            }
-            .row{
-                display: flex;
-                justify-content: space-between;
-                padding: 20rpx 33rpx;
+            .vheight{
+                height: 100vh;
                 background: #fff;
-                border-bottom: 2rpx solid #f1f1f1;
-                p:nth-child(1){
-                    font-size: 32rpx;
-                    color: #666666;
+                .row:last-child{
+                    border: none;
                 }
-                p:nth-child(2){
-                    font-size: 31rpx;
-                    color: #333333;
+                .row{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 20rpx 33rpx;
+                    background: #fff;
+                    border-bottom: 2rpx solid #f1f1f1;
+                    p:nth-child(1){
+                        font-size: 32rpx;
+                        color: #666666;
+                    }
+                    p:nth-child(2){
+                        font-size: 31rpx;
+                        color: #333333;
+                    }
+                    .default{
+                        color: #e0e0e0 !important;
+                    }
                 }
-            }
-            .cent{
-                width: 100%;
-                position: fixed;
-                bottom: 80px;
-                text-align: center;
-                font-size: 28rpx;
-                color: #999999;
+                .cent{
+                    width: 100%;
+                    position: fixed;
+                    bottom: 80px;
+                    text-align: center;
+                    font-size: 28rpx;
+                    color: #999999;
+                }
             }
         }
         .currentMy{
-            background: #fff;
+            // background: #fff;
             padding-bottom: 80px;
+            .head{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 33rpx;
+                p:nth-child(1){
+                    font-size: 26rpx;
+                    color: #666666;
+                }
+                .r{
+                    span{
+                        font-size: 30rpx;
+                        color: #333333;
+                        margin: 0 20rpx;
+                    }
+                }
+            }
             h3{
                 font-size: 40rpx;
                 color: #526992;
@@ -559,8 +658,9 @@ export default {
             }
             .headers{
                 background: #fff;
-                padding-bottom: 20rpx;
+                padding: 20rpx 0;
                 border-bottom: 1rpx solid #eceeed;
+                margin-top: 21rpx;
                 .nav {
                     display: flex;
                     padding: 0 33rpx;
@@ -600,6 +700,9 @@ export default {
                 }
                 span{
                     color: #333333;
+                }
+                span.active{
+                    color: #e0e0e0;
                 }
                 .collapse{
                     display: flex;

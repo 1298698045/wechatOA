@@ -18,7 +18,7 @@
                 </div>
             </div>
             <Contacts v-if="isShow" :groupId="groupId" :cc="cc" />
-            <Public :sign="sign" :cc="cc" />
+            <Public :sign="sign" :cc="cc" :admin="admin" :foldersId="foldersId" :RightCode="RightCode" :meetingId="meetingId" />
         </div>
         <ShowList v-if="maxShow" />
     </div>
@@ -41,7 +41,8 @@ export default {
             groupId:"",
             isShow:false,
             maxShow:false,
-            cc:""
+            cc:"",
+            meetingId:""
         }
     },
     computed:{
@@ -60,6 +61,10 @@ export default {
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
         this.cc = options.cc;
+        this.RightCode = options.RightCode;
+        this.foldersId = options.foldersId;
+        this.admin = options.admin;
+        this.meetingId = options.meetingId;
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.getQuery();

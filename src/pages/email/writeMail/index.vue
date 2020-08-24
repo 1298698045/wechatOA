@@ -2,45 +2,52 @@
     <div class="wrap">
         <div class="center">
             <div class="header">
-                <div class="boxWrap">
-                    <div class="flex">
+                <div class="rowBtn">
+                    <p class="save" @click="getSendOut('0','save')">保存</p>
+                    <p class="send"  @click="getSendOut('1')">发送</p>
+                </div>
+                <div class="boxWrap" v-if="nameCC==''" @click="getaddShow">
+                    <div class="flex" :class="{'active':nameList!=''}">
                         <span class="label">收件人：</span>
-                        <span class="spans" v-if="nameList!=''" v-for="(item,index) in nameList" :key="index">{{item.FullName}}</span>
-                        <i class="iconfont icon-quxiao1"  v-if="nameList!=''" @click="getDeleteName"></i>
-                        <!-- <i-icon v-if="nameList!=''" size="20" type="delete" @click="getDeleteName" /> -->
+                        <div class="cont">
+                            <span class="spans" v-if="nameList!=''" v-for="(item,index) in nameList" :key="index">{{item.FullName}}</span>
+                            <i class="iconfont icon-quxiao1"  v-if="nameList!=''" @click="getDeleteName"></i>
+                            <input type="text" :class="{'active':nameList!=''}" :value="name" :auto-focus="isFocus"  @input="changeName">
+                        </div>
                     </div>
                     <div class="input">
-                        <input type="text" :value="name" :auto-focus="true" @input="changeName">
-                        <i class="iconfont icon-tianjia"  v-if="name==''" @click="getAddContacts"></i>
+                        <!-- <input type="text" :value="name" :auto-focus="isFocus"  @input="changeName"> -->
+                        <i class="iconfont icon-tianjia1"  v-if="addShow" @click.stop="getAddContacts"></i>
                     </div>
-                    <!-- <van-field
-                        custom-style="color:#999;"
-                        title-width="120rpx"
-                        input-class="inp"
-                        label="收件人："
-                        :value="name"
-                        :border="false"
-                        @change="changeName"
-                        :focus="isFocus"
-                    />
-                    <van-icon v-if="name==''" custom-class="icon" name="add" color="#3399ff" size="20" @click="getAddContacts" /> -->
                 </div>
-                <div class="boxWrap">
+                <div class="boxWrap" v-if="name==''"  @click="getaddTwoShow">
                     <div class="flex">
                         <span class="label">抄送人：</span>
-                        <span class="spans" v-if="nameListCC!=''" v-for="(item,index) in nameListCC" :key="index">{{item.FullName}}</span>
-                        <i class="iconfont icon-quxiao1"  v-if="nameListCC!=''" @click="getDeleteNameCC"></i>
+                        <div class="cont">
+                            <span class="spans" v-if="nameListCC!=''" v-for="(item,index) in nameListCC" :key="index">{{item.FullName}}</span>
+                            <i class="iconfont icon-quxiao1"  v-if="nameListCC!=''" @click.stop="getDeleteNameCC"></i>
+                            <input type="text" :class="{'active':nameListCC!=''}" :value="nameCC" @input="changeCC">
+                        </div>
                     </div>
                     <div class="input">
-                        <input type="text" :v-model="nameCC" :auto-focus="true" @input="changeCC">
-                        <i class="iconfont icon-tianjia"  v-if="nameCC==''" @click="getAddCC"></i>
+                        <!-- <input type="text" :value="nameCC" @input="changeCC"> -->
+                        <i class="iconfont icon-tianjia1"  v-if="addTwoShow" @click="getAddCC"></i>
                     </div>
                 </div>
                 <!-- <div class="rowWrap" v-if="!isShow">
                     <p>抄送/密送，发件人：</p>
                     <p class="col">zhanglp@fenghuang.com</p>
                 </div> -->
-                <div class="box" v-if="!isShow">
+                <div class="boxWrap">
+                    <div class="flex">
+                        <span class="label">主题：</span>
+                        <input type="text" v-model="subject" >
+                    </div>
+                    <div class="input">
+                        <i class="iconfont icon-fujian" style="color:#999999;" @click="getFujian"></i>
+                    </div>
+                </div>
+                <!-- <div class="box" v-if="!isShow">
                     <van-field
                         custom-style="color:#999;"
                         title-width="120rpx"
@@ -50,9 +57,9 @@
                         :border="false"
                         @change="changeSubject"
                     />
-                </div>
+                </div> -->
             </div>
-            <div v-if="isShow">
+            <div class="showclass" v-if="isShow&&name!=''||isShow&&nameCC!=''">
                 <div class="rows" v-for="(item,index) in list" :key="index" @click="getSelect(item)">
                     <div class="name">
                         <p class="radius">{{item.name}}</p>
@@ -63,19 +70,6 @@
                     </div>
                 </div>
             </div>
-            <!-- <div class="rowWrap">
-                <p>收件人：</p>
-                <p class="col">weihui@fenghuang.com</p>
-                <p><van-icon name="add" color="#3399ff" size="20" @click="getAddContacts" /></p>
-            </div>
-            <div class="rowWrap">
-                <p>抄送/密送，发件人：</p>
-                <p class="col">zhanglp@fenghuang.com</p>
-            </div>
-            <div class="rowWrap">
-                <p>主题：</p>
-                <p class="col"></p>
-            </div> -->
             <div class="content" v-if="!isShow">
                 <textarea class="textarea" v-model="mailBody" name="" id="" cols="30" rows="10"></textarea>
             </div>
@@ -84,9 +78,15 @@
             <div class="boxWrap">
             <scroll-view scroll-x="true" style="display: flex;width: 100%">
                 <div class="swiper-item" v-for="(item,index) in fileList" :key="index">
-                    <p class="imgs">
-                        <img :src="item.link" alt="">
-                        <i class="iconfont icon-quxiao" @click="getDeleteFile(item,index)"></i>
+                    <p class="imgs" @click="getPreviewImg(item,index)">
+                        <img v-if="item.fileExtension=='jpg'||item.fileExtension=='png'" :src="item.link" alt="">
+                            <img v-if="item.fileExtension=='rar'" src="https://wx.phxinfo.com.cn/img/wechat/rar.png" alt="">
+                            <img v-if="item.fileExtension=='txt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Txt.png" alt="">
+                            <img v-if="item.fileExtension=='pdf'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.Pdf.png" alt="">
+                            <img v-if="item.fileExtension=='ppt'" src="https://wx.phxinfo.com.cn/img/wechat/02.3.1.PPT.png" alt="">
+                            <img v-if="item.fileExtension=='word'" src="https://wx.phxinfo.com.cn/img/wechat/word.png" alt="">
+                            <!-- <img :src="item.link" alt=""> -->
+                        <i class="iconfont icon-quxiao2" @click="getDeleteFile(item,index)"></i>
                     </p>
                     <p class="text">023904.jpg</p>
                     <p class="minText">6.42M</p>
@@ -94,22 +94,32 @@
             </scroll-view>
             </div>
         </div>
-        <div class="footer" v-if="!isShow">
+        <!-- <div class="footer" v-if="!isShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="row">
                 <div>
                     <p class="imgs">
                         <img src="https://wx.phxinfo.com.cn/img/wechat/02.4.1.Photograph.png" alt="">
                     </p>
-                    <!-- <i class="iconfont icon-paizhao"></i> -->
-                    <i class="iconfont icon-tupian"  @click="getPhoto"></i>
+                    <i class="iconfont icon-tupian1"  @click="getPhoto"></i>
                     <p class="imgs" @click="getUpan">
                         <img src="https://wx.phxinfo.com.cn/img/wechat/02.4.1.File.png" alt="">
                     </p>
-                    <!-- <i class="iconfont icon-dingpan-xin"></i>                  -->
                 </div>
                 <p class="btn" @click="getSendOut('1')">发送</p>
             </div>
-        </div>
+        </div> -->
+        <van-action-sheet
+            :show="sheetShow"
+            cancel-text="取消"
+            @close="onClose"
+            @cancel="onClose"
+        >
+            <div class="sheetWrap">
+                <p  @click="getUpan">优盘</p>
+                <p @click="getphotograph">拍照</p>
+                <p @click="getPhoto">从手机相册选择</p>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 <script>
@@ -131,10 +141,18 @@ export default {
             sendBatchId:"",
             sessionkey:"",
             nameCC:"",
-            nameListCC:[]
+            nameListCC:[],
+            EmailId:"",
+            tempCC:[],
+            addShow:true,
+            addTwoShow:false,
+            sheetShow:false
         }
     },
     computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
         ...mapState({
             selectListName:state=>{
                 return state.mailList.selectListName
@@ -148,52 +166,146 @@ export default {
         }),
         ...mapGetters([
             'filterList'
-        ])
+        ]),
+        fileids(){
+            let temp = [];
+            this.fileList.forEach(item=>{
+                if(item.id){
+                    temp.push(item.id);
+                }
+            })
+            return temp.join(',');
+        },
+        filesImgs(){
+            let temp = [];
+            this.fileList.forEach(item=>{
+                if(item.link){
+                    temp.push(item.link);
+                }
+            })
+            return temp;
+        },
+        ccUserIds(){
+            let temp = [];
+            this.nameListCC.forEach(item=>{
+                temp.push(item.id);
+            })
+            return temp;
+        },
+        ccUserNames(){
+            let temp = [];
+            this.nameListCC.forEach(item=>{
+                temp.push(item.FullName);
+            })
+            return temp;
+        }
     },
     onShow(){
         // console.log(this.filterList,'filterList');
         // console.log(this.selectListName,'selectListName');
-        this.nameList = this.selectListName;
+        this.nameList =this.nameList.concat(this.selectListName);
+        console.log(this.nameList,'namelist');
         this.nameList = this.nameList.map(item=>({
-            UserId:item.id,
+            id:item.id,
             FullName:item.FullName
         }))
+        this.nameList = this.unique(this.nameList);
         this.fileList = this.fileList.concat(this.selectFiles);
-        console.log(this.selectListNameCC,'selectListNameCC');
-        this.nameListCC = this.selectListNameCC.map(item=>({
-            UserId:item.id,
+        this.nameListCC = this.nameListCC.concat(this.selectListNameCC).map(item=>({
+            id:item.id,
             FullName:item.FullName
         }))
+        this.nameListCC = this.unique(this.nameListCC);
+        if(this.fileList!=''){
+            this.getSendOut('0').then(res=>{
+                this.getUploadFile(this.EmailId);
+            });
+        }
     },
     onLoad(){
         Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.isFocus = true;
-        // this.queryAll();
+        // this.sendDraft();
     },
     onUnload(){
         this.getClear([]);
+        this.clearFile([]);
     },
     methods:{
+        getFujian(){
+            this.sheetShow = true;
+        },
+        onClose(){
+            this.sheetShow = false;
+        },
+        getaddShow(){
+            this.addTwoShow = false;
+            this.addShow = true;
+        },
+        getaddTwoShow(){
+            this.addShow = false;
+            this.addTwoShow = true;
+        },
+        // 预览图片
+        getPreviewImg(item,index){
+            console.log(this.filesImgs,'123123')
+            wx.previewImage({
+                urls:this.filesImgs,
+                current:item.link,
+                success:res=>{
+                    console.log(res,'success');
+                }
+            })
+        },
+        sendDraft(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.email.send,
+                    SessionKey:this.sessionkey,
+                    emailStatus:0
+                }
+            }).then(res=>{
+                console.log(res);
+                this.EmailId = res.data[0].EmailId;
+            })
+        },
+        // 选择来自优盘的文件作为附件 id：草稿id
+        getUploadFile(id){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.email.addusbfile,
+                    SessionKey:this.sessionkey,
+                    mailid:id,
+                    fileids:this.fileids
+                }
+            }).then(res=>{
+                console.log(res);
+            })
+        },
         ...mapMutations([
             'getSign',
             'getSingleDelete',
             'getClear',
             'delete',
-            'getSingleDeleteCC'
+            'getSingleDeleteCC',
+            'clearFile' // 清空附件
         ]),
         getUpan(){
+            this.sheetShow = false;
             const url = '/pages/uPan/main';
             wx.navigateTo({url:url});
         },
-        queryAll(){
+        queryAll(name){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
                     method:"oa.addresslist.user.search",
                     SessionKey:this.sessionkey,
-                    search:this.name                
+                    search:name
                 }
             }).then(res=>{
                 this.list = res.listData;
@@ -207,7 +319,7 @@ export default {
         unique(arr) { // 根据唯一标识orderId来对数组进行过滤
     　　　　　　const res = new Map();  //定义常量 res,值为一个Map对象实例
     　　　　　　//返回arr数组过滤后的结果，结果为一个数组   过滤条件是，如果res中没有某个键，就设置这个键的值为1
-    　　　　　　return arr.filter((arr) => !res.has(arr.UserId) && res.set(arr.UserId, 1)) 
+    　　　　　　return arr.filter((arr) => !res.has(arr.id) && res.set(arr.id, 1)) 
         }, 
         getDeleteName(){
             let index =  this.nameList.length-1;
@@ -223,13 +335,25 @@ export default {
             this.getSingleDeleteCC(id);
         },
         getSelect(item){
-            this.temp.push({
-                FullName:item.FullName,
-                UserId:item.ValueId
-            })
-            this.nameList = this.unique(this.temp);
+            if(this.name!=''){
+                this.temp.push({
+                    FullName:item.FullName,
+                    id:item.ValueId
+                })
+                this.nameList = this.nameList.concat(this.temp);
+                this.nameList = this.unique(this.nameList);
+                this.name = '';                
+            }else {
+                this.tempCC.push({
+                    FullName:item.FullName,
+                    id:item.ValueId
+                })
+                this.nameListCC = this.nameListCC.concat(this.tempCC);
+                this.nameListCC = this.unique(this.nameListCC);
+                this.nameCC = '';
+            }
             this.isShow = false;
-            this.name = '';
+            
         },
         changeName(e){
             console.log(e);
@@ -239,7 +363,7 @@ export default {
             }else {
                 this.isShow = false;
             }
-            this.queryAll();
+            this.queryAll(this.name);
         },
         changeCC(e){
             this.nameCC = e.mp.detail.value;
@@ -248,6 +372,7 @@ export default {
             }else {
                 this.isShow = false;
             }
+            this.queryAll(this.nameCC);
         },
         changeSubject(e){
             this.subject = e.mp.detail;
@@ -262,7 +387,50 @@ export default {
             const url = '/pages/publics/mailList/main?cc='+'cc';
             wx.navigateTo({url:url});
         },
+        // 拍照
+        getphotograph(){
+            this.sheetShow = false;
+            this.getSendOut('0').then(()=>{
+                let that = this;
+                wx.chooseImage({
+                    count: 1,
+                    sizeType: ['original', 'compressed'],
+                    sourceType: ['camera'],
+                    success (res) {
+                        // tempFilePath可以作为img标签的src属性显示图片
+                        const tempFilePaths = res.tempFilePaths;
+                        for(var i=0;i<tempFilePaths.length;i++){
+                            that.fileList.push({
+                                link:tempFilePaths[i],
+                                fileExtension:'png'
+                            });
+                        }
+                        console.log(that.selectFiles,that.fileList,'selectFiles');
+                        that.fileList = that.fileList.concat(that.selectFiles);
+                        let Files = that.fileList.join(',');
+                        console.log(Files,'Files');
+                        for (var i = 0; i < tempFilePaths.length;i++){
+                            wx.uploadFile({
+                                url: "https://wx.phxinfo.com.cn/rest?method="+'email.attachfiles.upload'+'&SessionKey=' + that.sessionkey+'&pid='+that.sendBatchId,
+                                filePath: tempFilePaths[i],
+                                name: 'file',
+                                formData: {
+                                    'user': 'test'
+                                },
+                                success (res){
+                                    // debugger
+                                    console.log(res);
+                                    const data = res.data
+                                    //do something
+                                }
+                            })
+                        }
+                    }
+                })
+            })
+        },
         getPhoto(){
+            this.sheetShow = false;
             this.getSendOut('0').then(()=>{
                 let that = this;
                 console.log(that.sendBatchId);
@@ -274,12 +442,15 @@ export default {
                         // tempFilePath可以作为img标签的src属性显示图片
                         const tempFilePaths = res.tempFilePaths;
                         console.log(tempFilePaths,'路径');
-                        that.fileList = [];
+                        // that.fileList = [];
                         for(var i=0;i<tempFilePaths.length;i++){
                             that.fileList.push({
-                                link:tempFilePaths[i]
+                                link:tempFilePaths[i],
+                                fileExtension:'png'
                             });
                         }
+                        console.log(that.selectFiles,that.fileList,'selectFiles');
+                        that.fileList = that.fileList.concat(that.selectFiles);
                         let Files = that.fileList.join(',');
                         console.log(Files,'Files');
                         for (var i = 0; i < tempFilePaths.length;i++){
@@ -303,29 +474,33 @@ export default {
             })
         },
         getDeleteFile(item,index){
+            console.log(item);
             this.fileList.splice(index,1);
             if(item.id){
                 this.delete(item.id);
             }
         },
-        getSendOut(emailStatus){
+        getSendOut(emailStatus,str){
             let toUserids = [];
             this.nameList.forEach(item=>{
-                toUserids.push(item.UserId);
+                toUserids.push(item.id);
             })
             this.UserId = toUserids.join(',');
             return new Promise((reslove,reject)=>{
                 this.$httpWX.get({
                     url:this.$api.message.queryList,
                     data:{
-                        method:"email.componse.send",
+                        method:this.$api.email.send,
                         SessionKey:this.sessionkey,
                         subject:this.subject,
                         mailBody:this.mailBody,
                         toUserids:this.UserId,
                         emailStatus:emailStatus,
                         priority:0,
-                        attachfileids:""
+                        attachfileids:"",
+                        id:this.EmailId,
+                        ccUserIds:this.ccUserIds.join(','),
+                        ccUserNames:this.ccUserNames.join(',')
                     }
     
                 }).then(res=>{
@@ -339,7 +514,22 @@ export default {
                             delta: 1
                         })
                     }else if(emailStatus=='0'){
+                        this.EmailId = res.data[0].EmailId;
                         this.sendBatchId = res.data[0].sendBatchId;
+                        if(str=='save'){
+                            wx.showToast({
+                                title:"保存草稿成功",
+                                icon:"success",
+                                duration:2000,
+                                success:res=>{
+                                    setTimeout(()=>{
+                                        wx.navigateBack({
+                                            delta: 1
+                                        })
+                                    },1000)
+                                }
+                            })
+                        }
                     }
                     reslove();
                 })
@@ -368,28 +558,64 @@ export default {
         .center{
             width: 100%;
             .header{
+                .rowBtn{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 32rpx 33rpx;
+                    border-bottom: 1rpx solid #ededed;
+                    .save{
+                        font-size: 34rpx;
+                        color: #3399ff;
+                    }
+                    .send{
+                        font-size: 34rpx;
+                        color: #999999;
+                    }
+                    .send.active{
+                        color: #3399ff;
+                    }
+                }
                 .boxWrap{
                     padding: 10rpx 33rpx;
                     border-bottom: 1rpx solid #ededed;
                     overflow: hidden;
+                    display: flex;
+                    justify-content: space-between;
+                    .flex.active{
+                        // width: 90%;
+                    }
                     .flex{
                         float: left;
                         font-size: 28rpx;
                         color: #999999;
                         display: flex;
                         align-items: center;
+                        .cont{
+                            float: left;
+                            display: flex;
+                            flex-wrap: wrap;
+                            .spans{
+                                display: inline-block;
+                                background: #f6f6f6;
+                                padding: 0 15rpx;
+                                color: #666666;
+                                font-size: 26rpx;
+                                margin-right: 10rpx;
+                                border-radius: 2rpx;
+                                line-height: 46rpx;
+                            }
+                            input{
+                                line-height:46rpx;
+                            }
+                            .input.active{
+                                width:100rpx;
+                            }
+                        }
                         .label{
-
+                            font-size: 28rpx;
+                            color: #999999;
                         }
-                        .spans{
-                            display: inline-block;
-                            background: #f6f6f6;
-                            padding: 10rpx 15rpx;
-                            color: #666666;
-                            font-size: 26rpx;
-                            margin-right: 10rpx;
-                            border-radius: 2rpx;
-                        }
+                        
                     }
                     .input{
                         display: flex;
@@ -427,6 +653,10 @@ export default {
                     padding: 20rpx 30rpx;
                     border-bottom: 1rpx solid #ededed;
                 }
+            }
+            .showclass{
+                background: #f7f7f7;
+                height: 100vh;
             }
             .rows{
                 display: flex;
@@ -476,12 +706,12 @@ export default {
                     white-space: nowrap;
                     padding: 0 20rpx;
                     .swiper-item{
-                        width: 162rpx;
-                        height: 162rpx;
+                        width: 146rpx;
+                        height: 146rpx;
                         display: inline-block;
                         // background: red;
                         // margin-right: 10rpx;
-                        margin: 10rpx 10rpx 10rpx 0;
+                        margin: 20rpx 26rpx 0 0;
                         .imgs{
                             width: 100%;
                             height: 100%;
@@ -490,13 +720,14 @@ export default {
                             align-items: center;
                             position: relative;
                             img{
-                                width: 90%;
-                                height: 150rpx;
+                                width: 146rpx;
+                                height: 146rpx;
+                                border-radius: 12rpx;
                             }
                             i{
                                 position: absolute;
-                                top: -5rpx;
-                                right: -5rpx;
+                                top: -8rpx;
+                                right: -13rpx;
                                 color: #9c9c9c;
 
                             }
@@ -546,10 +777,22 @@ export default {
                     background: #3399ff;
                     border-radius: 7rpx;
                     width: 110rpx;
-                    height: 67rpx;
+                    height: 72rpx;
                     text-align: center;
-                    line-height: 67rpx;
+                    line-height: 72rpx;
                 }
+            }
+        }
+        .sheetWrap{
+            text-align: center;
+            p{
+                font-size: 36rpx;
+                padding: 30rpx 0;
+                color:#333333;
+            }
+            p:nth-child(2){
+                border-top: 1rpx solid #e2e3e5;
+                border-bottom: 1rpx solid #e2e3e5;
             }
         }
     }

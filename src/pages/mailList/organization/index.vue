@@ -5,22 +5,29 @@
                 <p>
                     <van-search :value="value" placeholder="搜索" />
                 </p>
-                <p @click="getAdmin" v-if="!isShow">管理</p>
+                <!-- 第一版不做 -->
+                <!-- <p @click="getAdmin" v-if="!isShow">管理</p>
                 <p v-if="isShow">
                     <span @click="getCancel">取消</span>&nbsp;&nbsp;
                     <span>批量操作</span>
-                </p>
+                </p> -->
             </div>
-            <p class="yy">
+            <scroll-view :scroll-x="true" class="yy">
+                <span class="blue" @click="getReturnBack">
+                    通讯录
+                    <i-icon type="enter" size="20" color="#999999" />
+                </span>
                 <span @click="getBack" class="back" :class="{'active':sonShow}">
                     绍兴第二医院
                 </span>
-                <span v-if="sonShow">
-                    <i-icon type="enter" size="20" />
-                    {{son}}
+                <span class="back" :class="{'active':index+1!=son.length}" v-if="sonShow" v-for="(item,index) in son" :key="index" @click="index+1!=son.length?getCurrentDepartment(item,index):''">
+                    <i-icon type="enter" size="20" color="#999999" />
+                    {{item.name}}
                 </span>
+            </scroll-view>
+            <!-- <p class="yy">
 
-            </p>
+            </p> -->
         </div>
         <div class="center" v-if="!sonShow">
             <van-index-bar :scroll-top="scrollTop" :index-list="indexList" @select="getSelect">
@@ -61,7 +68,8 @@
                     </div>
                 </view> -->
             </van-index-bar>
-            <div class="content">
+            <!-- 暂且不用 -->
+            <!-- <div class="content">
                 <div class="box">
                     <p>
                         <span>丽萍</span>
@@ -82,7 +90,7 @@
                         <p>邀请同事加入</p>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
         <div class="sonCenter" v-if="sonShow">
             <!-- <div class="departRow">
@@ -168,7 +176,7 @@ export default {
             indexList:['C','H','J','L','M','Q','R','S','X','Y','Z'],
             scrollTop:"",
             isShow:false,
-            son:"",
+            son:[],
             scrollTopSon:"",
             indexListSon:['B','D','E','F'],
             model:false,
@@ -182,6 +190,7 @@ export default {
         }
     },
     onLoad(){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         wx.getSystemInfo({
@@ -226,9 +235,17 @@ export default {
             this.isShow = false;
         },
         getSubagency(item){
+            console.log(item);
             this.sonShow = true;
             if(this.sonShow){
-                this.son = item.name;
+                // this.son = item.name;
+                wx.setNavigationBarTitle({
+                    title: item.name
+                })
+                this.son.push({
+                    name:item.name,
+                    id:item.id
+                });
             }
             this.$httpWX.get({
                 url:this.$api.message.queryList,
@@ -262,9 +279,40 @@ export default {
             })
                 
         },
+        getReturnBack(){
+            wx.navigateBack({
+                delta:1
+            })
+        },
         getBack(){
+            wx.setNavigationBarTitle({
+                title: '绍兴第二医院'
+            })
             this.sonShow = false;
-            this.son = "";
+            this.son = [];
+        },
+        getCurrentDepartment(item,index){
+            // this.son.length = index+1;
+            this.son.splice(index+1,this.son.length);
+            wx.setNavigationBarTitle({
+                title: this.son[0].name
+            })
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:"oa.unitandaddresslist.group.list",
+                    SessionKey:this.sessionkey,
+                    parentId:item.id,
+                }
+            }).then(res=>{
+                let indexListSon = [];
+                res.addrData.forEach(item=>{
+                    indexListSon.push(item.title)
+                })
+                this.indexListSon = indexListSon;
+                this.unitData = res.unitData;
+                this.addrData = res.addrData;
+            })
         },
         getSelectSon(e){
             this.scrollTopSon = e.mp.detail;
@@ -287,10 +335,10 @@ export default {
             background: #fff;
             padding: 30rpx 20rpx;
             .search{
-                display: flex;
+                // display: flex;
                 font-size: 28rpx;
                 p:nth-child(1){
-                    width: 70%;
+                    // width: 70%;
                 }
                 p:nth-child(2){
                     width: 30%;
@@ -300,20 +348,29 @@ export default {
                 }
             }
             .yy{
-                font-size: 28rpx;
+                font-size: 34rpx;
                 color: #999999;
                 margin-left: 10px;
+                .blue{
+                    color: #3399ff;
+                }
+                .blue.active{
+                    color: #999999;
+                }
                 .back.active{
                     color: #3399ff;
                 }
             }
         }
         .center{
+            .van-index-anchor{
+                font-size: 25rpx !important;
+            }
             .boxWrap{
                 .box{
                     background: #fff;
-                    padding: 30rpx;
-                    font-size: 28rpx;
+                    padding:40rpx 32rpx;
+                    font-size: 34rpx;
                     color: #666666;
                     border-bottom: 1rpx solid #eaebeb;
                 }
@@ -323,7 +380,7 @@ export default {
             }
             .content{
                 background: #fff;
-                padding: 30rpx;
+                padding:40rpx 32rpx;
                 margin: 20px 0;
                 .box{
                     display: flex;
@@ -360,11 +417,14 @@ export default {
         }
         .sonCenter{
             padding-bottom: 80px;
+            .van-index-anchor{
+                font-size: 25rpx!important;
+            }
             .boxWrap{
                 .box{
                     background: #fff;
                     padding: 30rpx;
-                    font-size: 28rpx;
+                    font-size: 34rpx;
                     color: #666666;
                     border-bottom: 1rpx solid #eaebeb;
                 }
@@ -386,7 +446,7 @@ export default {
                 .box{
                     background: #fff;
                     padding: 20rpx 30rpx;
-                    font-size: 28rpx;
+                    font-size: 34rpx;
                     color: #666666;
                     border-bottom: 1rpx solid #eaebeb;
                     display: flex;
@@ -400,10 +460,11 @@ export default {
                             background: #3399ff;
                             text-align: center;
                             color: #fff;
-                            font-size: 12px;
+                            font-size: 26rpx;
                         }
                     }
                     .text{
+                        font-size: 34rpx;
                         width: 100%;
                         line-height: 80rpx;
                         margin-left: 20rpx;

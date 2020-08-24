@@ -43,6 +43,7 @@ export default {
         }
     },
     onLoad(options){
+        Object.assign(this.$data,this.$options.data());
         this.sign = options.sign; // 0 组织人 1 会议纪要指派人
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;

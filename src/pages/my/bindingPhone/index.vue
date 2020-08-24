@@ -38,7 +38,8 @@ export default {
     data(){
         return {
             isShow:false,
-            mobile:""
+            mobile:"",
+            nickName:""
         }
     },
     computed:{
@@ -53,6 +54,7 @@ export default {
     },
     onLoad(options){
         this.mobile = options.mobile;
+        this.nickName = options.nickName;
     },
     methods:{
         getUnbound(){
@@ -62,7 +64,7 @@ export default {
             this.isShow = false;
         },
         getReplacePhone(){
-            const url = '/pages/my/replacePhone/main';
+            const url = '/pages/my/replacePhone/main?nickName='+this.nickName;
             wx.navigateTo({url:url});
         }
     }
@@ -97,10 +99,12 @@ export default {
                 color: #fff;
                 margin-top: 50rpx;
                 margin-bottom: 20rpx;
+                border-radius: 9rpx;
             }
             .btnT{
                 font-size: 33rpx;
                 color: #3399ff !important;
+                border-radius: 9rpx;
             }
         }
         .popup{

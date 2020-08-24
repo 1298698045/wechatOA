@@ -7,30 +7,33 @@
             <div class="header">
                 <p class="contacts" @click="getContcats">通讯录</p>
                 <i-icon type="enter" size="20" color="#999999" />
-                <p :style="departName!=''?'color:#3399ff':''">绍兴第二医院</p>
+                <p :style="departName!=''?'color:#3399ff':''">{{organizationName||'暂无'}}</p>
                 <p class="departName" v-if="departName!=''">
                     <i-icon type="enter" size="20" color="#999999" /> 
                     {{departName}}</p>
             </div>
-            <div class="head" v-if="!isShow">
+            <!-- 选择 -->
+            <!-- <div class="head" v-if="!isShow">
                 <van-checkbox :value="check" @change="changeAll">
                     <p :style="{'width':width+'px'}">全选</p>
                 </van-checkbox>
-            </div>
+            </div> -->
             <div class="center" v-if="!isShow">
                 <div class="content" v-for="(item,index) in list" :key="index">
                     <div class="lBox">
-                        <van-checkbox-group :value="result" @change="onChange">
+                        <!-- 选择 -->
+                        <!-- <van-checkbox-group :value="result" @change="onChange">
                             <van-checkbox  :value="item.checked" :name="item.id">{{item.name}} ({{item.quantity}}）</van-checkbox>
-                        </van-checkbox-group>
+                        </van-checkbox-group> -->
+                        {{item.name}} ({{item.quantity}}）
                     </div>
                     <div class="rBox" @click="getSubordinate(item)">
                         <i class="iconfont icon-xiaji" :class="item.className">下级</i>
                     </div>
                 </div>
             </div>
-            <Contacts :id="id" v-if="isShow" @childFn="getSubordinate" :cc="cc" />
-            <Public :sign="sign" :cc="cc" />
+            <Contacts :id="id" v-if="isShow" @childFn="getSubordinate" :cc="cc" :meetingId="meetingId" />
+            <Public :sign="sign" :cc="cc" :admin="admin" :foldersId="foldersId" :RightCode="RightCode" :meetingId="meetingId" />
         </div>
         <ShowList v-if="maxShow" />
     </div>
@@ -57,7 +60,11 @@ export default {
             isShow:false,
             id:"",
             maxShow:false,
-            cc:""
+            cc:"",
+            foldersId:"",
+            RightCode:"",
+            admin:"",
+            meetingId:"" // 会议id
         }
     },
     computed:{
@@ -65,11 +72,18 @@ export default {
             sign:state=>{
                 return state.mailList.sign
             }
-        })
+        }),
+        organizationName(){
+            return wx.getStorageSync('organizationName');
+        }
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
         this.cc = options.cc;
+        this.RightCode = options.RightCode;
+        this.foldersId = options.foldersId;
+        this.admin = options.admin;
+        this.meetingId = options.meetingId;
         this.width = wx.getSystemInfoSync().windowWidth-60;
         this.sessionkey = wx.getStorageSync('sessionkey');
         this.getQuery();

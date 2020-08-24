@@ -1,50 +1,62 @@
 <template>
     <div class="wrap">
-        <h3 v-if="!isShow">带“*”必填</h3>
+        <!-- <h3 v-if="!isShow">带“*”必填</h3> -->
+        <div class="header"  v-if="!isShow&&!repeatShow">
+            <p class="cancel" @click="getBack">取消</p>
+            <p class="submit" @click="getComplete">完成</p>
+        </div>
         <div class="center" v-if="!isShow">
             <div class="content">
                 <div class="row">
                     <p class="lable">名称<span>*</span></p>
                     <p class="inp">
-                        <input type="text" v-model="name" placeholder="请输入会议室名称">
-                    </p>
-                </div>
-                <div class="row" :class="{'border':imgList!=''}" @click="getChooseImage">
-                    <p class="lable">会议室图片</p>
-                    <p class="icon">
-                        <i class="iconfont icon-tupian"></i>
-                    </p>
-                </div>
-                <div class="imgWrap" v-if="imgList!=''">
-                    <div class="box">
-                        <p v-for="(item,index) in imgList" :key="index">
-                            <i-icon type="delete" i-class="icon" color="#9c9c9c" size="20" @click="getDelete(index)" />
-                            <img :src="item" alt="">
-                        </p>
-                    </div>
-                </div>
-                <div class="row" @click="getOpenAddress">
-                    <p class="lable">会议室地址<span>*</span></p>
-                    <p class="inp">
-                        <input type="text" disabled v-model="address" placeholder="请选择会议室地址">
-                        <i-icon type="enter" size="20" color="#999999" />
+                        <input placeholder-class="placeholder" type="text" v-model="name" placeholder="请输入会议室名称">
                     </p>
                 </div>
                 <div class="row">
                     <p class="lable">可容纳人数<span>*</span></p>
                     <p class="inp">
-                        <input type="text" v-model="Capacity" placeholder="请输入具体数量">
-                        <i-icon type="enter" size="20" color="#ffffff" />
+                        <input placeholder-class="placeholder" type="text" v-model="Capacity" placeholder="请输入具体数量">
+                        <!-- <i-icon type="enter" size="20" color="#ffffff" /> -->
                     </p>
                 </div>
+                <div class="row">
+                    <p class="lable">地点<span>*</span></p>
+                    <p class="inp">
+                        <input placeholder-class="placeholder" class="addressinp" type="text" v-model="address" placeholder="请输入地点">
+                        <i class="iconfont icon-dizhi1" @click.stop="getOpenAddress"></i>
+                        <!-- <i-icon type="enter" size="20" color="#999999" /> -->
+                    </p>
+                </div>
+                <div class="row imgRow" :class="{'border':imgList!=''}">
+                    <p class="lable">会议室图片</p>
+                    <!-- <p class="icon">
+                        <i class="iconfont icon-tupian"></i>
+                    </p> -->
+                </div>
+                <div class="imgWrap">
+                    <div class="box">
+                        <p v-if="imgList==''" class="default" @click="getChooseImage">
+                            <van-icon name="plus" size="20px" color="#bec5c5" />
+                        </p>
+                        <p v-for="(item,index) in imgList" :key="index" @click="getChooseImage">
+                            <i-icon type="delete" class="icon" color="#9c9c9c" size="20" @click="getDelete(index)" />
+                            <img :src="item" alt="">
+                        </p>
+                    </div>
+                </div>
+                
+                
             </div>
             <div class="checkWrap">
                 <p>选择会议室设备</p>
                 <van-checkbox-group :value="result" @change="changeTag">
                     <div class="checkboxGroup">
-                        <van-checkbox :name="item" v-for="(item,index) in tagList" :key="index" custom-class="check" label-class="label" label-position="left" shape="square">
-                            {{item}}
-                        </van-checkbox>
+                        <p v-for="(item,index) in tagList" :key="index">
+                            <van-checkbox :name="item"  custom-class="check" label-class="labels"  shape="square">
+                                {{item}}
+                            </van-checkbox>
+                        </p>
                         <!-- <van-checkbox :value="checked" custom-class="check" label-class="label" label-position="left" shape="square" @change="onChange">
                             话筒
                         </van-checkbox>
@@ -61,7 +73,7 @@
                 </van-checkbox-group>
             </div>
             <div class="rowWrap">
-                <div class="row">
+                <!-- <div class="row">
                     <div class="l">
                         <p class="max">会议室开放预订</p>
                         <p class="min">允许员工在线预订</p>
@@ -78,7 +90,7 @@
                     <div class="r">
                         <i-icon type="enter" size="20" color="#999999" />
                     </div>
-                </div>
+                </div> -->
                 <!-- 暂且不用 -->
                 <!-- <div class="row">
                     <div class="l">
@@ -91,18 +103,21 @@
                     </div>
                 </div> -->
             </div>
-        </div>
-         <div class="footer" v-if="!isShow">
-            <div class="boxwrap">
-                <!-- <van-button type="primary" color="#f3f3f3" :disabled="disabled" custom-class="btn black" block>取消</van-button> -->
-                <van-button type="primary" @click="getComplete" color="#3399ff" :disabled="disabled" block>完成</van-button>
+            <div class="rowBottom" @click="getDelConference" v-if="id!=''">
+                删除会议室
             </div>
         </div>
+        <!-- <div class="footer" v-if="!isShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
+            <div class="boxwrap">
+                <van-button type="primary" @click="getComplete" color="#3399ff" :disabled="disabled" block>完成</van-button>
+            </div>
+        </div> -->
         <mapList @childFn="getChildFn" @cancel="getCancelChild" v-if="isShow" />
     </div>
 </template>
 <script>
 import mapList from '../../../components/mapList';
+import { mapState } from 'vuex';
 export default {
     components:{
         mapList
@@ -129,11 +144,24 @@ export default {
             sessionkey:""
         }
     },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
+        ...mapState({
+            conferenceLink:state=>{
+                return state.publics.conferenceLink;
+            }
+        })
+    },
     onLoad(options){
         Object.assign(this.$data, this.$options.data())
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
-        this.id = options.id;
+        if(options.id){
+            this.id = options.id;
+            this.imgList = [this.conferenceLink];
+        }
         if(this.id){
             wx.setNavigationBarTitle({
                 title: '编辑会议室'
@@ -189,14 +217,16 @@ export default {
         getChooseImage(){
             let that = this;
             wx.chooseImage({
-                count: 9,
+                count: 1,
                 sizeType: ['original', 'compressed'],
                 sourceType: ['album', 'camera'],
                 success (res) {
                     // tempFilePath可以作为img标签的src属性显示图片
                     const tempFilePaths = res.tempFilePaths;
-                    that.imgList = that.imgList.concat(tempFilePaths);
+                    that.imgList = tempFilePaths;
+                    // that.imgList = that.imgList.concat(tempFilePaths);
                     console.log(that.imgList);
+                    
                 }
             })
         },
@@ -212,54 +242,154 @@ export default {
             this.imgList.splice(index,1);
         },
         getOpenAddress(){
-            this.isShow = true;
+            // this.isShow = true;
+            var that = this;
+            wx.chooseLocation({
+                success: function (res) {
+                    console.log(res);
+                    // success
+                    if (res.name == '') {
+                    } else {
+                        that.Location = res.name;
+                        that.Latitude = res.latitude;
+                        that.Longitude = res.longitude;
+                        that.address = res.address;
+                    }
+                },
+                fail: function () {
+                    // fail
+                },
+                complete: function () {
+                    // complete
+                }
+            })
         },
-        getComplete(){
+        // 删除会议室
+        getDelConference(){
+            let that = this;
+            wx.showModal({
+                confirmText:"取消",
+                cancelText:"确定",
+                cancelColor:"#3399ff",
+                confirmColor:"#3399ff",
+                content: '确定要删除这个会议室吗？一旦删除所有关于该会议室预订信息全部删除',
+                success:res=> {
+                    if (res.confirm) {
+                    } else if (res.cancel) {
+                        that.del();
+                    }
+                }
+            })
+            
+        },
+        del(){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
-                    method:"entity.save",
-                    ObjTypeCode:"20034",
+                    method:this.$api.conference.del,
                     SessionKey:this.sessionkey,
-                    id:this.id,
-                    name:this.name,
-                    ApproveByIds:"",
-                    Longitude:this.Longitude,
-                    Latitude:this.Latitude,
-                    Location:this.address,
-                    Capacity:this.Capacity,
-                    AttachInfo:this.AttachInfo
+                    Id:this.id,
+                    ObjTypeCode:20034
                 }
             }).then(res=>{
                 console.log(res);
-                wx.navigateBack({
-                    delta: 1
+                wx.showToast({
+                    title:res.msg,
+                    icon:"none",
+                    duration:2000,
+                    success:res=>{
+                        setTimeout(()=>{
+                            wx.navigateBack({
+                                delta:1
+                            })
+                        },1000)
+                    }
                 })
-                // 上传图片
-                // let that = this;
-                // wx.uploadFile({
-                //     url: "https://wx.phxinfo.com.cn/rest?method="+'file.attachfiles.upload'+'&SessionKey='+that.sessionkey+'&folderid='+res.data.ResourceOrgId,
-                //     filePath: that.imgList,
-                //     name: 'file',
-                //     formData: {
-                //         'user': 'test'
-                //     },
-                //     success (res){
-                //         const data = res.data
-                //         //do something
-                //     }
-                // })
             })
+        },
+        getBack(){
+            wx.navigateBack({
+                delta:1
+            })
+        },
+        getComplete(){
+            if(this.imgList!=''){
+                let that = this;
+                let urls = `${that.$api.upload.url}?method=${that.$api.conference.create}&SessionKey=${that.sessionkey}&ObjectTypeCode=${20034}`;
+                wx.uploadFile({
+                    url: urls,
+                    filePath: that.imgList[0],
+                    name: 'file',
+                    formData: {
+                        id:that.id,
+                        name:that.name,
+                        ApproveByIds:"",
+                        Longitude:that.Longitude,
+                        Latitude:that.Latitude,
+                        Location:that.address,
+                        Capacity:that.Capacity,
+                        AttachInfo:that.AttachInfo
+                    },
+                    success (res){
+                        console.log(res);
+                        wx.navigateBack({
+                            delta: 1
+                        })
+                    }
+                })
+            }else {
+                this.$httpWX.get({
+                    url:this.$api.message.queryList,
+                    data:{
+                        // method:"entity.save",
+                        method:this.$api.conference.create,
+                        ObjectTypeCode:"20034",
+                        SessionKey:this.sessionkey,
+                        id:this.id,
+                        name:this.name,
+                        ApproveByIds:"",
+                        Longitude:this.Longitude,
+                        Latitude:this.Latitude,
+                        Location:this.address,
+                        Capacity:this.Capacity,
+                        AttachInfo:this.AttachInfo
+                    }
+                }).then(res=>{
+                    console.log(res);
+                    wx.navigateBack({
+                        delta: 1
+                    })
+                })
+            }
         }
     }
 }
 </script>
 <style lang="scss" scoped>
     @import '../../../../static/css/icon.css';
+    @import '../../../../static/css/conference.css';
     .wrap{
         width: 100%;
         height: 100%;
         overflow: hidden;
+        .header{
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+            padding: 32rpx 33rpx;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 99999;
+            .cancel{
+                font-size: 34rpx;
+                color: #999999;
+            }
+            .submit{
+                font-size: 34rpx;
+                color: #3399ff;
+            }
+        }
         h3{
             color: #999999;
             font-size: 26rpx;
@@ -269,19 +399,27 @@ export default {
         .center{
             width: 100%;
             padding-bottom: 80px;
+            margin-top: 130rpx;
             .content{
                 background: #fff;
                 .row.border{
                     border-bottom: none;
+                }
+                .imgRow{
+                    border: none !important;
                 }
                 .row{
                     padding: 30rpx 33rpx;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 2rpx solid #eaebeb;
+                    border-bottom: 1rpx solid #e2e3e5;
+                    .placeholder{
+                        color: #cccccc;
+                        font-size: 33rpx;
+                    }
                     .lable{
-                        font-size: 32rpx;
+                        font-size: 34rpx;
                         color: #666666;
                         span{
                             color: #ff6666;
@@ -295,6 +433,9 @@ export default {
                             text-align: right;
                             display: inline-block;
                         }
+                        .addressinp{
+                            margin-right: 20rpx;
+                        }
                     }
                     .icon{
                         i{
@@ -304,15 +445,21 @@ export default {
                 }
                 .imgWrap{
                     background: #fff;
-                    padding: 30rpx 33rpx;
+                    padding: 0rpx 33rpx 33rpx;
                     border-bottom: 2rpx solid #eaebeb;
                     .box{
                         display: flex;
                         flex-wrap: wrap;
+                        .default{
+                            background: #f7f7f7;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        }
                         p{
                             width: 100rpx;
                             height: 100rpx;
-                            background: #dce1e4;
+                            // background: #dce1e4;
                             border-radius: 7rpx;
                             margin-right: 40rpx;
                             position: relative;
@@ -326,6 +473,7 @@ export default {
                                 position: absolute;
                                 top: -15rpx;
                                 right: -15rpx;
+                                z-index: 9999;
                             }
                         }
                     }
@@ -343,10 +491,16 @@ export default {
                 .checkboxGroup{
                     display: flex;
                     padding-top: 20rpx;
-                    .label{
-                        margin-left: 10rpx;
-                        font-size: 26rpx;
-                        color: #666666;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    .labels{
+                        margin-left: 10rpx!important;
+                        font-size: 26rpx!important;
+                        // color: #666666;
+                        color: var(--checkbox-label-color,#666666)!important;
+                    }
+                    .check{
+                        margin-top: 10rpx!important;
                     }
                 }
             }
@@ -383,6 +537,14 @@ export default {
                         }
                     }
                 }
+            }
+            .rowBottom{
+                text-align: center;
+                background: #fff;
+                font-size: 32rpx;
+                color: #ff6966;
+                padding: 42rpx 0;
+                margin-top: 24rpx;
             }
         }
         .footer{

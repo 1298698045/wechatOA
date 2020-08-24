@@ -79,7 +79,7 @@ export default {
             wx.navigateTo({url:url});
         },
         getMyFiles(){
-            const url = '/pages/usbDrive/myFile/main?srchType='+'my';
+            const url = '/pages/usbDrive/myFile/main?srchType='+'my'+'&id='+'10010000-0000-0000-0000-000000000001';
             wx.navigateTo({url:url});
         },
         getSharedFile(){

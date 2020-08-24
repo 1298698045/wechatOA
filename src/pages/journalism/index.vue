@@ -1,16 +1,19 @@
 <template>
     <div class="wrap">
-        <van-search :value="keyValue" placeholder="搜索" @change="getSearch" />
-        <!-- <swiper class="swiper" :indicator-dots="indicatorDots" :autoplay="autoplay" :interval="interval" :duration="duration">
-        </swiper> -->
-        <div class="header">
-            <div class="left">
-                <i-tabs :current="current_scroll" scroll @change="handleChangeScroll">
-                    <i-tab :key="item.ItemName" :title="item.ItemName" v-for="(item,index) in tagLists"></i-tab>
-                </i-tabs>
-            </div>
-            <div class="right" @click="getOpenModal">
-                <i-icon type="other" size="20" color="#3399ff" />
+        <div class="fixed">
+            <van-search :value="keyValue" placeholder="搜索" @change="getSearch" />
+            <!-- <swiper class="swiper" :indicator-dots="indicatorDots" :autoplay="autoplay" :interval="interval" :duration="duration">
+            </swiper> -->
+            <div class="header">
+                <div class="left">
+                    <i-tabs :current="current_scroll" scroll @change="handleChangeScroll">
+                        <i-tab :key="item.ItemName" :title="item.ItemName" v-for="(item,index) in tagLists"></i-tab>
+                    </i-tabs>
+                </div>
+                <div class="right" @click="getOpenModal">
+                    <i class="iconfont icon-gengduo"></i>
+                    <!-- <i-icon type="other" size="20" color="#3399ff" /> -->
+                </div>
             </div>
         </div>
         <div class="center">
@@ -18,11 +21,11 @@
                 <div class="content" v-if="item.coverDisplay==''">
                     <p class="h1" :class="item.isRead=='true'?'active':''">{{item.title}}</p>
                     <div class="rowText">
-                        <span :class="item.isRead=='true'?'active':''">热</span>
+                        <!-- <span class="re" :class="item.isRead=='true'?'active':''">热点</span> -->
                         <span v-if="item.IsTop==true" class="isTop">置顶</span>
                         <span :class="item.isRead=='true'?'active':''">{{item.deptName}}</span>
-                        <span :class="item.isRead=='true'?'active':''">{{item.ReadCount}}阅读</span>
-                        <span :class="item.isRead=='true'?'active':''">{{item.commentCount}}评论</span>
+                        <span :class="item.isRead=='true'?'active':''" v-if="item.ReadCount>0">{{item.ReadCount}}阅读</span>
+                        <span :class="item.isRead=='true'?'active':''" v-if="item.commentCount>0">{{item.commentCount}}评论</span>
                         <span :class="item.isRead=='true'?'active':''">{{item.time}}</span>
                     </div>
                 </div>
@@ -32,11 +35,11 @@
                             {{item.title}}
                         </p>
                         <div class="spans">
-                            <span :class="item.isRead=='true'?'active':''">热</span>
+                            <!-- <span :class="item.isRead=='true'?'active':''">热</span> -->
                             <span v-if="item.IsTop==true" class="isTop">置顶</span>
                             <span :class="item.isRead=='true'?'active':''">{{item.deptName}}</span>
-                            <span :class="item.isRead=='true'?'active':''">{{item.ReadCount}}阅读</span>
-                            <span :class="item.isRead=='true'?'active':''">{{item.commentCount}}评论</span>
+                            <span :class="item.isRead=='true'?'active':''" v-if="item.ReadCount>0">{{item.ReadCount}}阅读</span>
+                            <span :class="item.isRead=='true'?'active':''" v-if="item.commentCount>0">{{item.commentCount}}评论</span>
                             <span :class="item.isRead=='true'?'active':''">{{item.time}}</span>
                         </div>
                     </div>
@@ -48,7 +51,12 @@
                     <div class="text">
                         <h2>{{item.title}}</h2>
                         <!-- <h2>同志职务任免的通知</h2> -->
-                        <p><span>{{item.deptName}}</span>  {{item.ReadCount}}阅读 {{item.commentCount}}评论 <span>{{item.time}}</span></p>
+                        <p>
+                            <span>{{item.deptName}}</span>
+                            <span v-if="item.ReadCount>0">{{item.ReadCount}}阅读 </span>
+                            <span v-if="item.commentCount>0">{{item.commentCount}}评论 </span>
+                            <span>{{item.time}}</span>
+                         </p>
                     </div>
                     <div class="imgs">
                         <p v-if="item.mainImg!=''">
@@ -59,8 +67,12 @@
                 <div class="manyImgs" v-if="item.coverDisplay=='BelowGrid'">
                     <h3>{{item.title}}</h3>
                     <p>
-                        <span v-if="item.IsTop==true" class="isTop">置顶</span>                        
-                        {{item.deptName}} {{item.ReadCount}}阅读 {{item.commentCount}}评论 {{item.time}}</p>
+                        <span v-if="item.IsTop==true" class="isTop">置顶</span>     
+                        <span>{{item.deptName}}</span>
+                        <span v-if="item.ReadCount>0">{{item.ReadCount}}阅读</span>  
+                        <span v-if="item.commentCount>0">{{item.commentCount}}评论</span>    
+                        <span>{{item.time}}</span>             
+                    </p>
                     <div class="box" v-if="item.mainImg!=''">
                         <p>
                             <img :src="item.mainImg" alt="">
@@ -70,21 +82,19 @@
                 <div class="maxImgs" v-if="item.coverDisplay=='BelowTitleBigImg'">
                     <h3>{{item.title}}</h3>
                     <p>
-                        <span v-if="item.IsTop==true" class="isTop">置顶</span>                                                
-                        {{item.deptName}} {{item.ReadCount}}阅读 {{item.commentCount}}评论 {{item.time}}</p>
+                        <span v-if="item.IsTop==true" class="isTop">置顶</span>  
+                        <span>{{item.deptName}}</span>
+                        <span v-if="item.ReadCount>0">{{item.ReadCount}}阅读</span> 
+                        <span v-if="item.commentCount>0">{{item.commentCount}}评论</span>
+                        <span>{{item.time}}</span>                                   
+                    </p>
                     <div class="imgWrap" v-if="item.mainImg!=''">
                         <img :src="item.mainImg" alt="">
                     </div>
                 </div>
             </div>
         </div>
-        <div class="footer">
-            <!-- <i-tab-bar :current="current" color="#049bfb" @change="handleChange">
-                <i-tab-bar-item key="homepage" icon="homepage" current-icon="homepage_fill" title="新闻"></i-tab-bar-item>
-                <i-tab-bar-item key="group" icon="group" current-icon="group_fill" title="视频"></i-tab-bar-item>
-                <i-tab-bar-item key="remind" icon="remind" current-icon="remind_fill" title="关注"></i-tab-bar-item>
-                <i-tab-bar-item key="mine" icon="mine" current-icon="mine_fill" title="我的"></i-tab-bar-item>
-            </i-tab-bar>     -->
+        <div class="footerX"  :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="boxWrap">
                 <div class="box" v-for="(item,index) in listName" :key="index" @click="getCheckName(index)">
                     <p>
@@ -96,7 +106,7 @@
         </div>
          <van-popup
             :show="showPopup"
-            
+            z-index="9999"
             position="center"
             custom-style="width: 100%;height: 100%;overflow: scroll;"
             
@@ -133,8 +143,8 @@
                 </div>
             </div>
         </van-popup>
-        <div class="clues-add-button" v-if="!showPopup" @click="onCluesAddBtnClick">
-            +
+        <div class="clues-add-button" v-if="!showPopup" @click="onCluesAddBtnClick" :class="{'active':isModelmes}">
+            <i class="iconfont icon-icon-add-3-copy"></i>
         </div>
     </div>
 </template>
@@ -204,6 +214,15 @@ export default {
         this.showPopup = false;
         this.getMyTag();
         this.getQuery();
+        wx.getSystemInfo({
+            success: (res) => {
+                console.log(res)
+                let modelmes = res.model; //手机品牌
+                console.log('手机品牌', modelmes)
+                if (modelmes.indexOf('iPhone X') != -1) {　　//XS,XR,XS MAX均可以适配,因为indexOf()会将包含'iPhone X'的字段都查出来
+                }
+            },
+        })
     },
     computed:{
         ...mapState({
@@ -217,6 +236,9 @@ export default {
                 return state.user.MyChannel
             }
         }),
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        }
         // ...mapGetters(['selectTagList'])
     },
     methods:{
@@ -368,6 +390,12 @@ export default {
     .wrap{
         width: 100%;
         height: 100%;
+        .fixed{
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 9999;
+        }
         .van-search__content{
             background: #eceeed!important;
         }
@@ -404,13 +432,14 @@ export default {
         }
         .center{
             padding-bottom: 100px;
+            margin-top: 100px;
             .content{
                 padding: 30rpx;
                 border-bottom: 1rpx solid #eceeed;
                 background: #fff;
                 .h1{
-                    font-size: 36rpx;
-                    font-weight: bold;
+                    font-size: 38rpx;
+                    // font-weight: bold;
                     color: #333333;
                 }
                 .h1.active{
@@ -420,7 +449,7 @@ export default {
                     span{
                         font-size: 22rpx;
                         display: inline-block;
-                        margin: 0 10rpx;
+                        margin-right:  10rpx;
                     }
                     span.active{
                         color: #999999;
@@ -428,22 +457,24 @@ export default {
                     .isTop{
                         color: #ff6666;
                     }
-                    span:nth-child(1){
-                        font-size: 15rpx;
+                    .re{
+                        font-size: 24rpx;
                         color: #ff6666;
-                        border:1rpx solid #ff6666;
-                        display: inline-block;
+                        // border:1rpx solid #ff6666;
+                        // display: inline-block;
                         // padding: 5rpx;
-                        width: 25rpx;
-                        text-align: center;
-                        border-radius: 2rpx;
-                        margin-left: 0;
-                        margin-right: 10rpx;
+                        // width: 25rpx;
+                        // text-align: center;
+                        // border-radius: 2rpx;
+                        // margin-left: 0;
+                        // margin-right: 10rpx;
                     }
-                    span:nth-child(2),span:nth-child(5){
+                    // span:nth-child(2),span:nth-child(5){
+                    //     color: #999999;
+                    // }
+                    span{
                         color: #999999;
                     }
-                    
                 }
             }
             .contRight{
@@ -454,16 +485,19 @@ export default {
                 .text{
                     flex: 1;
                     margin-right: 20rpx;
+                    position: relative;
                     .h3{
-                        font-size: 30rpx;
-                        font-weight: bold;
+                        font-size: 38rpx;
+                        // font-weight: bold;
                     }
                     .h3.active{
                         color: #999999;
                     }
                     .spans{
+                        position: absolute;
+                        bottom: 0;
                         span{
-                            font-size: 22rpx;
+                            font-size: 24rpx;
                             color: #999999;
                             margin-right: 10rpx;
                         }
@@ -473,12 +507,13 @@ export default {
                     }
                 }
                 .imgBox{
-                    width: 222rpx;
-	                height: 146rpx;
+                    width: 223rpx;
+	                height: 153rpx;
                     img{
                         width: 100%;
                         height: 100%;
                         vertical-align: middle;
+                        border-radius: 7rpx;
                     }
                 }
             }
@@ -490,11 +525,11 @@ export default {
                 .text{
                     width: 70%;
                     h2{
-                        font-size: 30rpx;
-                        font-weight: bold;
+                        font-size: 38rpx;
+                        // font-weight: bold;
                     }
                     p{
-                        font-size: 12px;
+                        font-size: 24rpx;
                         color: #333333;
                         margin-top: 10rpx;
                         span{
@@ -510,6 +545,7 @@ export default {
                         img{
                             width: 100%;
                             height: 100%;
+                            border-radius: 7rpx;
                         }
                     }
                 }
@@ -519,12 +555,12 @@ export default {
                 background: #fff;
                 border-bottom: 1rpx solid #eceeed;
                 h3{
-                    font-size: 30rpx;
-                    font-weight: bold;
+                    font-size: 38rpx;
+                    // font-weight: bold;
                     color: #999999;
                 }
                 p{
-                    font-size: 12px;
+                    font-size: 24rpx;
                     color: #999999;
                     .isTop{
                         color: #ff6666;
@@ -549,15 +585,19 @@ export default {
                 background: #fff;
                 border-bottom: 1rpx solid #eceeed;
                 h3{
-                    font-size: 30rpx;
-                    font-weight: bold;
+                    font-size: 38rpx;
+                    // font-weight: bold;
                     color: #999999;
                 }
                 p{
-                    font-size: 12px;
+                    font-size: 24rpx;
                     color: #999999;
+                    margin-top: 24rpx;
                     .isTop{
                         color: #ff6666;
+                    }
+                    span{
+                        margin-right: 10rpx;
                     }
                 }
                 .imgWrap{
@@ -568,6 +608,7 @@ export default {
                         width: 100%;
                         height: 100%;
                         vertical-align: middle;
+                        border-radius: 7rpx;
                     }
                 }
             }
@@ -682,20 +723,30 @@ export default {
             right: 20px;
             bottom: 80px;
             background: #049bfb;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             z-index: 1002;
             border-radius: 50%;
             color: #fff;
             text-align: center;
-            opacity: 0.8;
-            font-size: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0rpx 5rpx 12rpx 0rpx rgba(0, 0, 0, 0.3);
+            i{
+                font-size: 35rpx;
+            }
+
         }
-        .footer{
+        .clues-add-button.active{
+            bottom: 100px;
+        }
+        .footerX{
             width: 100%;
             position: fixed;
-            bottom: 20px;
+            bottom: 0;
             background: #f9f9f9;
+            padding-bottom: 20rpx;
             .boxWrap{
                 display: flex;
                 // text-align: center;

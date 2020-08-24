@@ -25,6 +25,7 @@
     "van-datetime-picker":"/static/vant/datetime-picker/index",
     "van-divider":"/static/vant/divider/index",
     "van-collapse":"/static/vant/collapse/index",
-    "van-collapse-item":"/static/vant/collapse-item/index"
+    "van-collapse-item":"/static/vant/collapse-item/index",
+    "van-checkbox-group":"/static/vant/checkbox-group/index"
   }
 }

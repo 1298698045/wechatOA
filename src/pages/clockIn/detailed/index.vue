@@ -2,7 +2,7 @@
     <div class="wrap">
         <i-tabs :current="current" @change="changeTabs">
             <i-tab key="tab1" :title="'已打卡('+info.Check+')'"></i-tab>
-            <i-tab key="tab2" title="应到但未打卡(13)"></i-tab>
+            <i-tab key="tab2" :title="'应到但未打卡('+info.NotCheck+')'"></i-tab>
         </i-tabs>
         <div class="header">
             <p :class="{active:num==index}" v-for="(item,index) in current=='tab1'?list:listT" :key="index" @click="getSwitch(item,index)">{{item.name}}({{item.total}})</p>
@@ -10,11 +10,11 @@
         <div class="center">
             <div class="content" v-for="(item,index) in listData" :key="index">
                 <div class="imgs">
-                    <p>崔曼</p>
+                    <p>{{item.Name}}</p>
                 </div>
                 <div class="cont">
                     <div class="l">
-                        <p>崔曼</p>
+                        <p>{{item.Name}}</p>
                         <p>{{item.DeptName}}</p>
                     </div>
                     <div class="r">
@@ -36,16 +36,16 @@ export default {
                     code:'Check'
                 },
                 {
+                    name:"正常",
+                    code:"Ok"
+                },
+                {
                     name:"迟到",
                     code:'Late'
                 },
                 {
                     name:"外勤",
                     code:'Out'
-                },
-                {
-                    name:"缺卡",
-                    code:"Lackcheck"
                 },
                 {
                     name:"早退",
@@ -56,12 +56,16 @@ export default {
             listT:[
                 {
                     name:"全部未打卡",
-                    code:""
+                    code:"Notcheck"
                 },
                 {
                     name:"矿工",
-                    code:""
-                } 
+                    code:"Absent"
+                },
+                {
+                    name:"缺卡",
+                    code:"Lackcheck"
+                },
             ],
             // list:['全部已打卡(10)','迟到(2)','外勤(6)','早退(1)','缺卡(2)'],
             // listT:['全部未打卡(13)','矿工(5)'],
@@ -75,9 +79,14 @@ export default {
         }
     },
     onLoad(options){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.date = options.date;
+        this.scope = options.scope;
+        this.num = this.list.findIndex(item=>item.code==options.scope);
+        this.num = this.listT.findIndex(item=>item.code==options.scope);
+        this.current = options.tab;
         this.getQuery();
         this.queryAll();
     },
@@ -94,10 +103,14 @@ export default {
                 console.log(res);
                 this.info = res.data;
                 this.$set(this.list[0],'total',res.data.Check);
-                this.$set(this.list[1],'total',res.data.Late);
-                this.$set(this.list[2],'total',res.data.Out);
-                this.$set(this.list[3],'total',res.data.LackCheck);
+                this.$set(this.list[1],'total',res.data.Ok);
+                this.$set(this.list[2],'total',res.data.Late);
+                this.$set(this.list[3],'total',res.data.Out);
+                this.$set(this.list[4],'total',res.data.Leave);
                 // this.$set(this.list[4],'total',res.data.Leave);
+                this.$set(this.listT[0],'total',res.data.NotCheck);
+                this.$set(this.listT[1],'total',res.data.Absent);
+                this.$set(this.listT[2],'total',res.data.LackCheck);
                 console.log(this.list,'123123');
             })
         },

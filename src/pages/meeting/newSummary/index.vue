@@ -5,7 +5,7 @@
         </div>
         <div class="boxWrap">
             <p class="icon">
-                <i class="iconfont icon-richeng1"></i>
+                <i class="iconfont icon-richeng"></i>
             </p>
             <p class="cont">
                 <textarea v-model="MeetingSummary" name="" id="" cols="30" rows="10" placeholder="输入会议内容"></textarea>

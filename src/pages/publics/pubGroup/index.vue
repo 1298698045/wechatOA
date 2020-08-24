@@ -23,10 +23,10 @@
                 </div>
             </div>
         </div>
-        <h3>
+        <!-- <h3>
             最近联系
-        </h3>
-        <div class="center">
+        </h3> -->
+        <!-- <div class="center">
             <van-checkbox-group :value="result" @change="changeGroup">
                 <van-checkbox custom-class="checkbox" :vlaue="item.checked" :name="item.ValueId" v-for="(item,index) in 5" :key="index">
                     <div class="contRow" :style="{'width':width+'px'}">
@@ -42,7 +42,7 @@
                     </div>
                 </van-checkbox>
             </van-checkbox-group>
-        </div>
+        </div> -->
         <GroupTodal />
     </div>
 </template>

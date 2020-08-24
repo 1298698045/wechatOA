@@ -1,16 +1,18 @@
 <template>
     <div class="wrap">
         <div class="content">
-            <div class="rowWrap">
+            <div class="rowWrap"  @click="getUploadAvatar">
                 <div class="name">
                     <p>头像</p>
                 </div>
                 <div class="right">
-                    <p class="radius" :class="imgUrl!=''?'active':''">
-                        <span v-if="imgUrl==''"  @click="getAvatar">
+                    <p class="radius"  v-if="imgUrl==''" :class="imgUrl!=''?'active':''">
+                        <span>
                             {{info.fullName}}
                         </span>
-                        <img v-if="imgUrl!=''" :src="imgUrl" alt="" @click="getPreview">
+                    </p>
+                    <p class="radius" style="background:#fff;" v-if="imgUrl!=''" @click.stop="getPreviewImg(imgUrl)">
+                        <img v-if="imgUrl!=''" :src="imgUrl" alt="" @click="getAvatar">
                     </p>
                     <i-icon type="enter" color="#cccccc" size="20" />
                 </div>
@@ -33,7 +35,7 @@
                     <i-icon type="enter" color="#fff" size="20" />
                 </div>
             </div>
-            <div class="rowWrap" @click="getQrcode">
+            <!-- <div class="rowWrap" @click="getQrcode">
                 <div class="name">
                     <p>我的二维码</p>
                 </div>
@@ -41,19 +43,19 @@
                     <i-icon type="picture" />
                     <i-icon type="enter" color="#cccccc" size="20" />
                 </div>
-            </div>
+            </div> -->
             <picker @change="bindPickerSix" :value="sixIndex" :range="sixList">
                 <div class="rowWrap">
-                        <div class="name">
-                            <p>性别</p>
-                        </div>
-                        <div class="right">
-                            <span class="text">{{sixList[sixIndex]}}</span>
-                            <i-icon type="enter" color="#cccccc" size="20" />
-                        </div>
+                    <div class="name">
+                        <p>性别</p>
+                    </div>
+                    <div class="right">
+                        <span class="text">{{sixList[sixIndex]}}</span>
+                        <i-icon type="enter" color="#cccccc" size="20" />
+                    </div>
                 </div>
             </picker>
-            <picker mode="region" @change="bindPickerRegion" :value="region">
+            <!-- <picker mode="region" @change="bindPickerRegion" :value="region">
                 <div class="rowWrap">
                     <div class="name">
                         <p>地区</p>
@@ -63,13 +65,13 @@
                         <i-icon type="enter" color="#cccccc" size="20" />
                     </div>
                 </div>
-            </picker>
+            </!-->
             <div class="rowWrap">
                 <div class="name">
                     <p>单位名称</p>
                 </div>
                 <div class="right">
-                    <span class="text">绍兴第二医院</span>
+                    <span class="text">{{info.orgnizationIdName}}</span>
                     <i-icon type="enter" color="#fff" size="20" />
                 </div>
             </div>
@@ -87,7 +89,7 @@
                     <p>职务</p>
                 </div>
                 <div class="right">
-                    <span class="text">管理员</span>
+                    <span class="text">{{info.jobTitle}}</span>
                     <i-icon type="enter" color="#fff" size="20" />
                 </div>
             </div>
@@ -100,15 +102,15 @@
                     <i-icon type="enter" color="#cccccc" size="20" />
                 </div>
             </div>
-            <div class="rowWrap" @click="getEmail">
+            <!-- <div class="rowWrap" @click="getEmail">
                 <div class="name">
                     <p>邮箱</p>
                 </div>
                 <div class="right">
-                    <span class="text">未设置</span>
+                    <span class="text">{{info.emailAddress==''?'未设置':info.emailAddress}}</span>
                     <i-icon type="enter" color="#cccccc" size="20" />
                 </div>
-            </div>
+            </div> -->
         </div>
          <van-popup
         :show="showName"
@@ -121,11 +123,11 @@
                     修改名字
                 </h3>
                 <p>
-                    <input type="text" :focus="isTrue" :value="editName" ref="inp" class="inp">
+                    <input type="text" v-model="editName" ref="inp" class="inp">
                 </p>
                 <div>
                     <span @click="onClosePopup">取消</span>
-                    <span>确定</span>
+                    <span @click="getSubmitName">确定</span>
                 </div>
             </div>
         </van-popup>
@@ -140,17 +142,29 @@
                     邮箱
                 </h3>
                 <p>
-                    <input type="text" placeholder="请输入" class="inp">
+                    <input type="text" v-model="email" placeholder="请输入" class="inp">
                 </p>
                 <div>
                     <span @click="onCloseEmail">取消</span>
-                    <span>确定</span>
+                    <span @click="getDetermineEmail">确定</span>
                 </div>
             </div>
         </van-popup>
+        <van-action-sheet
+            :show="show"
+            cancel-text="取消"
+            @close="getClose"
+            @cancel="getClose"
+        >
+            <div class="sheetWrap">
+                <p @click="getEditAvatar">修改头像</p>
+                <p @click="getDefaultAvatar">恢复默认头像</p>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 <script>
+import { isEmail } from '@/utils/email';
 export default {
     data(){
         return {
@@ -164,10 +178,13 @@ export default {
             isTrue:true,
             imgUrl:"",
             sessionkey:"",
-            info:{}
+            info:{},
+            email:"",
+            show:false
         }
     },
     onLoad(){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.getUserInfo();
@@ -183,9 +200,127 @@ export default {
             }).then(res=>{
                 console.log(res);
                 this.info = res.data[0];
+                this.email = this.info.emailAddress;
+                this.getAvatar();
+                // let that = this;
+                // this.imgUrl = this.info.avatar;
+                // wx.downloadFile({
+                //     url: that.info.avatar, //仅为示例，并非真实的资源
+                //     success (res) {
+                //         console.log(res);
+                //         // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+                //         if (res.statusCode === 200) {
+                //             that.imgUrl = res.tempFilePath;
+                //         }
+                //     }
+                // })
+                
+                
             })
         },
         getAvatar(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.my.isset,
+                    SessionKey:this.sessionkey,
+                    userId:this.info.id
+                }
+            }).then(res=>{
+                console.log(res);
+                if(res.status==0){
+                    this.imgUrl = '';
+                }else {
+                    let that = this;
+                    let url = `${that.$api.upload.url}?method=${that.$api.my.getAvatar}&SessionKey=${that.sessionkey}&UserId=${that.info.id}`;
+                    wx.downloadFile({
+                        url: url, //仅为示例，并非真实的资源
+                        success (res) {
+                            console.log(res);
+                            // 只要服务器有响应数据，就会把响应内容写入文件并进入 success 回调，业务需要自行判断是否下载到了想要的内容
+                            if (res.statusCode === 200) {
+                                that.imgUrl = res.tempFilePath;
+                            }
+                        }
+                    })
+                }
+            })
+        },
+        // 恢复默认头像
+        getDefaultAvatar(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.my.default,
+                    SessionKey:this.sessionkey,
+                    userId:this.info.id
+                }
+            }).then(res=>{
+                this.show = false;
+                this.getAvatar();
+            })
+        },
+        getSubmitName(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.edit,
+                    SessionKey:this.sessionkey,
+                    ObjTypeCode:8,
+                    id:this.info.id,
+                    FullName:this.editName
+                }
+            }).then(res=>{
+                console.log(res);
+                wx.showToast({
+                    title:'设置成功',
+                    icon:"success",
+                    duration:2000,
+                    success:res=>{
+                        this.showName = false;
+                    }
+                })
+            })
+        },
+        getDetermineEmail(){
+            if(!isEmail(this.email)){
+                wx.showToast({
+                    title:'邮箱格式不正确',
+                    icon:'none',
+                    duration:2000
+                })
+                return false;
+            }
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.edit,
+                    SessionKey:this.sessionkey,
+                    ObjTypeCode:8,
+                    id:this.info.id,
+                    Internalemailaddress:this.email
+                }
+            }).then(res=>{
+                console.log(res);
+                wx.showToast({
+                    title:'设置成功',
+                    icon:"success",
+                    duration:2000,
+                    success:res=>{
+                        this.showEmail = false;
+                    }
+                })
+            })
+        },
+        getUploadAvatar(){
+            if(this.imgUrl!=""){
+                this.show = true;
+            }else {
+                this.uploadPhoto() 
+            }
+    
+        },
+        uploadPhoto(){
             let that = this;
             wx.chooseImage({
                 count: 1,
@@ -196,8 +331,10 @@ export default {
                     const tempFilePaths = res.tempFilePaths;
                     console.log(tempFilePaths);
                     that.imgUrl = tempFilePaths[0];
+                    let url = `${that.$api.upload.url}?method=${that.$api.my.Avatar}&SessionKey=${that.sessionkey}&UserId=${that.info.id}`;
+                    console.log(url);
                     wx.uploadFile({
-                        url:"https://wx.phxinfo.com.cn/rest?method="+"sys.user.uploadavatar"+"&SessionKey="+that.sessionkey,
+                        url:url,
                         filePath: tempFilePaths[0],
                         name:"file",
                         formData: {
@@ -209,18 +346,24 @@ export default {
                     })
                 }
             })
-    
         },
-        getPreview(){
+        getEditAvatar(){
+            this.uploadPhoto();
+            this.show = false;
+        },
+        getClose(){
+            this.show = false;
+        },
+        getPreviewImg(imgUrl){
             let that = this;
             wx.previewImage({
-                current: that.imgUrl, // 当前显示图片的http链接
-                urls: [that.imgUrl] // 需要预览的图片http链接列表
+                current: imgUrl, // 当前显示图片的http链接
+                urls: [imgUrl] // 需要预览的图片http链接列表
             })
         },
         getEditName(){
-            this.editName = this.name;
-            this.showName = true;
+            // this.editName = this.info.fullName;
+            // this.showName = true;
         },
         onClosePopup(){
             this.showName = false;
@@ -243,7 +386,7 @@ export default {
             this.showEmail = true;
         },
         getBindingPhone(){
-            const url = '/pages/my/bindingPhone/main?mobile='+this.info.mobile;
+            const url = '/pages/my/bindingPhone/main?mobile='+this.info.mobile+'&nickName='+this.info.nickName;
             wx.navigateTo({url:url});
         }
     }
@@ -313,6 +456,18 @@ export default {
                 span:nth-child(1){
                     margin-right: 60rpx;
                 }
+            }
+        }
+        .sheetWrap{
+            text-align: center;
+            p{
+                line-height: 112rpx;
+                font-size: 36rpx;
+                color: #333333;
+                background: #fff;
+            }
+            p:nth-child(1){
+                border-bottom: 1rpx solid #e2e3e5;
             }
         }
     }

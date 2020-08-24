@@ -36,7 +36,7 @@
                 <p :class="{'active':result!=''}" @click="getDelete">删除</p>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="row">
                 <div class="col">
                     <p>
@@ -71,6 +71,11 @@ export default {
             editShow:false,
             sessionkey:"",
             list:[]
+        }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(){

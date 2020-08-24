@@ -12,14 +12,14 @@
             <van-checkbox-group :value="result" @change="onChange">
                 <div class="row" v-for="(item,index) in list" :key="index">
                     <div class="check" v-if="show">
-                        <van-checkbox :name="item.UserId"></van-checkbox>
+                        <van-checkbox :name="item.Id"></van-checkbox>
                     </div>
                     <div class="name">
-                        <p class="radius">{{item.name}}</p>
+                        <p class="radius">{{item.ObjectName}}</p>
                     </div>
                     <div class="cont">
                         <div>
-                            <p>{{item.FullName}}</p>
+                            <p>{{item.ObjectName}}</p>
                             <p>信息中心</p>
                         </div>
                         <div>
@@ -47,7 +47,8 @@ export default {
             id:"",
             RightCode:"",
             list:[],
-            sessionkey:""
+            sessionkey:"",
+            RightCode:""
         }
     },
     computed:{
@@ -60,6 +61,7 @@ export default {
         this.sessionkey = sessionkey;
         let index = options.index;
         this.id = options.id;
+        this.RightCode = options.RightCode;
         if(index=='0'){
             this.RightCode  = 32;
         }else if(index=='1'){
@@ -67,9 +69,28 @@ export default {
         }else if(index=='2'){
             this.RightCode = 2;
         }
-        this.queryList();
+        // this.queryList();
+        this.getQuery();
+    },
+    onShow(){
+        this.getQuery();
     },
     methods:{
+        getQuery(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.usb.access,
+                    SessionKey:this.sessionkey,
+                    id:this.id,
+                    RightCode:this.RightCode
+                }
+            }).then(res=>{
+                console.log(res);
+                this.list = res.data;
+                this.total = res.data.length;
+            })
+        },
         // 常用联系人
         queryList(){
             this.$httpWX.get({
@@ -91,32 +112,57 @@ export default {
             this.result = e.mp.detail;
         },
         getAdd(){
-            this.$httpWX.get({
-                url:this.$api.message.queryList,
-                data:{
-                    method:"file.folderright.add",
-                    SessionKey:this.sessionkey,
-                    Id:this.id,
-                    RightCode:this.RightCode,
-                    ObjectTypeCode:0,
-                    ObjectId:this.result.join(',')
-                }
-            }).then(res=>{
-                console.log(res);
-            })
+            // this.$httpWX.get({
+            //     url:this.$api.message.queryList,
+            //     data:{
+            //         method:"file.folderright.add",
+            //         SessionKey:this.sessionkey,
+            //         Id:this.id,
+            //         RightCode:this.RightCode,
+            //         ObjectTypeCode:0,
+            //         ObjectId:this.result.join(',')
+            //     }
+            // }).then(res=>{
+            //     console.log(res);
+            // })
+            const url = '/pages/publics/mailList/main?admin='+0+'&foldersId='+this.id+'&RightCode='+this.RightCode;
+            wx.navigateTo({url:url});
         },
         getDelete(){
             if(this.result!=''){     
+                // this.$httpWX.get({
+                //     url:this.$api.message.queryList,
+                //     data:{
+                //         method:"file.folderright.add",
+                //         SessionKey:this.sessionkey,
+                //         Id:"",
+                //         EntityId:this.id
+                //     }
+                // }).then(res=>{
+                //     console.log(res);
+                // })
                 this.$httpWX.get({
                     url:this.$api.message.queryList,
                     data:{
-                        method:"file.folderright.add",
+                        method:this.$api.usb.adminDel,
                         SessionKey:this.sessionkey,
-                        Id:"",
-                        EntityId:this.id
+                        ids:this.result.join(',')
                     }
                 }).then(res=>{
                     console.log(res);
+                    let that = this;
+                    wx.showToast({
+                        title:res.msg,
+                        icon:'none',
+                        duration:2000,
+                        success:res=>{
+                            wx.nextTick(()=>{
+                                that.result = [];
+                                that.show = false;
+                                that.getQuery();
+                            })
+                        }
+                    })
                 })
             }else {
                 return ;
@@ -130,7 +176,11 @@ export default {
             this.show = false;
         },
         getAllSelect(){
-            this.result.push('0','1','2');
+            let temp = [];
+            this.list.forEach(item=>{
+                temp.push(item.Id);
+            })
+            this.result = temp;
         }
     }
 }

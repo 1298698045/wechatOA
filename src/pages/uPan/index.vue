@@ -21,7 +21,7 @@
                 </div>    
             </div>  
             <div class="files">
-                <van-checkbox-group :value="result" @change="onChange">
+                <van-checkbox-group :max="max==1?1:0" :value="result" @change="onChange">
                     <van-checkbox custom-class="checkbox" :vlaue="item.checked" :name="item.id" v-for="(item,index) in files" :key="index">
                         <div class="rows">
                             <div class="lBox">
@@ -63,10 +63,12 @@ export default {
             imgList:[],
             srchType:"my",
             ParentId:"10010000-0000-0000-0000-000000000001", // 共享文件 10010000-0000-0000-0000-000000000003 // 单位文件 10010000-0000-0000-0000-000000000002
+            max:0
         }
     },
-    onLoad(){
+    onLoad(options){
         Object.assign(this.$data,this.$options.data());
+        this.max = options.max;
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.getQuery();

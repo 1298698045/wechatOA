@@ -1,8 +1,8 @@
 <template>
     <div class="wrap">
-        <div class="nav">
+        <!-- <div class="nav">
             带“*”必填
-        </div>
+        </div> -->
         <div class="center">
             <div class="content">
                 <picker class="pickers" v-model="columnIdx" range-key="Name" :range="column" @change="changeColumn">
@@ -16,10 +16,11 @@
                         :readonly="true"
                         placeholder="请选择"
                         right-icon-class="icon"
+                        input-align="right"
                     />
                 </picker>
                 <van-field
-                    :value="tag"
+                    :value="newTag"
                     required
                     clearable
                     title-width="75px"
@@ -29,9 +30,10 @@
                     placeholder="请选择"
                     @click="getTag"
                     right-icon-class="icon"
+                    input-align="right"
                 />
                 <van-popup
-                    :show="show"
+                    :show="''"
                     position="center"
                     custom-style="width: 80%;height: auto;border-radius:7rpx;"
                     @close="onClose"
@@ -67,6 +69,8 @@
                     label="标题"
                     placeholder="请输入标题"
                     @change="changeTitle"
+                    input-align="right"
+                    input-class="inp"
                 />
                 <!-- <div class="cont"> -->
                     <van-field
@@ -83,60 +87,106 @@
                 <!-- </div> -->
             </div>
             <div class="content">
-                <div class="head" @click="handleSelPhoto">
+                <div class="head">
                     <p>图片</p>
-                    <p>
+                    <!-- <p>
                         <i class="iconfont icon-tupian"></i>
-                    </p>
+                    </p> -->
                 </div>
-                <div class="cont" v-if="imgList!=''">
+                <div class="cont">
+                    
                     <p class="imgWrap" v-for="(item,index) in imgList" :key="index">
-                        <!-- <van-image
-                            width="50"
-                            height="50"
-                            :src="item"
-                        /> -->
                         <img :src="item" alt="">
                         <span class="close"  @click="getCloseImg(index)">
                             <i-icon type="close" color="#fff" size="12" />
                         </span>
-                        <!-- <van-icon name="close" custom-class="close" size="20" color="#9c9c9c" @click="getCloseImg(index)"/> -->
+                    </p>
+                    <p class="imgWrap" @click="handleSelPhoto">
+                        <i-icon type="add" color="#bec5c5" size="30" />
                     </p>
                 </div>
             </div>
             <div class="content">
-                <div class="head" @click="getEnclosure">
+                <div class="head">
                     <p>附件</p>
-                    <p> 
+                    <!-- <p> 
                         <i class="iconfont icon-fujian" style="color:#3399ff;"></i>
-                    </p>
+                    </p> -->
                 </div>
-                <div class="fjcont" v-for="(item,index) in selectFiles" :key="index">
+                <div class="fjcont" v-for="(item,index) in selectFiles" :key="index" @click="getPreview(item)">
                     <div>
                         <img :src="item.link" alt="">
                     </div>
                     <div>
                         <p class="name">{{item.name}}</p>
-                        <p class="time">2018/6/9  17:56   31.2MB</p>
+                        <p class="time">31.2MB</p>
                     </div>
-                    <div class="iconWrap" @click="getDeleteFile(item)">
-                        <i class="iconfont icon-quxiao" style="color:#B1B1B1;"></i>
-                        <!-- <van-icon name="close" custom-class="icon" size="20"/> -->
+                    <div class="iconWrap">
+                        <p>预览</p>
+                        <i  @click="getDeleteFile(item)" class="iconfont icon-quxiao" style="color:#B1B1B1;"></i>
+                    </div>
+                </div>
+                <div class="fjcont">
+                    <div class="default" @click="getEnclosure">
+                        <i-icon type="add" color="#bec5c5" size="30" />
                     </div>
                 </div>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <!-- <van-button type="default" custom-class="btn">取消</van-button> -->
             <div class="btn">
                 <van-button type="info" block @click="getNext">下一步</van-button>
             </div>
         </div>
+        <van-action-sheet
+            :show="show"
+            @close="onClose"
+            @select="onSelect"
+            z-index="99999"
+        >
+            <div class="sheetWrap">
+                <div class="title">
+                    <p class="cancel" @click="getCancel">
+                        取消
+                    </p>
+                    <p class="name">
+                        标签
+                    </p>
+                    <p class="submit" @click="getDetermine">
+                        确定
+                    </p>
+                </div>
+                <div class="content">
+                    <van-checkbox-group :value="newResult" @change="onChangeGroup">
+                        <van-cell-group>
+                            <van-cell
+                                v-for="(item,index) in tagList"
+                                :key="index"
+                                :title="item.name"
+                                value-class="value-class"
+                                clickable
+                                :data-name="index"
+                                @click.stop="toggle"
+                            >
+                            <van-checkbox
+                                :class="'checkboxes-'+index"
+                                :name="item.itemid"
+                                shape="square"
+                                slot="right-icon"
+                            />
+                            </van-cell>
+                        </van-cell-group>
+                    </van-checkbox-group>
+                </div>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 <script>
 const uuid = require('../../utils/uuid');
 import {mapState,mapMutations} from 'vuex';
+import getOpenFiles from '@/utils/openFiles';
 export default {
     data(){
         return {
@@ -159,7 +209,10 @@ export default {
             result:[],
             id:"",
             // tag:"",
-            sessionkey:""
+            sessionkey:"",
+            show:false,
+            newResult:[],
+            newTag:""
         }
     },
     computed:{
@@ -173,12 +226,35 @@ export default {
             selectFiles:state=>{
                 return state.usb.selectFiles;
             }
-        })
+        }),
+        isModelmes(){
+            return  wx.getStorageSync('isModelmes');
+        },
+        fileIds(){
+            let temp = [];
+            this.selectFiles.forEach(item=>{
+                temp.push(item.id);
+            })
+            return temp;
+        },
+        openImgs(){
+            let temp = [];
+            this.selectFiles.forEach(item=>{
+                if(item.fileExtension.indexOf('jpg')!=-1||item.fileExtension.indexOf('png')!=-1){
+                    temp.push(item.link);
+                }
+            })
+            return temp;
+        }
+    },
+    onUnload(){
+        this.clearFile([]);
     },
     onLoad(options){
         Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
+        // this.isModelmes = wx.getStorageSync('isModelmes');
         this.uuid = uuid.wxuuid();
         this.getColumnQuery();
         this.queryTag();
@@ -186,15 +262,33 @@ export default {
             wx.setNavigationBarTitle({
                 title: '修改新闻'
             })
+            this.uuid = options.id;
             this.id = options.id;
             this.getQueryInfo();
             this.contentBody();
         }
     },
+    onShow(){
+        if(this.selectFiles!=''){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.usb.addFile,
+                    SessionKey:this.sessionkey,
+                    fileIds:this.fileIds.join(','),
+                    ObjectTypeCode:100201,
+                    ObjectId:this.uuid
+                }
+            }).then(res=>{
+                console.log(res);
+            })
+        }
+    },
     methods:{
         ...mapMutations([
             'journalismInfo',
-            'delete'
+            'delete',
+            'clearFile'
         ]),
         getEnclosure(){
             const url = '/pages/uPan/main';
@@ -202,6 +296,40 @@ export default {
         },
         getDeleteFile(item){
             this.delete(item.id);
+        },
+        toggle(e){
+            const { name } = e.mp.currentTarget.dataset;
+            // const checkbox = wx.createSelectorQuery(`.checkboxes-${index}`)
+            const checkbox = this.$mp.page.selectComponent(`.checkboxes-${name}`);
+            checkbox.toggle();
+        },
+        onChangeGroup(e){
+            this.newResult = e.mp.detail;
+        },
+        getDetermine(){
+            console.log(this.newResult);
+            let temp = [];
+            this.newResult.forEach(item=>{
+                const row = this.tagList.find(v=>v.itemid===item);
+                temp.push(row.name);
+            })
+            this.newTag = temp.join(',');
+            this.show = false;
+        },
+        noop(e) {
+        },
+        getCancel(){
+            this.show = false;
+            this.newResult = [];
+        },
+        onClose(){
+            this.show = false;
+            this.newResult = [];
+        },
+        // 预览附件
+        getPreview(item){
+            let openImgs = JSON.stringify(this.openImgs);
+            getOpenFiles(item,openImgs);
         },
     // 新闻详情信息
         getQueryInfo(){
@@ -215,6 +343,7 @@ export default {
           }).then(res=>{
               this.info = res.data[0];
               this.resultName = this.info.KeyWords.split(',');
+              this.newTag = this.resultName.join(',');
               console.log(this.resultName,'resultname')
               this.title = this.info.Title;
           })
@@ -353,7 +482,7 @@ export default {
                     // return;
                     // this.imgList = tempFilePaths;
                     wx.uploadFile({
-                        url: "https://wx.phxinfo.com.cn/rest?method="+'file.attachfiles.upload'+'&SessionKey=' + this.sessionkey+'&pid='+this.uuid, //仅为示例，非真实的接口地址
+                        url: "https://wx.phxinfo.com.cn/rest?method="+'file.attachfiles.upload'+'&SessionKey=' + this.sessionkey+'&pid='+this.uuid+"&ObjTypeCode="+100201, //仅为示例，非真实的接口地址
                         filePath: tempFilePaths[0],
                         name: 'file',
                         formData: {
@@ -379,7 +508,7 @@ export default {
                     duration:2000
                 })
                 return false;
-            }else if(this.tag==""){
+            }else if(this.newTag==""){
                 wx.showToast({
                     title:"标签不能为空",
                     icon:"none",
@@ -404,7 +533,8 @@ export default {
             var object = {};
             object.uuid = this.uuid;
             object.columnId = this.columnId;
-            object.keyWords = this.tag;
+            // object.keyWords = this.tag;
+            object.keyWords = this.newTag;
             object.title = this.title;
             object.content = this.content;
             object.type = 1;
@@ -438,6 +568,9 @@ export default {
         .content{
             background: #fff;
             margin-bottom: 20rpx;
+            .inp{
+                margin-right: 20rpx;
+            }
             .icon{
                 color: #cccccc;
             }
@@ -507,9 +640,15 @@ export default {
                 flex-wrap: wrap;
                 // justify-content: space-between;
                 // flex-direction: row;
+                .imgWrap:last-child{
+                    background: #f7f7f7;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
                 .imgWrap{
-                    width: 100rpx;
-                    height: 100rpx;
+                    width: 96rpx;
+                    height: 96rpx;
                     position: relative;
                     margin-right: 20rpx;
                     margin-top: 10rpx;
@@ -530,7 +669,7 @@ export default {
                         height: 33rpx;
                         line-height: 33rpx;
                         text-align: center;
-                        background: #9c9c9c;
+                        background: #343434;
                         position: absolute;
                         top: -10rpx;
                         right: -10rpx;
@@ -539,13 +678,24 @@ export default {
                     }
                 }
             }
+            .fjcont:last-child{
+                border: none;
+            }
             .fjcont{
                 padding: 20rpx 33rpx;
                 display: flex;
                 border-bottom: 2rpx solid #f6f6f6;
+                .default{
+                    width: 96rpx;
+                    height: 96rpx;
+                    background: #f7f7f7;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
                 div:nth-child(1){
-                    width: 83rpx;
-                    height: 83rpx;
+                    width: 96rpx;
+                    height: 96rpx;
                     img{
                         width: 100%;
                         height: 100%;
@@ -557,12 +707,16 @@ export default {
                     color: #333333;
                     padding: 10rpx 0;
                     flex: 1;
-                    margin-left: 20px;
+                    margin-left: 20rpx;
+                    width: 393rpx;
                     .name{
-                        width: 500rpx;
+                        width: 393rpx;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
+                        font-size: 34rpx;
+                        color: #333333;
+                        padding-bottom: 24rpx;
                     }
                     .time{
                         font-size: 24rpx;
@@ -572,6 +726,18 @@ export default {
                 div:nth-child(3){
                     display: flex;
                     align-items: center;
+                    p{
+                        width: 86rpx;
+                        height: 46rpx;
+                        line-height: 46rpx;
+                        text-align: center;
+                        border-radius: 23rpx;
+                        font-size: 28rpx;
+                        color: #a1a5aa;
+                        background: #fff;
+                        margin-right: 21rpx;
+                        background: #eeeeee;
+                    }
                     .icon{
                         line-height: 2.5;
                     }
@@ -588,4 +754,33 @@ export default {
             padding: 20rpx;
         }
     }
+    .sheetWrap{
+            width: 100%;
+            height: auto;
+            background: #fff;
+            .title{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 30rpx;
+                .cancel,.submit{
+                    font-size: 33rpx;
+                    color: #3399ff;
+                }
+                .name{
+                    font-size: 34rpx;
+                    color: #333333;
+                    font-weight: bold;
+                }
+            }
+            .content{
+                .van-checkbox{
+                    border-radius: 5rpx!important;
+                    .van-checkbox__icon{
+                        width: 36rpx!important;
+                        height: 36rpx!important;
+                    }
+                }
+            }
+        }
 </style>

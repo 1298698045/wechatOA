@@ -17,6 +17,9 @@
     "van-icon":"/static/vant/icon/index",
     "van-button":"/static/vant/button/index",
     "i-checkbox-group":"/static/view/checkbox-group/index",
-    "i-checkbox":"/static/view/checkbox/index"
+    "i-checkbox":"/static/view/checkbox/index",
+    "van-action-sheet":"/static/vant/action-sheet/index",
+    "van-cell-group":"/static/vant/cell-group/index",
+    "van-cell":"/static/vant/cell/index"
   }
 }

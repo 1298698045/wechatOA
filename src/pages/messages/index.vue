@@ -1,11 +1,11 @@
 <template>
     <div class="wrap">
         <van-search :value="value" placeholder="搜索" />
-        <i-notice-bar icon="systemprompt" color="#3399ff" i-class="systemprompt" closable>
+        <!-- <i-notice-bar icon="systemprompt" color="#3399ff" i-class="systemprompt" closable>
             启用新消息通知，不错过重要新消息!
-        </i-notice-bar>
+        </i-notice-bar> -->
         <div class="center">
-            <div class="content" :class="{active:num==index}" v-for="(item,index) in list" :key="index" @click="handleSelelct(item,index)">
+            <div class="content" :class="{active:num==index}" v-for="(item,index) in list" :key="index" @touchstart="touchstart(item,index)" @touchend="touchend" @click="handleSelelct(item,index)">
                 <i-row>
                     <i-col span="4" i-class="left">
                         <div class="imgWrap">
@@ -21,22 +21,38 @@
                     </i-col>
                     <i-col span="5" class="rightCol">
                         <p class="time">{{item.time}}</p>
-                        <span v-if="item.Quantity">{{item.Quantity}}</span>
+                        <span :class="{'radius':item.Quantity<10}" v-if="item.Quantity>0">{{item.Quantity}}</span>
                         <!-- <i-badge count="66" i-class-alone="demo-badge-alone" /> -->
                     </i-col>
                 </i-row>
             </div>
         </div>
+        <vue-tab-bar
+            @fetch-index="clickIndexNav"
+            :selectNavIndex="selectNavIndex"
+            :needButton="needButton"
+            :handButton="handButton"
+            :btnText="btnText">
+        </vue-tab-bar>
     </div>
 </template>
 <script>
-import { mapState } from 'vuex';
+import { mapState,mapMutations} from 'vuex';
+import vueTabBar from '../../components/vueTabBar';
 export default {
+    components:{
+        vueTabBar
+    },
     data(){
         return {
             list:[],
-            num:"",
-            sessionkey:""
+            num:-1,
+            sessionkey:"",
+            selectNavIndex:0,
+            needButton:false,
+            handButton:'',
+            btnText:'',
+            total:""
         }
     },
     onShow(){
@@ -55,12 +71,20 @@ export default {
             }
         })
     },
+    onShow(){
+        wx.hideTabBar();
+        this.getQuery();
+    },
     onLoad(){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.getQuery();
+        
     },
     methods:{
+        ...mapMutations([
+            'getMessageTotal'
+        ]),
         getQuery(){
             console.log(this.$httpWX,this.$api.message.queryList);
             this.$httpWX.get({
@@ -71,10 +95,20 @@ export default {
                 }
             }).then(res=>{
                 this.list = res.listDta;
+                let total = 0;
                 this.list.map(item=>{
                     const time = this.getDate(item.ModifiedOn.replace(/-/g,'/'));
                     item.time = time;
                     return item;
+                })
+                this.list.forEach(item=>{
+                   total += Number(item.Quantity)
+                })
+                this.total = total;
+                this.getMessageTotal(total);
+                wx.setTabBarBadge({
+                    index: 0,
+                    text: String(total)
                 })
             })
         },
@@ -87,10 +121,27 @@ export default {
             const newDate = `${month}${date}`;
             return newDate;
         },
+        touchstart(item,index){
+            this.num = index;
+        },
+        touchend(){
+            this.num = -1;
+        },
         handleSelelct(item,index){
             console.log(item);
-            this.num = index;
+            // this.num = index;
             let id = item.ModuleId;
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.msg.update,
+                    SessionKey:this.sessionkey,
+                    objectTypeCode:item.ObjectTypeCode
+                }
+            }).then(res=>{
+                console.log(res);
+                this.getQuery();
+            })
             // 107邮件 101待办事务 104新闻
             if(id==104){
                 const url = '/pages/journalism/main?contentTypeCode='+1;
@@ -130,50 +181,62 @@ export default {
             height: 100%;
             overflow: hidden;
             background: #fff;
+            padding-bottom: 80px;
             .content.active{
                 background: #f3f3f3;
             }
             .content{
                 padding: 20rpx;
                 background: #fff;
+                border-bottom: 1rpx solid #e2e3e5;
                 .left{
                     .imgWrap{
-                        width: 48px;
-                        height: 48px;
+                        width: 100rpx;
+                        height: 100rpx;
                         img{
-                            width: 100%;
-                            height: 100%;
+                            width: 100rpx;
+                            height: 100rpx;
                             vertical-align: middle;
+                            border-radius: 50%;
                         }
                     }
                 }
                 .centerCol{
                     .topText{
                         color: #333333;
-                        font-size: 30rpx;
+                        font-size: 35rpx;
                         margin-top: 10rpx;
                     }
                     .minText{
                         color: #999999;
-                        font-size: 20rpx;
+                        font-size: 28rpx;
                     }
                 }
                 .rightCol{
                         text-align: right;
                     .time{
-                        font-size: 10px;
+                        font-size: 21rpx;
                         color: #999999;
                         margin-top: 10rpx;
                     }
                     span{
-                        width: 21px;
-                        height: 14px;
+                        width: 40rpx;
+                        height: 32rpx;
+                        line-height: 32rpx;
                         text-align: center;
                         background: red;
                         color: #fff;
                         display: inline-block;
-                        font-size: 10px;
-                        border-radius: 20rpx;
+                        font-size: 17rpx;
+                        border-radius: 16rpx;
+                    }
+                    span.radius{
+                        width: 32rpx;
+                        height: 32rpx;
+                        line-height: 32rpx;
+                        border-radius: 50%;
+                        text-align: center;
+                        font-size: 17rpx;
                     }
                 }
             }

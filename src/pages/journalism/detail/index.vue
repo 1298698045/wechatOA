@@ -21,53 +21,91 @@
                 <wxParse :content="article" />
             </div>
             <div class="dividerWrap" v-if="enclosureList!=''">
-                <p>
+                <!-- <p>
                     附件
-                </p>
+                </p> -->
                 <span></span>
             </div>
             <!-- <div>
                 <van-divider contentPosition="left">附件</van-divider>
             </div> -->
-            <div class="enclosureCont">
-                <p v-for="(item,index) in enclosureList" :key="index" @click="getOpenFile(item)"><i-icon type="accessory" color="#ff6666" />
-                    <span class="overflow">
-                        {{item.name}}
-                    </span>
-                </p>
+            <div class="boxWrap">
+                <h3>附件</h3>
+                <div class="enclosureCont">
+                    <p v-for="(item,index) in enclosureList" :key="index" @click="getOpenFile(item)">
+                        <i class="iconfont icon-fujian2"></i>
+                        <!-- <i-icon type="accessory" color="#ff6666" /> -->
+                        <span class="overflow">
+                            {{item.name}}
+                        </span>
+                    </p>
+                </div>
             </div>
             <div class="dividerWrap">
-                <p>
+                <!-- <p>
                     相关标签
-                </p>
+                </p> -->
                 <span></span>
             </div>
-            <div class="tagContent">
-                <p>院办</p>
-                <p>财务</p>
+            <div class="boxWrap">
+                <h3>标签</h3>
+                <div class="tagContent">
+                    <p v-for="(item,index) in KeyWords" :key="index">{{item}}</p>
+                    <!-- <p>财务</p> -->
+                </div>
+            </div>
+            <div class="dividerWrap">
+                <span></span>
             </div>
             <div class="border">
-                <p @click="getLick">点赞{{info.likecount}}</p>
-                <p>不喜欢{{info.dislikeqty}}</p>
+                <!-- <p @click="getLick">点赞{{info.likecount}}</p>
+                <p>不喜欢{{info.dislikeqty}}</p> -->
+                <p @click="getFabulous(zanShow)" :class="{'active':zanShow}">
+                    <i class="iconfont icon-zan2"></i>
+                    <span v-if="!zanShow">点赞</span>
+                    <span v-else>
+                        {{info.LikeCount}}
+                    </span>
+                </p>
+                <!-- <p>
+                    <i class="iconfont icon-shanchu1"></i>
+                    <span>
+                        不喜欢
+                    </span>
+                </p> -->
             </div>
-            <div class="dividerWrap" v-if="relevantList!=''">
+            <!-- <div class="dividerWrap" v-if="relevantList!=''">
                 <p>
                     相关推荐
                 </p>
                 <span></span>
-            </div>
+            </div> -->
             <!-- <div>
                 <van-divider contentPosition="left">相关推荐</van-divider>
             </div> -->
-            <div class="contentWrap">
-                <div class="content" v-for="(item,index) in relevantList" :key="index" @click="getParentPage(item)">
+        </div>
+        <div class="contentWrap">
+            <div class="relevantList" v-for="(item,index) in relevantList" :key="index" @click="getParentPage(item)">
+                <div class="content" v-if="item.coverdisplay!='RightTitle'">
                     <p class="h1">{{item.title}}</p>
                     <div class="rowText">
-                        <span>热</span>
-                        <span>文艺、美工</span>
+                        <span>{{item.keywords}}</span>
                         <span>{{item.readcount}}阅读</span>
                         <span>{{item.commentcount}}评论</span>
                         <span>{{item.time}}</span>
+                    </div>
+                </div>
+                <div class="rightContent" v-if="item.coverdisplay=='RightTitle'">
+                    <div class="left">
+                        <p class="title">
+                            {{item.title}}
+                        </p>
+                        <p class="time">
+                            {{item.keywords}}  {{item.readcount}}阅读  {{item.time}}
+                        </p>
+                    </div>
+                    <div class="right">
+                        <img src="" alt="">
                     </div>
                 </div>
             </div>
@@ -75,8 +113,8 @@
         <div class="tabWrap">
             <van-index-bar :scroll-top="scrollTop">
                 <i-tabs :current="current" @change="handleChangeTab">
-                    <i-tab key="tab1" :title="'评论'+info.CommentCount"></i-tab>
-                    <i-tab key="tab2" :title="'已读'+info.ReadCount"></i-tab>
+                    <i-tab key="tab1" :title="'评论 '+info.CommentCount"></i-tab>
+                    <i-tab key="tab2" :title="'已读 '+info.ReadCount"></i-tab>
                 </i-tabs>
                 <div class="content" v-for="(item,index) in commentList" :key="index" v-if="current=='tab1'">
                     <div class="row">
@@ -85,10 +123,12 @@
                     <div class="row">
                         <p class="name">{{item.CreatedByName}}</p>
                         <p class="cont">{{item.Comment}}</p>
-                        <p class="info">信息中心 <span>{{item.CreatedOn}}</span></p>
+                        <p class="info">{{item.BusinessUnitName}} <span>{{item.CreatedOn}}</span></p>
                     </div>
-                    <div class="row">
-                        <i class="iconfont icon-zan zan" :class="item.IsLike==1?'active':''" @click="getCommentLive(item)">{{item.LikeQty}}</i>
+                    <div class="row" @click="getCommentLive(item)">
+                        <i class="iconfont icon-zan2 zan" :class="item.IsLike==1?'active':''">
+                        </i>
+                        <span :class="item.IsLike==1?'active':''">{{item.IsLike==1?item.LikeQty:'赞'}}</span>
                     </div>
                 </div>
                 <div class="content" v-for="(item,index) in readerList" :key="index" v-if="current=='tab2'">
@@ -125,7 +165,7 @@
         </div>
         <!-- <van-overlay :show="overlayShow" @click="onClickHide">
         </!-->
-        <div class="footer" v-if="overlayShow==false">
+        <div class="footer" v-if="overlayShow==false" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="bottomBox">
                 <!-- <p>
                     <i class="iconfont icon-fanhui"></i>
@@ -182,6 +222,8 @@ import wxParse from 'mpvue-wxparse';
 import { mapState, mapMutations } from 'vuex';
 import { getDate } from '@/utils/changeDate.js';
 import Notify from '../../../../static/vant/notify/notify';
+// const openFile = require('../../../utils/openFiles');
+import getOpenFiles from '@/utils/openFiles';
 export default {
     components:{
         wxParse
@@ -218,7 +260,9 @@ export default {
             height:"",
             overlayShow:false,
             total:500,
-            sessionkey:""
+            sessionkey:"",
+            KeyWords:[],
+            // journalismId:"804d311c-850a-47c0-9a23-49037a37c518"
         }
     },
     onUnload(){
@@ -228,6 +272,7 @@ export default {
         // })
     },
     onLoad(){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.height = wx.getSystemInfoSync().windowHeight;
@@ -250,7 +295,19 @@ export default {
             journalismId:state=>{
                 return state.user.journalismId;
             }
-        })
+        }),
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
+        openImgs(){
+            let temp = [];
+            this.enclosureList.forEach(item=>{
+                if(item.fileExtension.indexOf('jpg')!=-1||item.fileExtension.indexOf('png')!=-1){
+                    temp.push(item.link);
+                }
+            })
+            return temp;
+        },
     },
     methods:{
         queryInfo(){
@@ -263,8 +320,11 @@ export default {
                 }
             }).then(res=>{
                 let data = res.data[0];
-                data.CreatedOn = getDate(data.CreatedOn.replace(/-/g,'/'));
-                this.info = data
+                // data.CreatedOn = getDate(data.CreatedOn.replace(/-/g,'/'));
+                this.info = data;
+                this.info.CommentCount = this.info.CommentCount==0?'':this.info.CommentCount;
+                this.info.ReadCount = this.info.ReadCount==0?'':this.info.ReadCount;
+                this.KeyWords = this.info.KeyWords.split(',');
                 if(this.info.IsFavor=="1"){
                     this.isShow = true;
                 }else {
@@ -314,7 +374,8 @@ export default {
                 data:{
                     method:"file.attachfiles.getlist",
                     SessionKey:this.sessionkey,
-                    pid:this.journalismId
+                    pid:this.journalismId,
+                    ObjTypeCode:100201
                 }
             }).then(res=>{
                 console.log('附件',res);
@@ -322,31 +383,34 @@ export default {
             })
         },
         getOpenFile(item){
-            console.log(item);
-            // fileExtension
-            let url = item.link;
-            if(item.fileExtension=='docx'||item.fileExtension=='pdf'){
-                wx.downloadFile({
-                    url: url, 
-                    success (res) {
-                        debugger
-                        if (res.statusCode === 200) {
-                            var filePath = res.tempFilePath
-                        }
-                        wx.openDocument({
-                            filePath: filePath,
-                            success: function (res) {
-                                console.log('打开文档成功')
-                            }
-                        })
-                    }
-                })
-            }else if(item.fileExtension=='jpg'){
-                wx.previewImage({
-                    current: item.link, // 当前显示图片的http链接
-                    urls: [item.link] // 需要预览的图片http链接列表
-                })
-            }
+            console.log(item,this.openImgs);
+            const openImgs = JSON.stringify(this.openImgs);
+            getOpenFiles(item,openImgs);
+            // let url = item.link;
+            // if(item.fileExtension=='docx'||item.fileExtension=='pdf'||item.fileExtension=='xls'||item.fileExtension=='xlsx'){
+            //     wx.downloadFile({
+            //         url: url, 
+            //         fileType:item.fileExtension,
+            //         success (res) {
+            //             debugger
+            //             if (res.statusCode === 200) {
+            //                 var filePath = res.tempFilePath
+            //             }
+            //             wx.openDocument({
+            //                 filePath: filePath,
+            //                 fileType:item.fileExtension,
+            //                 success: function (res) {
+            //                     console.log('打开文档成功')
+            //                 }
+            //             })
+            //         }
+            //     })
+            // }else if(item.fileExtension=='jpg'){
+            //     wx.previewImage({
+            //         current: item.link, // 当前显示图片的http链接
+            //         urls: [item.link] // 需要预览的图片http链接列表
+            //     })
+            // }
         },
         getFocus(){
             this.overlayShow = true;
@@ -372,6 +436,7 @@ export default {
                 }).then(res=>{
                     this.comment = "";
                     this.overlayShow = false;
+                    this.queryInfo();
                     this.getCommentsList();
                 })
             }else {
@@ -455,8 +520,16 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
-                Notify({ type: 'primary', message: res.msg });
-                this.queryInfo();
+                wx.showToast({
+                    title:res.msg,
+                    icon:'success',
+                    duration:2000,
+                    success:res=>{
+                        setTimeout(()=>{
+                            this.queryInfo();
+                        },1000)
+                    }
+                })
             })
         },
         getFabulous(show){
@@ -477,12 +550,18 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
-                Notify({ type: 'primary', message: res.msg });
+                // Notify({ type: 'primary', message: res.msg });
                 this.queryInfo();
             })
         },
         // 评论点赞
         getCommentLive(item){
+            let action = '';
+            if(item.IsLike==1){
+                action = 'dislike';
+            }else {
+                action = 'Like';
+            }
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
@@ -490,11 +569,12 @@ export default {
                     SessionKey:this.sessionkey,
                     id:item.CommentId,
                     objectTypeCode:"100205",
-                    action:"Like"
+                    action:action
                 }
             }).then(res=>{
                 console.log(res);
                 this.queryInfo();
+                this.getCommentsList();
             })
         },
         getComment(){
@@ -552,6 +632,9 @@ export default {
                     success:res=>{
                         let that = this;
                         that.moveShow = false;
+                        wx.navigateBack({
+                            delta: 1
+                        })
                     }
                 })
             })
@@ -572,6 +655,7 @@ export default {
     @import "../../../../static/css/public.scss";
     @import url("~mpvue-wxparse/src/wxParse.css");
     @import '../../../../static/css/icon.css';
+    @import '../../../../static/css/journalism.css';
     .wrap{
         // background: #fff;
         .header{
@@ -585,22 +669,23 @@ export default {
         .rowWrap{
             padding: 30rpx;
             display: flex;
+            align-items: center;
             background: #fff;
             .row:nth-child(1){
-                width:75rpx;
-                height: 75rpx;
+                width:69rpx;
+                height: 69rpx;
                 border-radius: 50%;
                 text-align: center;
-                line-height: 75rpx;
+                line-height: 69rpx;
                 background: #3399ff;
-                font-size: 21rpx;
+                font-size: 23rpx;
                 color: #fff;
             }
             .row:nth-child(2){
-                font-size: 28rpx;
+                font-size: 31rpx;
                 padding: 10rpx 0;
                 flex: 1;
-                margin-left: 20px;
+                margin-left: 20rpx;
                 .time{
                     font-size: 22rpx;
                     color: #999999;
@@ -637,20 +722,38 @@ export default {
                 p:nth-child(1){
                     margin-right: 30px;
                 }
+                p:nth-child(1).active{
+                    border: 2rpx solid #fc6464;
+                    color: #fc6464;
+                }
                 p{
-                    width: 164rpx;
-                    height: 75rpx;
-                    line-height: 75rpx;
+                    width: 242rpx;
+                    height: 72rpx;
+                    line-height: 72rpx;
                     text-align: center;
                     border:2rpx solid #cccccc;
                     border-radius: 38rpx;
                     color: #333333;
                     margin: 0 10rpx;
                     font-size: 24rpx;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    span{
+                        margin-left: 15rpx;
+                    }
+                }
+            }
+            .boxWrap{
+                padding: 0 33rpx;
+                h3{
+                    font-size: 32rpx;
+                    color: #333333;
+                    padding: 33rpx 0;
                 }
             }
             .tagContent{
-                padding: 33rpx;
+                padding-bottom: 33rpx;
                 display: flex;
                 p{
                     width: 111rpx;
@@ -660,15 +763,15 @@ export default {
                     font-size: 24rpx;
                     color: #666666;
                     background: #f2f2f2;
-                    border-radius: 28rpx;
+                    border-radius: 9rpx;
                     margin-right: 20rpx;
                 }
             }
             .dividerWrap{
-                // padding-left: 33rpx;
                 display: flex;
                 align-items: center;
-                padding: 20rpx 0 20rpx 33rpx;
+                // padding: 20rpx 0 20rpx 33rpx;
+                padding: 20rpx 33rpx;
                 p{
                     color: #999999;
                     font-size: 22rpx;
@@ -678,62 +781,93 @@ export default {
                     display: inline-block;
                     width: 100%;
                     height: 2rpx;
-                    background: #eceeed;
-                    margin-left: 20rpx;
+                    background: #e2e3e5;
                 }
             }
-            .enclosureCont{
-                padding: 10rpx 30rpx;
-                font-size: 28rpx;
-                p{
-                    margin: 10rpx 0;
-                    padding: 0 20rpx;
-                    height: 69rpx;
-                    line-height: 69rpx;
-                    background: #f2f2f2;
-                    border-radius: 35rpx;
-                    display: flex;
+            .boxWrap{
+                padding:0 33rpx;
+                h3{
+                    font-size: 32rpx;
                     color: #333333;
+                    padding: 33rpx 0;
+                }
+                .enclosureCont{
                     font-size: 28rpx;
-                    .overflow{
-                        flex: 1;
-                        width: 100%;
-                        margin-left: 20rpx;
+                    p:first-child{
+                        margin: 0;
+                    }
+                    p{
+                        // margin: 10rpx 0;
+                        margin-top: 20rpx;
+                        padding: 0 20rpx;
+                        height: 76rpx;
+                        line-height: 76rpx;
+                        background: #f2f2f2;
+                        border-radius: 9rpx;
+                        display: flex;
+                        color: #333333;
+                        font-size: 28rpx;
+                        .overflow{
+                            flex: 1;
+                            width: 100%;
+                            margin-left: 20rpx;
+                        }
+                        .iconfont{
+                            color: #fc6464;
+                        }
                     }
                 }
             }
-            .contentWrap{
+        }
+        .contentWrap{
+            background: #fff;
+            margin-top: 16rpx;
+            .relevantList{                    
+                padding: 30rpx;
+                border-bottom: 1rpx solid #eceeed;
                 .content{
-                    padding: 30rpx;
-                    border-bottom: 1rpx solid #eceeed;
                     .h1{
                         font-size: 36rpx;
                         color: #333333;
-                        font-weight: bold;
+                        // font-weight: bold;
                     }
                     .rowText{
                         span{
                             font-size: 22rpx;
                             display: inline-block;
                             margin: 0 10rpx;
-                        }
-                        span:nth-child(1){
-                            font-size: 15rpx;
-                            color: #ff6666;
-                            border:1rpx solid #ff6666;
-                            display: inline-block;
-                            // padding:0 5rpx;
-                            border-radius: 2rpx;
-                            margin-left: 0;
-                            margin-right: 10rpx;
-                            border-radius: 5rpx;
-                            width: 30rpx;
-                            text-align: center;
-                        }
-                        span:nth-child(2),span:nth-child(5){
                             color: #999999;
                         }
                         
+                    }
+                }
+                .rightContent{
+                    display: flex;
+                    justify-content: space-between;
+                    .left{
+                        flex: 1;
+                        position: relative;
+                        .title{
+                            font-size: 36rpx;
+                            color: #333333;
+                        }
+                        .time{
+                            position: absolute;
+                            bottom: 0;
+                            font-size: 24rpx;
+                            color: #999999;
+                        }
+                    }
+                    .right{
+                        width: 217rpx;
+                        height: 127rpx;
+                        background: #ccc;
+                        border-radius: 7rpx;
+                        img{
+                            width: 217rpx;
+                            height: 217rpx;
+                            border-radius: 7rpx;
+                        }
                     }
                 }
             }
@@ -749,25 +883,25 @@ export default {
                 border-bottom: 1rpx solid #eceeed;
                 .row:nth-child(1){
                     p{
-                        width: 75rpx;
-                        height: 75rpx;
+                        width: 69rpx;
+                        height: 69rpx;
                         border-radius: 50%;
                         background: #3399ff;
                         text-align: center;
-                        line-height: 75rpx;
-                        font-size: 21rpx;
+                        line-height: 69rpx;
+                        font-size: 23rpx;
                         color: #fff;
                     }
                 }
                 .row:nth-child(2){
                     flex:1;
-                    margin-left: 20rpx;
+                    margin-left: 19rpx;
                     .name{
-                        font-size: 28rpx;
+                        font-size: 31rpx;
                         color: #3399ff;
                     }
                     .cont{
-                        font-size: 32rpx;
+                        font-size: 35rpx;
                         margin: 15rpx 0;
                         color: #333333;
                     }
@@ -780,12 +914,19 @@ export default {
                     }
                 }
                 .row:nth-child(3){
+                    display: flex;
+                    align-items: center;
                     .zan{
                         color:#999999;
                         font-size: 12px;
                     }
+                    span{
+                        margin-left: 10rpx;
+                        font-size: 27rpx;
+                        color: #666666;
+                    }
                     .active{
-                        color: #fc6464;
+                        color: #ff6666;
                     }
                 }
             }
@@ -841,7 +982,7 @@ export default {
             width: 100%;
             background: #fff;
             position: fixed;
-            bottom: 20px;
+            bottom: 0px;
             .bottomBox{
                 padding: 20rpx 0;
                 display: flex;

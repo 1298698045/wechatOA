@@ -1,11 +1,11 @@
 
 <template>
 	<view class="date">
-		<view class="head">
+		<!-- <view class="head">
 			<view class="icon" @click="switch_month_week('prev',true)"><text class="iconfont icon-fanhui" /></view>
 			<view class="title">{{nowYear+'年'+nowMonth+'月'}}</view>
 			<view class="icon" @click="switch_month_week('next',true)"><text class="iconfont next icon-fanhui" /></view>
-		</view>
+		</view> -->
 		<view class="date_dl" >
 			<view class="dd" v-for="(item,index) in week" :key="index">{{item}}</view>
 		</view>
@@ -110,6 +110,7 @@ export default {
 	},
 	created(){
 		this.init();
+		this.switch_month_week();
 	},
 	methods:{
 		change(){
@@ -118,6 +119,11 @@ export default {
 			};
 			
 			this.$emit('change',value)
+		},
+		// 返回到当日
+		getDefault(date){
+			this.value = date;
+			this.init();
 		},
 		init(){
 			console.log(this.value)
@@ -237,7 +243,7 @@ export default {
 			}
 		},
 		change_date(e){
-			
+			console.log(e);
 			let primary_current = this.current
 			let current = e.mp.detail.current;
 			
@@ -427,7 +433,7 @@ export default {
 			}
 		},
 		next(){
-			this.get_date(this.next_date)
+			// this.get_date(this.next_date)
 		},
 		get_date(value = '',type = 'same'){
 			let date = new Date();
@@ -458,7 +464,7 @@ export default {
 				date_arrs.push({
 					day:i,
 					type:'prev',
-					date:`${prev_date.getFullYear()}-${prev_date.getMonth()+1}-${i}`
+					date:`${prev_date.getFullYear()}/${prev_date.getMonth()+1}/${i}`
 				})
 			}
 			
@@ -467,11 +473,11 @@ export default {
 					day:i,
 					type:'month',
 					today:i == nowDay ? true : false,
-					date:`${nowYear}-${nowMonth}-${i}`
+					date:`${nowYear}/${nowMonth}/${i}`
 				})
 				
 				if(i == nowDay && type == 'same'){
-					this.date = `${nowYear}-${nowMonth}-${i}`;
+					this.date = `${nowYear}/${nowMonth}/${i}`;
 				}
 				
 			}
@@ -485,7 +491,7 @@ export default {
 				date_arrs.push({
 					day:i,
 					type:'next',
-					date:`${next_date.getFullYear()}-${next_date.getMonth()+1}-${i}`
+					date:`${next_date.getFullYear()}/${next_date.getMonth()+1}/${i}`
 				})
 			}
 			

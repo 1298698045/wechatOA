@@ -130,35 +130,35 @@
                 </div>
             </div>
             <div class="iconRow">
-                <div class="box" @click="getMeeting">
+                <div class="box" v-if="!isMeeting" @click="getMeeting">
                     <p>
                         <i class="iconfont icon-canyuren-copy"></i>
                         <!-- <i-icon type="refresh" color="#666666" size="20" /> -->
                     </p>
                     <p class="name">参会人</p>
                 </div>
-                <div class="box" @click="getEquipment">
+                <div class="box" v-if="!isEquipment" @click="getEquipment">
                     <p>
                         <i class="iconfont icon-shebei1"></i>
                         <!-- <i-icon type="brush_fill" color="#666666" size="20" /> -->
                     </p>
                     <p class="name">设备</p>
                 </div>
-                <div class="box" @click="getPhone">
+                <div class="box" v-if="!isPhone" @click="getPhone">
                     <p>
                         <i class="iconfont icon-dianhua"></i>
                         <!-- <i-icon type="trash" color="#666666" size="20" /> -->
                     </p>
                     <p class="name">电话</p>
                 </div>
-                <div class="box" @click="getRemarks">
+                <div class="box" v-if="!isRemarks" @click="getRemarks">
                     <p>
                         <i class="iconfont icon-beizhu"></i>
                         <!-- <i-icon type="brush_fill" color="#666666" size="20" /> -->
                     </p>
                     <p class="name">描述</p>
                 </div>
-                <div class="box" @click="getNotice">
+                <div class="box" v-if="!isNotice" @click="getNotice">
                     <p>
                         <i class="iconfont  icon-shanguangdeng"></i>
                         <!-- <i-icon type="trash" color="#666666" size="20" /> -->

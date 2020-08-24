@@ -89,7 +89,7 @@
         unitHeight: 16,
         unitMinute: 15,
         showMinute: 60,
-        defaultChoose: 8,
+        defaultChoose: 4, // 4为1小时
         scale: 0,
         minRatio: 0,
         minAll: 0,
@@ -154,7 +154,7 @@
       this.unitHeight = parseInt(this.hourHeight / 4) || 16; //16px
       // this.unitMinute = parseInt(this.uMinute) || 15; //15分钟
       // this.showMinute = parseInt(this.showMin) || 60; //60分钟
-      this.defaultChoose = parseInt(this.defaultChooseLong/15) || 8; //120分钟
+      this.defaultChoose = parseInt(this.defaultChooseLong/15) || 4; //120分钟
       this.minMute=parseInt(this.showMin) || 1;
 
       this.minRatio = this.showMinute / this.unitMinute; //4
@@ -183,7 +183,7 @@
         let isToday;
         let td = new Date();
         td = new Date(td.getFullYear(), td.getMonth(), td.getDate());
-        let od = new Date(d);
+        let od = new Date(d.replace(/-/g,'/'));
         od = new Date(od.getFullYear(), od.getMonth(), od.getDate());
         let xc = od - td;
         let result = "";

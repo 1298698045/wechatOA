@@ -2,42 +2,49 @@
     <div class="wrap">
         <div class="container">
             <div class="nav">
-                带“*”必填
+                选择可被查看范围
             </div>
             <div class="header">
-                <picker class="pickers" v-model="rangeIdx" range-key="name" :range="range" @change="changeRange">
+                <!-- <picker class="pickers" v-model="rangeIdx" range-key="name" :range="range" @change="changeRange">
                     <van-field
                         :value="range[rangeIdx]?range[rangeIdx].name:''"
-                        required
                         clearable
                         title-width="75px"
                         label="范围"
                         icon="arrow"
                         :readonly="true"
                         placeholder="请选择"
+                        input-align="right"
                     />
-                </picker>
+                </picker> -->
+                <van-field
+                    :value="rangeName"
+                    clearable
+                    title-width="75px"
+                    label="范围"
+                    icon="arrow"
+                    :readonly="true"
+                    placeholder="请选择"
+                    input-align="right"
+                    @click="getArrow"
+                />
             </div>
             <div class="content">
                 <div class="heads" @click="handleSelPhoto">
                     <p>封面图片</p>
-                    <p>
+                    <!-- <p>
                         <i class="iconfont icon-tupian" style="color:#3399ff;"></i>
-                        <!-- <i-icon type="picture_fill" size="20" color="#3399ff" /> -->
-                    </p>
+                    </p> -->
                 </div>
-                <div class="cont" v-if="imgList!=''">
-                    <p class="imgWrap">
-                        <!-- <van-image
-                            width="60"
-                            height="60"
-                            :src="item"
-                        /> -->
+                <div class="cont">
+                    <p class="imgWrap" v-if="imgList!=''">
                         <img :src="imgList" alt="">
                         <span class="close"  @click="getCloseImg">
                             <i-icon type="close" color="#fff" size="12" />
                         </span>
-                        <!-- <van-icon name="close" custom-class="img" size="20" @click="getCloseImg(index)"/> -->
+                    </p>
+                    <p class="imgWrap" @click="handleSelPhoto">
+                        <i-icon type="add" color="#bec5c5" size="30" />
                     </p>
                 </div>
             </div>
@@ -45,25 +52,23 @@
                 <picker class="pickers" v-model="imgPositionIdx" range-key="name" :range="imgPositionList" @change="changeImgPosition">
                     <van-field
                         :value="imgPositionList[imgPositionIdx]?imgPositionList[imgPositionIdx].name:''"
-                        required
                         clearable
                         title-width="75px"
                         label="图片位置"
                         icon="arrow"
                         :readonly="true"
                         placeholder="请选择"
+                        input-align="right"
                     />
                 </picker>
             </div>
-            <div class="content">
+            <!-- 接收人隐藏 -->
+            <!-- <div class="content">
                 <div class="heads" @click="getSelectContacts">
                     <p>接收人</p>
                     <p>
                         <span class="people">{{selectListName.length}}人</span>
                         <van-icon name="add-o" color="#3399ff" size="20" />
-                        <!-- <span class="round">
-                            <i-icon type="add" size="20" color="#3399ff" />
-                        </span> -->
                     </p>
                 </div>
                 <div class="cont">
@@ -74,18 +79,8 @@
                             <i-icon type="close" color="#fff" size="12" />
                         </span>
                     </div>
-                    <!-- <div class="avatar">
-                        <p class="canvas">李楠</p>
-                        <p class="name">李楠</p>
-                        <van-icon name="close" custom-class="icon" size="20" @click="getCloseImg(index)"/>
-                    </div>
-                    <div class="avatar">
-                        <p class="canvas">李楠</p>
-                        <p class="name">李楠</p>
-                        <van-icon name="close" custom-class="icon" size="20" @click="getCloseImg(index)"/>
-                    </div> -->
                 </div>
-            </div>
+            </div> -->
              <div class="row">
                 <div class="photo">
                     <p>重要信息</p>
@@ -109,7 +104,7 @@
                         <p>
                             <span v-if="topDate==''" style="color:#ababab;">请选择</span>
                             <span else >{{topDate}}</span>
-                            <i-icon type="enter" size="20" />
+                            <i-icon type="enter" size="20" color="#cccccc" />
                         </p>
                     </div>
                 </picker>
@@ -134,11 +129,61 @@
                 </div>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="btn">
                 <van-button type="info" block @click="getSubmit">发布</van-button>
             </div>
         </div>
+        <van-action-sheet
+            :show="isPhotoShow"
+            :actions="actions"
+            @close="onClosePhoto"
+            @select="onSelect"
+            @cancel="onClosePhoto"
+            z-index="99999"
+            cancel-text="取消"
+        />
+        <van-action-sheet
+            :show="show"
+            @close="onClose"
+            z-index="99999"
+        >
+            <div class="sheetWrap">
+                <div class="title">
+                    <p class="cancel" @click="getCancel">
+                        取消
+                    </p>
+                    <p class="name">
+                        范围
+                    </p>
+                    <p class="submit" @click="getDetermine">
+                        确定
+                    </p>
+                </div>
+                <div class="content">
+                    <van-checkbox-group :value="result" @change="onChangeGroup">
+                        <van-cell-group>
+                            <van-cell
+                                v-for="(item,index) in list"
+                                :key="index"
+                                :title="item.name"
+                                value-class="value-class"
+                                clickable
+                                :data-name="index"
+                                @click.stop="toggle"
+                            >
+                            <van-checkbox
+                                :class="'checkboxes-'+index"
+                                :name="item.groupId"
+                                shape="square"
+                                slot="right-icon"
+                            />
+                            </van-cell>
+                        </van-cell-group>
+                    </van-checkbox-group>
+                </div>
+            </div>
+        </van-action-sheet>
     </div>
 </template>
 <script>
@@ -159,7 +204,7 @@ export default {
             type:"",
             Attach:"",
             groupId:"",
-            imgPositionIdx:"",
+            imgPositionIdx:0,
             imgPositionList:[
                 {
                     name:"标题右边",
@@ -178,8 +223,20 @@ export default {
             importantInfo:false,
             topInfo:true,
             topDate:"",
-            sessionkey:""
-
+            sessionkey:"",
+            show:false,
+            list:['部门','小组'],
+            result:[],
+            rangeName:"",
+            isPhotoShow:false,
+            actions: [
+                // {
+                //     name: '优盘',
+                // },
+                {
+                    name: '从手机相册选择',
+                }
+            ],
         }
     },
     computed:{
@@ -199,7 +256,10 @@ export default {
         }),
         ...mapGetters([
             'filterList'
-        ])
+        ]),
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        }
     },
     onShow(){
         console.log(this.selectListName,'selectListName');
@@ -232,6 +292,56 @@ export default {
             'getClear',
             'getSingleDelete'
         ]),
+        getOpenSheet(){
+            this.isPhotoShow = true;
+        },
+        onSelect(e){
+            console.log(e);
+            let name = e.mp.detail.name;
+            if(name=='优盘'){
+                const url = '/pages/uPan/main?max='+1;
+                wx.navigateTo({url:url});
+            }else {
+                this.isPhotoShow = false;
+                this.handleSelPhoto();
+            }
+        },
+        onClosePhoto(){
+            this.isPhotoShow = false;
+        },
+        getArrow(){
+            this.show = true;
+        },
+        toggle(e){
+            const { name } = e.mp.currentTarget.dataset;
+            // const checkbox = wx.createSelectorQuery(`.checkboxes-${index}`)
+            const checkbox = this.$mp.page.selectComponent(`.checkboxes-${name}`);
+            checkbox.toggle();
+        },
+        onChangeGroup(e){
+            this.result = e.mp.detail;
+        },
+        noop(e) {
+        },
+        getCancel(){
+            this.show = false;
+            this.result = [];
+        },
+        onClose(){
+            this.show = false;
+            this.result = [];
+        },
+        getDetermine(){
+            this.groupId = this.result.join(',');
+            let temp = [];
+            this.result.forEach(item=>{
+              const name = this.list.find(v=>v.groupId===item);
+              temp.push(name.name);
+            })
+            this.rangeName = temp.join(',');
+            console.log(temp);
+            this.show = false;
+        },
         getSelectContacts(){
             this.getSign('release');
             const url = '/pages/publics/mailList/main';
@@ -251,6 +361,7 @@ export default {
             }).then(res=>{
                 console.log(res);
                 this.range = res.listData;
+                this.list = res.listData;
             })
         },
         changeRange(e){
@@ -318,14 +429,7 @@ export default {
             // this.getClear([]);
             // console.log(this.selectId,this.filterList,'---')
             // return;
-            if(this.groupId==""){
-                wx.showToast({
-                    title:"范围不能为空",
-                    icon:"none",
-                    duration:2000
-                })
-                return false;
-            }else if(this.coverDisplay==""){
+            if(this.coverDisplay==""){
                 wx.showToast({
                     title:"图片位置不能为空",
                     icon:"none",
@@ -384,6 +488,9 @@ export default {
         .size{
             font-size: 32rpx;
         }
+    }
+    .value-class {
+        flex: none !important;
     }
     .nav{
         padding: 31rpx 33rpx;
@@ -455,9 +562,16 @@ export default {
                 flex-wrap: wrap;
                 // justify-content: space-between;
                 flex-direction: row;
+                .imgWrap:last-child{
+                    background: #f7f7f7;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
                 .imgWrap{
-                    width: 100rpx;
-                    height: 100rpx;
+                    width: 96rpx;
+                    height: 96rpx;
+                    margin-right: 40rpx;
                     position: relative;
                     img{
                         width: 100%;
@@ -470,7 +584,7 @@ export default {
                         height: 33rpx;
                         line-height: 33rpx;
                         text-align: center;
-                        background: #9c9c9c;
+                        background: #343434;
                         position: absolute;
                         top: -10rpx;
                         right: -10rpx;
@@ -555,6 +669,35 @@ export default {
             z-index: 99999;
             .btn{
                 padding: 20rpx;
+            }
+        }
+        .sheetWrap{
+            width: 100%;
+            height: auto;
+            background: #fff;
+            .title{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 30rpx;
+                .cancel,.submit{
+                    font-size: 33rpx;
+                    color: #3399ff;
+                }
+                .name{
+                    font-size: 34rpx;
+                    color: #333333;
+                    font-weight: bold;
+                }
+            }
+            .content{
+                .van-checkbox{
+                    border-radius: 5rpx!important;
+                    .van-checkbox__icon{
+                        width: 36rpx!important;
+                        height: 36rpx!important;
+                    }
+                }
             }
         }
 </style>

@@ -24,7 +24,7 @@
         <div class="center">
           <div class="record"  :class="index!=0?'top':''" v-for="(item,index) in list.attendData" :key="index">
             <div class="leftLine">
-              <p class="minRadius" :class="item.CheckTime==''?'blue':''"></p>
+              <p class="minRadius" :class="item.status==0?'blue':''"></p>
               <span class="spans"></span>
             </div>
             <div class="rightCont">
@@ -32,15 +32,17 @@
               <p class="weight" v-if="item.CheckTime!=''">打卡时间{{item.CheckTime}}
                 <span v-if="item.AbnormalCode=='1'">迟到</span>
                 <span v-if="item.AbnormalCode=='2'">早退</span>
-                <span class="waiqin" v-if="item.CheckType=='3'">外勤</span>
+                <span class="waiqin" v-if="item.CheckType=='3'||item.CheckType=='2'">外勤</span>
               </p>
               <p class="adress" v-if="item.Location!=''">
-                <i-icon type="coordinates" color="#999999;" />
+                <i class="iconfont icon-dizhi"></i>
+                <i class="iconfont icon-anquan"></i>
+                <!-- <i-icon type="coordinates" color="#999999;" /> -->
                 <span>{{item.Location}}</span>
               </p>
               <div class="toWrap">
                 <p class="toUpdate" v-if="item.CheckTime!=''&&item.IsUpdate==true" @click="getToUpdate(item)">更新打卡<i-icon type="enter" /></p>
-                <p class="toUpdate" v-if="item.CheckTime!=''&&item.AbnormalCode=='1'" @click="getSeeComment(item)">查看备注<i-icon type="enter" /></p>
+                <p class="toUpdate" v-if="item.CheckTime!=''&&(item.AbnormalCode=='1'||item.AbnormalCode=='2')&&item.Remark!=''" @click="getSeeComment(item)">查看备注<i-icon type="enter" /></p>
               </div>
               <!-- 缺卡 -->
               <div class="queKa" v-if="item.AbnormalCode=='3'">
@@ -88,16 +90,18 @@
     </div>
 
     <apply v-if="current=='apply'" />
-    <statistics v-if="current=='statistics'" />
-    <newSetting v-if="current=='setting'" @childFn="getIsShow"></newSetting>
+    <statistics :attendAdmin="attendAdmin" v-if="current=='statistics'" />
+    <newSetting v-if="current=='setting'" :DistanceRange="DistanceRange" @childFn="getIsShow"></newSetting>
     <!-- <setting v-if="current=='setting'" /> -->
-    <div class="footer" v-if="boxShow">
-        <i-tab-bar :current="current" :fixed="true" color="#049bfb" @change="handleChange">
-            <i-tab-bar-item key="homepage" icon="coordinates" current-icon="coordinates_fill" title="打卡"></i-tab-bar-item>
-            <i-tab-bar-item key="apply" icon="task" current-icon="task_fill" title="申请"></i-tab-bar-item>
-            <i-tab-bar-item key="statistics" icon="remind" current-icon="remind_fill" title="统计"></i-tab-bar-item>
-            <i-tab-bar-item key="setting" icon="setup" current-icon="setup_fill" title="设置"></i-tab-bar-item>
+    <div class="footer" v-if="boxShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
+      <div>
+        <i-tab-bar :current="current" color="#049bfb" @change="handleChange">
+            <i-tab-bar-item key="homepage" :img="imgUrl+'04.2.1.Clock_1.png'" :current-img="imgUrl+'04.2.1.Clock_2.png'" title="打卡"></i-tab-bar-item>
+            <i-tab-bar-item key="apply" :img="imgUrl+'04.2.1.Apply_1.png'" :current-img="imgUrl+'04.2.1.Apply_2.png'" title="申请"></i-tab-bar-item>
+            <i-tab-bar-item key="statistics" :img="imgUrl+'04.2.1.Statistics_1.png'" :current-img="imgUrl+'04.2.1.Statistics_2.png'" title="统计"></i-tab-bar-item>
+            <i-tab-bar-item v-if="attendAdmin" key="setting" :img="imgUrl+'04.2.1.Setup_1.png'" :current-img="imgUrl+'04.2.1.Setup_2.png'" title="设置"></i-tab-bar-item>
         </i-tab-bar>
+      </div>
     </div>
 
     <!-- 早退打卡 -->
@@ -132,11 +136,38 @@
             </div>
           </div>
         </div>
-        <div class="bottom" v-if="popupStatus==true">
+        <div class="bottompop" v-if="popupStatus==true">
           <p @click="getNoClockIn">不打卡</p>
           <p @click="getSubmit">确定</p>
         </div>
         <h3 class="submit" @click="getSubmit" v-if="!popupStatus">提交</h3>
+      </div>
+    </van-popup>
+
+    <!-- 查看备注 -->
+    <van-popup
+      :show="comentShow"
+      position="center"
+      custom-style="width:80%;height: auto;border-radius:7rpx;"
+      @cancel="getCloseComent"
+      @close="getCloseComent"
+    >
+      <div class="popupWrap">
+        <h3>打卡备注</h3>
+        <div class="cont">
+          <div class="row">
+            <p>打卡时间：</p>
+            <p>{{commentTime}}</p>
+          </div>
+          <div class="row">
+            <p>打卡地点：</p>
+            <p>{{commentLocation}}</p>
+          </div>
+        </div>
+        <div class="textValue">
+          <textarea class="textarea" v-model="commentRemark" :disabled="true" placeholder-class="placeholder" name="" id="" cols="30" rows="10"></textarea>
+        </div>
+        <h3 class="submit" @click="getCloseComent">关闭</h3>
       </div>
     </van-popup>
 
@@ -153,7 +184,7 @@
         </div>
         <p class="text" :style="{'color':colorClass}">{{CheckTypeName}}成功</p>
         <p class="time" :style="{'color':colorClass}">{{everyDate}}</p>
-        <p class="min">工作辛苦了，好好休息！</p>
+        <p class="min">{{tipsText}}</p>
       </div>
       <div class="foot" @click="getMyKnow">
         我知道了
@@ -229,8 +260,27 @@ export default {
         clockInStatus:"",
         popupStatus:"",
         colorClass:"",
-        Distance:""
+        Distance:"",
+        tipsText:"",
+        comentShow:false,
+        commentTime:"",
+        commentLocation:"",
+        commentRemark:"",
+        comentShow:"",
+        attendAdmin:''
     };
+  },
+  computed:{
+    isModelmes(){
+      return wx.getStorageSync('isModelmes');
+    },
+    imgUrl(){
+      return this.$api.photo.url;
+    },
+    currentTime(){
+      let time = new Date().getTime();
+      return time;
+    }
   },
   onLoad() {
       let sessionkey = wx.getStorageSync('sessionkey');
@@ -246,6 +296,7 @@ export default {
       this.startTime = `${y}-${m}-${day}`;
       // this.getLocation();
       this.numtap();
+      this.getPrivilege();
       this.getLocation().then(()=>{
         this.getUserInfo().then(()=>{
           this.getQuery();
@@ -264,6 +315,18 @@ export default {
     clearTimeout(this.timer);
   },
   methods: {
+    getPrivilege(){
+        this.$httpWX.get({
+            url:this.$api.message.queryList,
+            data:{
+                method:this.$api.clockIn.privilege,
+                SessionKey:this.SessionKey
+            }
+        }).then(res=>{
+            console.log(res);
+            this.attendAdmin = res.data.attendAdmin;
+        })
+    },
     getIsShow(val){
       this.boxShow = val;
     },
@@ -524,7 +587,12 @@ export default {
                   that.latitude = latitude;
                   that.longitude = longitude;
                   qqmapsdk.reverseGeocoder({
+                    location:{
+                      latitude:latitude,
+                      longitude:longitude
+                    },
                     success:res=>{
+                      console.log(res);
                       that.address = res.result.address;
                       resolve();
                     }
@@ -538,8 +606,18 @@ export default {
       })
     },
     changeTime(e){
-      this.startTime = e.mp.detail.value;
-      this.getQuery();
+      let value = e.mp.detail.value;
+      if(new Date(value).getTime()<=this.currentTime){
+        this.startTime = e.mp.detail.value;
+        this.getQuery();
+      }else {
+        wx.showToast({
+          title:'不能选择未来的日子',
+          icon:'none',
+          duration:2000
+        })
+      }
+      // console.log(new Date(this.startTime).getTime(),this.currentTime,'-------');
     },
     //分割字符方法，
     timestr(){
@@ -646,33 +724,68 @@ export default {
     },
     // 查看备注 
     getSeeComment(item){
-
+      this.commentTime = `${item.AttendDate} ${item.CheckTime}`;
+      this.commentLocation = item.Location;
+      this.commentRemark = item.Remark==''?'无备注信息':item.Remark;
+      this.comentShow = true;
+      // wx.showModal({
+      //   title: '查看备注',
+      //   content: item.Remark,
+      //   success (res) {
+      //     if (res.confirm) {
+      //       console.log('用户点击确定')
+      //     } else if (res.cancel) {
+      //       console.log('用户点击取消')
+      //     }
+      //   }
+      // })
+    },
+    // 关闭备注modal
+    getCloseComent(){
+      this.comentShow = false;
     },
     // 更新打卡
     getToUpdate(item){
-      this.AbnormalCode = item.AbnormalCode;
-      this.CheckType = item.checkTypeCode;
-      this.WorkShiftId = item.WorkShiftId;
-      this.OnTime = item.OnTime;
-      this.AttendanceEmpId = item.AttendanceEmpId; // 更新打卡
-      this.clockInCode = item.AbnormalCode;
+      let that = this;
+      console.log(item);
+      wx.getLocation({
+        type: 'gcj02',
+        success (res) {
+          const latitude = res.latitude
+          const longitude = res.longitude
+          const speed = res.speed
+          const accuracy = res.accuracy
+          that.latitude = latitude;
+          that.longitude = longitude;
+        }
+      })
+      that.AbnormalCode = item.AbnormalCode;
+      // that.CheckType = item.checkTypeCode;
+      that.CheckType = item.CheckType;
+      that.WorkShiftId = item.WorkShiftId;
+      that.OnTime = item.OnTime;
+      that.AttendanceEmpId = item.AttendanceEmpId; // 更新打卡
+      that.clockInCode = item.AbnormalCode;
+      // that.clockInStatus = 5;
       console.log(item.clockInCode,'clockInCode');
       if(item.CheckType==0){
-        this.CheckTypeName = '上班打卡';
+        that.CheckTypeName = '上班打卡';
       }else if(item.CheckType==1){
-        this.CheckTypeName = '下班打卡';
+        that.CheckTypeName = '下班打卡';
       }else if(item.CheckType==2){
-        this.CheckTypeName = '外勤上班';
+        that.CheckTypeName = '外勤上班';
       }else if(item.CheckType==3){
-        this.CheckTypeName = '外勤下班';
+        that.CheckTypeName = '外勤下班';
+        // this.boxShow = false;
+        // return ;
       }
       wx.showModal({
         title: '',
         content: '确定要更新此次打卡记录吗？',
         success:(res)=>{
           if (res.confirm) {
-            this.list = {};
-            this.getSubmit();
+            that.list = {};
+            that.getSubmit();
             console.log('用户点击确定')
           } else if (res.cancel) {
             console.log('用户点击取消')
@@ -757,10 +870,18 @@ export default {
           }
         }).then(res=>{
           console.log(res);
-          console.log(this.clockInCode,'123123123123');
-          if(this.clockInCode==0){
+          console.log(this.clockInCode,this.CheckType,'123123123123');
+          if(this.CheckType==0||this.CheckType==2){
+            this.tipsText = '开心工作，从此刻开启';
+          }else if(this.CheckType==1||this.CheckType==3){
+            this.tipsText = '工作辛苦了，好好休息';
+          }
+          if((this.clockInCode==0&&this.CheckType==0)||(this.clockInCode==0&&this.CheckType==1)){
             this.popupImg = 'https://wx.phxinfo.com.cn/img/wechat/Clock_in.png';
             this.colorClass = '#3399ff';
+          }else if((this.clockInCode==0&&this.CheckType==2)||(this.clockInCode==0&&this.CheckType==3)){
+            this.popupImg = 'https://wx.phxinfo.com.cn/img/wechat/04.2.1.Clock_in.png';
+            this.colorClass = '#57b987';
           }else {
             this.popupImg = 'https://wx.phxinfo.com.cn/img/wechat/04.2.1.Clock_in_早退打卡成功.png';
             this.colorClass = '#fe943e';
@@ -797,7 +918,7 @@ export default {
       wx.chooseImage({
         count: 1,
         sizeType: ['original', 'compressed'],
-        sourceType: ['album', 'camera'],
+        sourceType: ['camera'],
         success (res) {
           // tempFilePath可以作为img标签的src属性显示图片
           const tempFilePaths = res.tempFilePaths;
@@ -830,8 +951,9 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-@import "../../../static/css/public.scss";
-@import "../../../static/css/icon.css";
+// @import "../../../static/css/public.scss";
+// @import "../../../static/css/icon.css";
+@import "../../../static/css/clockIn.css";
 page{
   background: #fff;
 }
@@ -875,8 +997,18 @@ page{
   .center{
     background: #fff;
     padding: 51rpx 0;
+    height: 100vh;
     .record.top{
       margin-top: -20rpx;
+    }
+    .record:last-child{
+      // background: red;
+      .leftLine{
+       .spans{
+        //  display: none;
+          background: #fff;
+       } 
+      }
     }
     .record{
       display: flex;
@@ -921,7 +1053,7 @@ page{
             line-height: 40rpx;
             text-align: center;
             font-size: 25rpx;
-            border: 2rpx solid #ff9237;
+            border: 3rpx solid #ff9237;
             color: #ff9237;
             border-radius: 5rpx;
           }
@@ -936,6 +1068,15 @@ page{
         }
         .adress{
           padding-bottom: 10rpx;
+          display: flex;
+          .icon-anquan{
+            color: #74b48c;
+            font-size: 28rpx;
+          }
+          .icon-dizhi{
+            color: #9c9c9c;
+            font-size: 28rpx;
+          }
           span{
             font-size: 25rpx;
             color: #999999;
@@ -982,7 +1123,8 @@ page{
             justify-content: center;
             align-items: center;
             margin-right: 30px;
-            box-shadow: 0rpx 70rpx 117rpx 0rpx rgba(34, 155, 250, 0.3);
+            box-shadow: 0rpx 10rpx 30rpx rgba(34, 155, 250, 0.4);
+            background-image: linear-gradient(to bottom, #72b8f9, #5096f3);
             .time{
               font-size: 31rpx;
               opacity: .6;
@@ -990,11 +1132,16 @@ page{
           }
           .round.zaotui{
             background: #ff9237;
-            box-shadow: 0rpx 70rpx 117rpx 0rpx rgba(254, 150, 61, 0.3);
+            // box-shadow: 0rpx 70rpx 117rpx 0rpx rgba(254, 150, 61, 0.3);
+            box-shadow: 0rpx 10rpx 30rpx rgba(254, 150, 61, 0.4);
+            background-image: linear-gradient(to bottom, #f8be5a, #fe9941);
           }
           .round.waiqin{
             background: #0ebc7f;
-            box-shadow: 0rpx 70rpx 117rpx 0rpx rgba(21, 190, 131, 0.3);
+            // box-shadow: 0rpx 70rpx 117rpx 0rpx rgba(21, 190, 131, 0.3);
+            box-shadow: 0rpx 10rpx 30rpx rgba(21, 190, 131, 0.4);
+            background-image: linear-gradient(to bottom, #72e4b1, #59bc8a);
+
           }
         }
         .clockInAdress{
@@ -1049,11 +1196,12 @@ page{
       }
     }
   }
-  // .footer{
-  //       width: 100%;
-  //       position: fixed;
-  //       bottom: 20px;
-  //   }
+  .footer{
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        background: #fff;
+    }
   .popupWrap{
     h3{
       text-align: center;
@@ -1067,7 +1215,7 @@ page{
       color: #3399ff;
       border-top: 1rpx solid #e2e4e3;
     }
-    .bottom{
+    .bottompop{
       display: flex;
       border-top: 2rpx solid #e2e4e3;
       p{

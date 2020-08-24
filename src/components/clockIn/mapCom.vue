@@ -17,10 +17,10 @@
     <div class="boxWrap">
       <div class="row">
         <p class="top">
-          我的位置 <span class="l">(在</span><span class="c">考勤范围</span><span class="l">内)</span>
+          我的位置 <span class="l">(不在</span><span class="c">考勤范围</span><span class="l">内)</span>
         </p>
-        <p class="bottom">
-          <span>外勤</span> {{adress}}
+        <p class="bottoms">
+          <span :style="{'background':colorCode}">外勤</span> {{adress}}
         </p>
       </div>
       <div class="center">
@@ -38,12 +38,13 @@
     </div>
     <div class="footer">
       <div class="box">
-        <van-button type="primary" :color="colorCode" block @click="getExternalClockIn">{{submitName}}</van-button>
+        <van-button type="primary" :color="colorCode" block @click="getExternalClockIn">{{time}} {{submitName}}</van-button>
       </div>
     </div>
   </div>
 </template>
 <script>
+import { timestr } from '@/utils/timer';
 export default {
   name: "mapCom",
   props: ["longitude", "latitude","adress","clockInStatus","WorkShiftId","sessionkey"],
@@ -94,7 +95,9 @@ export default {
           },
           clickable: true
         }
-      ]
+      ],
+      timer:null,
+      time:""
     };
   },
   watch: {
@@ -151,9 +154,19 @@ export default {
       }
     }
   },
+  mounted(){
+    let that = this;
+    that.timer = setInterval(function() {
+      console.log(timestr(),'------');
+      timestr();
+      that.time = timestr();
+      console.log(that.time,'timestr');
+    }, 1000);
+  },
   onLoad() {
     // status 0:上班打卡1:下班打卡2:迟到打卡3:早退打卡4:外勤上班打卡5:外勤下班打卡6:迟到外勤打卡7:早退外勤打卡
     console.log(this.clockInStatus,'onload');
+
     if(this.clockInStatus==6){
       this.submitName = '迟到外勤打卡';
       this.colorCode = '#ff9237';
@@ -165,7 +178,7 @@ export default {
       this.colorCode = '#65bfb4';
     }else if(this.clockInStatus==7){
       this.submitName = '早退外勤打卡';
-      this.colorCode = '#ff9237';
+      this.colorCode = '#65bfb4';
     }
   },
   methods: {
@@ -185,6 +198,7 @@ export default {
         Description:this.Description
       }
       this.$emit('childFn',data);
+      clearTimeout(this.timer);
     },
     getChooseImage(){
       let that = this;
@@ -240,9 +254,10 @@ page{
             color: #3399ff;
           }
         }
-        .bottom{
+        .bottoms{
           font-size: 24rpx;
           color: #999999;
+          margin-top: 20rpx;
           span{
             display: inline-block;
             color: #fff;
@@ -251,7 +266,7 @@ page{
             line-height: 31rpx;
             text-align: center;
             border-radius: 16rpx;
-            background: #3399ff;
+            // background: #65bfb4;
           }
         }
       }

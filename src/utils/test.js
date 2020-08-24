@@ -40,6 +40,28 @@ const list = {
             "value":""
         },
         {
+            "label":"时间",
+            "localId":"time",
+            "targetValue":"time",
+            "type":"T",
+            "value":"2020-07-07 00:00",
+            "multiIndex":[1,2,3,4,5]
+        },
+        {
+            "label":"年份",
+            "localId":"time",
+            "targetValue":"time",
+            "type":"N",
+            "value":"2020"
+        },
+        {
+            "label":"月份",
+            "localId":"time",
+            "targetValue":"time",
+            "type":"YM",
+            "value":"2020-07"
+        },
+        {
             "label": "级别",
             "localId": "level",
             "targetValue": "level",
@@ -89,7 +111,21 @@ const list = {
             "value":"",
             "type":"SS"
         },
-
+        {
+            "label":"内容",
+            "localId":"content",
+            "targetValue":"content",
+            "value":"内容描述",
+            "type":"Text"
+        },
+        {
+            "label":"复选框",
+            "localId":"cehckbox",
+            "targetValue":"cehckbox",
+            "value":[1,2,3],
+            "type":"G",
+            "result":[]
+        }
         // {
         //     "label": "内容",
         //     "localId": "content",

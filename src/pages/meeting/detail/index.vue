@@ -24,7 +24,7 @@
                             <p>{{startDay}}</p>
                         </div>
                         <div class="num">
-                            <span></span><p>{{mathNum}}天</p><span></span>
+                            <span></span><p>{{mathNum}}</p><span></span>
                         </div>
                         <div class="lMin">
                             <p>{{endMonth}}月{{endDate}}日</p>
@@ -41,7 +41,7 @@
                     </div> -->
                     <div class="rows">
                         <div class="l">
-                            <i class="iconfont icon-type"></i>
+                            <i class="iconfont icon-leixing"></i>
                         </div>
                         <div class="r">
                             <p>日历：工作</p>
@@ -94,17 +94,17 @@
                 </div>
                 <div class="moveRow"  @click="getSignDetail">
                     <p>
-                        <i class="iconfont icon-qiandao2"></i>
+                        <i class="iconfont icon-qiandao"></i>
                     </p>
                     <p>
-                        1人已签到
+                        {{detailInfo.joinQty}}人已签到
                     </p>
                     <p>
                         <i-icon type="enter" color="#999999" size="20" />
                     </p>
                 </div>
                 <div class="moveCont">
-                    <div class="moveRow">
+                    <!-- <div class="moveRow">
                         <p>
                             <i class="iconfont icon-zuzhiren"></i>
                         </p>
@@ -114,29 +114,52 @@
                         <p>
                             <i-icon type="enter" color="#999999" size="20" />
                         </p>
+                    </div> -->
+                    <div class="row">
+                        <div class="l">
+                            <i class="iconfont icon-zuzhiren"></i>
+                        </div>
+                        <div class="r">
+                            <p>
+                                <span class="avatar">{{detailInfo.owningUserName}}</span>
+                                <span class="name">{{detailInfo.owningUserNam}}</span>
+                                <span class="tag">组织人</span>
+                            </p>
+                        </div>
                     </div>
                     <div class="moveRow" @click="getInvitation">
                         <p>
-                            <i class="iconfont icon-zuzhiren"></i>
+                            <i class="iconfont icon-canyuren"></i>
                         </p>
                         <p style="border:none;">
-                            邀请10人，1人接受
+                            邀请{{detailInfo.inviteQty}}人，{{detailInfo.joinQty}}人接受
                         </p>
                         <p>
                             <i-icon type="enter" color="#999999" size="20" />
                         </p>
                     </div>
                 </div>
-                <div class="moveRow">
+                <div class="moveRow" @click="getUsb">
                     <p>
                         <i class="iconfont icon-fujian"></i>
                     </p>
                     <p>
                         附件
                     </p>
-                    <p>
-                        <i class="iconfont icon-add"></i>
+                    <p v-if="isEdit">
+                        <i class="iconfont icon-tianjia"></i>
                     </p>
+                </div>
+                <div class="enclosure">
+                    <div class="rows" v-for="(item,index) in listFile" :key="index">
+                        <p>
+                            <img :src="item.link" alt="">
+                        </p>
+                        <p>{{item.name}}</p>
+                        <p @click="getDelFiles(item)">
+                            <i-icon type="close" size="20" color="#666666" />
+                        </p>
+                    </div>
                 </div>
                 <div class="moveRow">
                     <p>
@@ -170,10 +193,10 @@
                     </div>
                     <div class="comment">
                         <div class="lBox">
-                            <i class="iconfont icon-tixing1"></i>
+                            <i class="iconfont icon-tixing"></i>
                         </div>
                         <div class="rBox items">
-                            <p class="info"><span>崔曼 创建了 日程</span><span>05月25日 11:23</span></p>
+                            <p class="info"><span>{{detailInfo.createdByName}} 创建了 会议</span><span>{{detailInfo.createdOn}}</span></p>
                         </div>
                     </div>
                 </div>
@@ -184,7 +207,7 @@
                 </div>
                 <div class="bottom">
                     <div class="box">
-                        <textarea class="textarea" v-model="comment" @blur="getBlur" :show-confirm-bar="false" cursor-spacing='140' placeholder="我来说两句..." :auto-focus="true" name="" id="" maxlength="500" cols="30" rows="10"></textarea>
+                        <textarea class="textarea" :adjust-position="true" v-model="comment" @blur="getBlur" :show-confirm-bar="false" cursor-spacing='140' placeholder="我来说两句..." :auto-focus="true" name="" id="" maxlength="500" cols="30" rows="10"></textarea>
                         <div class="total">
                             <p>
                                 {{contentSize}}/{{total}}
@@ -196,18 +219,18 @@
                     </div>
                 </div>
             </div>
-            <div class="footer" v-if="!overlayShow">
+            <div class="footer" v-if="!overlayShow" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
                 <div class="boxWrap">
                     <div class="lBox">
                         <div class="box" @click="getComment">
                             <p>
-                                <i class="iconfont icon-pinglun1"></i>
+                                <i class="iconfont icon-pinglun"></i>
                             </p>
                             <p>评论</p>
                         </div>
                         <div class="box" @click="getSignIn">
                             <p>
-                                <i class="iconfont icon-qiandao2"></i>
+                                <i class="iconfont icon-qiandao"></i>
                             </p>
                             <p>签到</p>
                         </div>
@@ -220,8 +243,12 @@
                     </div>
                     <div class="rBox">
                         <p>
-                            <span @click="getRefuse(2)">拒绝</span>
-                            <span @click="getRefuse(1)">已接受</span>
+                            <span :class="{'refuse':audienceStatusCode==2}" @click="audienceStatusCode==2?'':getRefuse(2)">
+                                {{audienceStatusCode==2?'已拒绝':'拒绝'}}
+                            </span>
+                            <span :class="{'accept':audienceStatusCode!=1}" @click="audienceStatusCode==1?'':getRefuse(1)">
+                                {{audienceStatusCode==1?'已接受':'接受'}}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -265,6 +292,7 @@
 import Summarys from '@/components/summary/summarys';
 import Topics from "@/components/summary/topics";
 import mapList from '@/components/mapList';
+import {mapState, mapMutations} from 'vuex';
 export default {
     components:{
         Summarys,
@@ -287,6 +315,9 @@ export default {
                 },
                 {
                     name: '删除'
+                },
+                {
+                    name: '取消会议'
                 }
             ],
             show:false,
@@ -340,15 +371,34 @@ export default {
             address:"",
             latitude:"",
             longitude:"",
-            location:""
+            location:"",
+            listFile:[],
+            isEdit:false,
+            audienceStatusCode:""
         }
     },
     computed:{
         contentSize(){
             return this.comment.length || 0;
         },
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
+        ...mapState({
+            selectFiles:state=>{
+                return state.usb.selectFiles;
+            }
+        }),
+        FileIds(){
+            let temp = [];
+            this.selectFiles.forEach(item=>{
+                temp.push(item.id);
+            })
+            return temp;
+        },
     },
     onLoad(options){
+        this.clearFile([]);
         this.id = options.id;
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
@@ -356,8 +406,20 @@ export default {
         this.getQueryDetail();
         this.getCommentQuery();
         this.getFileQuery();
+        this.getFileList();
+    },
+    onUnload(){
+        this.getClear([]); // 清空参与人
+        this.clearFile([]); // 清空优盘附件
+    },
+    onShow(){
+        this.getAddFile();
     },
     methods:{
+        ...mapMutations([
+            'getClear',
+            'clearFile'
+        ]),
         getChildFn(val,isBook){
             console.log(val,isBook);
             this.isShow = isBook;
@@ -365,7 +427,59 @@ export default {
         getCancelChild(val){
             this.isShow = val;
         },
-        // 获取附件
+        // 选择优盘附件
+        getUsb(){
+            if(this.isEdit){
+                const url = '/pages/uPan/main';
+                wx.navigateTo({url:url});
+            }
+        },
+        getAddFile(){
+            if(this.FileIds!=""){
+                this.$httpWX.get({
+                    url:this.$api.message.queryList,
+                    data:{
+                        method:this.$api.usb.addFile,
+                        SessionKey:this.sessionkey,
+                        FileIds:this.FileIds.join(','),
+                        ObjectTypeCode:5000,
+                        ObjectId:this.id
+                    }
+                }).then(res=>{
+                    console.log(res);
+                    this.getQueryDetail();
+                })
+            }
+        },
+        // 获取会议附件
+        getFileList(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.getFile,
+                    SessionKey:this.sessionkey,
+                    pid:this.id,
+                    ObjTypeCode:5000
+                }
+            }).then(res=>{
+                console.log(res);
+            })
+        },
+        getDelFiles(item){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.public.delete,
+                    SessionKey:this.sessionkey,
+                    Id:item.id,
+                    ObjTypeCode:1001
+                }
+            }).then(res=>{
+                console.log(res);
+                this.getQueryDetail();
+            })
+        },
+        // 获取纪要
         getFileQuery(){
             this.$httpWX.get({
                 url:this.$api.message.queryList,
@@ -390,6 +504,12 @@ export default {
             }).then(res=>{
                 console.log(res);
                 this.detailInfo = res.data;
+                this.listFile = res.data.files;
+                this.isEdit = res.data.isEdit;
+                if(!this.isEdit){
+                    this.actions = [];
+                }
+                this.audienceStatusCode = res.data.audienceStatusCode;
                 let scheduledStart = this.detailInfo.scheduledStart;
                 let scheduledEnd = this.detailInfo.scheduledEnd;
                 let date = new Date(scheduledStart);
@@ -414,7 +534,7 @@ export default {
             let date3 = endTime - startTime;
             //计算出相差天数
             let days = Math.floor(date3 / (24 * 3600 * 1000));
-            return days;
+            // return days;
             //计算出小时数
 
             var leave1 = date3 % (24 * 3600 * 1000);    //计算天数后剩余的毫秒数
@@ -427,6 +547,11 @@ export default {
 
             var leave3 = leave2 % (60 * 1000);      //计算分钟数后剩余的毫秒数
             var seconds = Math.round(leave3 / 1000);
+            let diff = 
+                days>0&&hours>0?`${days}天${hours}小时`
+                :days>0&&hours==0?`${days}天`
+                :`${hours}小时`;
+            return diff;
         },
         getCommentQuery(){
             this.$httpWX.get({
@@ -483,6 +608,11 @@ export default {
                 wx.navigateTo({url:url});
             }else if(name=='删除'){
                 this.getDelete();
+            }else if(name=='添加参与人'){
+                const url = '/pages/publics/mailList/main?admin='+1+'&meetingId='+this.id;
+                wx.navigateTo({url:url});
+            }else if(name=='取消会议'){
+                
             }
         },
         getSendout(){
@@ -515,60 +645,70 @@ export default {
                 wx.showToast({
                     title:res.msg,
                     icon:"success",
-                    duration:2000
+                    duration:2000,
+                    success:res=>{
+                        wx.navigateBack({
+                            delta: 1
+                        })
+
+                    }
                 })
             })
         },
         getSignIn(){
-            var that = this
-            wx.chooseLocation({
-                success: function (res) {
-                    console.log(res);
-                    // success
-                    if (res.name == '') {
-                    } else {
-                        that.location = res.name;
-                        that.latitude = res.latitude;
-                        that.longitude = res.longitude;
-                        that.address = res.address;
-                        that.$httpWX.get({
-                            url:that.$api.message.queryList,
-                            data:{
-                                method:"meeting.audience.checkin",
-                                SessionKey:that.sessionkey,
-                                id:that.id,
-                                location:that.address,
-                                latitude:that.latitude,
-                                longitude:that.longitude
-                            }
-                        }).then(res=>{
-                            console.log(res);
-                            wx.showToast({
-                                title:res.msg,
-                                icon:"success",
-                                duration:2000
+            if(this.isEdit){
+                // this.isShow = true; // 地图
+                const url = '/pages/meeting/signin/main?id='+this.id;
+                wx.navigateTo({url:url});
+            }else {
+                var that = this;
+                wx.chooseLocation({
+                    success: function (res) {
+                        console.log(res);
+                        // success
+                        if (res.name == '') {
+                        } else {
+                            that.location = res.name;
+                            that.latitude = res.latitude;
+                            that.longitude = res.longitude;
+                            that.address = res.address;
+                            that.$httpWX.get({
+                                url:that.$api.message.queryList,
+                                data:{
+                                    method:"meeting.audience.checkin",
+                                    SessionKey:that.sessionkey,
+                                    id:that.id,
+                                    location:that.address,
+                                    latitude:that.latitude,
+                                    longitude:that.longitude
+                                }
+                            }).then(res=>{
+                                console.log(res);
+                                wx.showToast({
+                                    title:res.msg,
+                                    icon:"success",
+                                    duration:2000
+                                })
                             })
-                        })
+                        }
+                    },
+                    fail: function () {
+                        // fail
+                    },
+                    complete: function () {
+                        // complete
                     }
-                },
-                fail: function () {
-                    // fail
-                },
-                complete: function () {
-                    // complete
-                }
-            })
-            // this.isShow = true;
-            // const url = '/pages/meeting/signin/main';
-            // wx.navigateTo({url:url});
+                })
+            }
+            
         },
         // 签到详情
         getSignDetail(){
-            const url = '/pages/meeting/signinDetail/main';
+            const url = '/pages/meeting/signinDetail/main?id='+this.id+'&isEdit='+this.isEdit;
             wx.navigateTo({url:url});
         },
         getInvitation(){
-            const url = '/pages/meeting/joinDetail/main?id='+this.id;
+            const url = '/pages/meeting/joinDetail/main?id='+this.id+'&isEdit='+this.isEdit;
             wx.navigateTo({url:url});
         },
         // 拒绝
@@ -603,7 +743,10 @@ export default {
                 wx.showToast({
                     title:res.msg,
                     icon:"success",
-                    duration:2000
+                    duration:2000,
+                    success:res=>{
+                        this.getQueryDetail();
+                    }
                 })
             })
         }
@@ -611,7 +754,7 @@ export default {
 }
 </script>
 <style lang="scss">
-@import '../../../../static/css/meeting.css';
+@import '../../../../static/css/schedule.css';
     .wrap{
         .container{
             padding-bottom: 80px;
@@ -637,9 +780,14 @@ export default {
                         margin-left: 20rpx;
                         border-bottom: 2rpx solid #e3e3e3;
                         p:nth-child(1){
-                            font-size: 33rpx;
+                            width: 100%;
+                            overflow: hidden;
+                            word-break: break-word;
+                            line-height: 1;
+                            font-size: 34rpx;
                             color: #333333;
                             line-height: 1.5;
+                            font-weight: bold;
                         }
                         p:nth-child(2){
                             font-size: 26rpx;
@@ -653,7 +801,7 @@ export default {
                     align-items: center;
                     padding: 20rpx 0;
                     .lMin{
-                        width: 35%;
+                        // width: 35%;
                         p:nth-child(1){
                             font-size: 40rpx;
                             font-weight: bold;
@@ -676,13 +824,14 @@ export default {
                         }
                         p{
                             font-size: 24rpx;
-                            width: 82rpx;
+                            // width: 82rpx;
                             height: 48rpx;
                             text-align: center;
                             line-height: 48rpx;
                             color: #999999;
                             background: #eef0f2;
                             border-radius: 26rpx;
+                            padding: 0 20rpx;
                         }
                     }
                 }
@@ -723,6 +872,12 @@ export default {
                         margin-left: 20rpx;
                         font-size: 34rpx;
                         color: #333333;
+                        p{
+                            width: 100%;
+                            overflow: hidden;
+                            word-break: break-word;
+                            line-height: 1;
+                        }
                     }
                 }
             }
@@ -739,10 +894,60 @@ export default {
                         padding: 30rpx 0;
                         flex: 1;
                         margin-left: 20rpx;
-                        border-bottom: 2rpx solid #e3e3e3;
+                        border-bottom: 1rpx solid #e2e3e5;
                     }
                     .move{
                         color: #999999;
+                    }
+                }
+                .row{
+                    display: flex;
+                    align-items: center;
+                    padding: 33rpx;
+                    background: #fff;
+                    border-bottom: 1rpx solid #e2e3e5;
+                    .r{
+                        flex: 1;
+                        margin-left: 25rpx;
+                        display: flex;
+                        p{
+                            display: flex;
+                            align-items: center;
+                            margin-right: 20rpx;
+                            .avatar{
+                                display: inline-block;
+                                width: 50rpx;
+                                height: 50rpx;
+                                line-height: 50rpx;
+                                text-align: center;
+                                color: #fff;
+                                font-size: 20rpx;
+                                background: #3399ff;
+                                border-radius: 50%;
+                            }
+                            .name{
+                                font-size: 34rpx;
+                                color: #333333;
+                                margin: 0 10rpx;
+                            }
+                            .tag{
+                                display: inline-block;
+                                width: 68rpx;
+                                height: 32rpx;
+                                line-height: 32rpx;
+                                text-align: center;
+                                font-size: 20rpx;
+                                color: #3399ff;
+                                background: #e8f1fc;
+                                border-radius: 5rpx;
+                            }
+                        }
+                    }
+                    .cont{
+                        flex: 1;
+                        margin-left: 25rpx;
+                        font-size: 34rpx;
+                        color: #333333;
                     }
                 }
             }
@@ -760,6 +965,35 @@ export default {
                     color: #999999;
                 }
             }
+            .enclosure{
+                    background: #fff;
+                    .rows{
+                        display: flex;
+                        padding: 33rpx;
+                        align-items: center;
+                        p:nth-child(1){
+                            width: 96rpx;
+                            height: 96rpx;
+                            // background: #e5e5e5;
+                            border-radius: 12rpx;
+                            img{
+                                width: 100%;
+                                height: 100%;
+                                overflow: hidden;
+                            }
+                        }
+                        p:nth-child(2){
+                            flex: 1;
+                            margin-left: 20rpx;
+                            font-size: 34rpx;
+                            color: #333333;
+                            width: 300rpx;
+                            text-overflow: ellipsis;
+                            overflow: hidden;
+                            white-space: nowrap;
+                        }
+                    }
+                }
             h3{
                 background: #f7f7f7;
                 color: #999999;
@@ -946,7 +1180,14 @@ export default {
                             border-bottom-right-radius: 7rpx;
                             background:rgba(51, 153, 255, .5);
                             color: #fff;
-                            
+                        }
+                        span:nth-child(2).accept{
+                            background: #fff;
+                            color: #3399ff;
+                        }
+                        span:nth-child(1).refuse{
+                            background: #bfc1c2;
+                            color: #fff;
                         }
                     }
                 }

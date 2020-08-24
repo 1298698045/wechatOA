@@ -127,7 +127,7 @@
                 </p>
             </div>
         </div>
-        <div class="footer">
+        <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="box">
                 <van-button type="primary" color="#3399ff" @click="getSubmit" block>保存</van-button>
             </div>
@@ -282,6 +282,11 @@ export default {
             sessionkey:""
 
 
+        }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(){
@@ -460,7 +465,7 @@ export default {
         .footer{
             width: 100%;
             position: fixed;
-            bottom: 20rpx;
+            bottom: 0;
             background: #fff;
             z-index: 999;
             .box{

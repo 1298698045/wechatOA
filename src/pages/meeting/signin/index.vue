@@ -2,7 +2,8 @@
     <div class="wrap">
         <div class="qrCode">
             <div class="border">
-                <img class="code" src="https://dss2.bdstatic.com/6Ot1bjeh1BF3odCf/it/u=829888290,2650878176&fm=74&app=80&f=JPG&size=f121,121?sec=1880279984&t=274501980523d63a7d93c94f85aabbab" alt="">
+                <img class="code" :src="qrUrl" alt="">
+                <!-- <img class="code" src="https://dss2.bdstatic.com/6Ot1bjeh1BF3odCf/it/u=829888290,2650878176&fm=74&app=80&f=JPG&size=f121,121?sec=1880279984&t=274501980523d63a7d93c94f85aabbab" alt=""> -->
                 <img class="horn" src="https://wx.phxinfo.com.cn/img/wechat/horn.png" alt="">
             </div>
         </div>
@@ -36,7 +37,10 @@ export default {
     data(){
         return {
             checked:true,
-            signCheck:false
+            signCheck:false,
+            sessionkey:"",
+            id:"",
+            qrUrl:""
         }
     },
     computed:{
@@ -46,7 +50,26 @@ export default {
             }
         }]
     },
+    onLoad(options){
+        this.sessionkey = wx.getStorageSync('sessionkey');
+        this.id = options.id;
+        this.getQuery();
+    },
     methods:{
+        getQuery(){
+            this.$httpWX.get({
+                url:this.$api.message.queryList,
+                data:{
+                    method:this.$api.meeting.qrCode,
+                    SessionKey:this.sessionkey,
+                    path:'pages/meeting/signResult/main?id='+this.id,
+                    width:430
+                }
+            }).then(res=>{
+                console.log(res);
+                this.qrUrl = res.data;
+            })
+        },
         onChange(e){
             this.checked = e.mp.detail;
         },

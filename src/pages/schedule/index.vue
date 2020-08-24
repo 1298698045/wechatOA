@@ -12,13 +12,20 @@
         <p><i-icon type="search" size="20" /></p>
       </div>
     </div>
-    <div class="calendar" v-if="current=='tab1'">
-      <lxCalendar @change="changeDate"></lxCalendar>
+    <div v-if="current!='tab3'">
+      <SwiperCalendar ref="childSwiper" @change="getChangeSwiper" />
+      <!-- <div class="calendar" v-if="current=='tab1'">
+        <lxCalendar ref="child" @change="changeDate"></lxCalendar>
+      </div> -->
+      <div class="rowTime">
+        <p @click="getBackTime" v-if="!isToday">
+          <i class="iconfont icon-jintian"></i>
+        </p>
+        <p v-else></p>
+        <p>{{date}} {{weekDay}}</p>
+      </div>
     </div>
     <div class="center"  v-if="current=='tab1'">
-      <div class="rowTime">
-        05月25日 星期一
-      </div>
       <div class="content" v-for="(item,index) in listData" :key="index">
         <div class="lBox">
           <!-- <p class="time">25</p>
@@ -26,28 +33,11 @@
           <p class="month">{{item.MonthName}}</p>
         </div>
         <div class="rBox">
-          <!-- <van-steps
-            :steps="steps"
-            :active=" active "
-            direction="vertical"
-            active-color="#52b55e"
-            desc-class="steps"
-          /> -->
-          <!-- <i-steps  direction="vertical">
-            <i-step v-for="(item,index) in listData" :key="index" @click="getDetail(item)">
-              <view slot="title">
-                {{item.subject}}
-              </view>
-              <view slot="content">
-                  {{item.scheduledStart}}-{{item.scheduledEnd}}
-              </view>
-            </i-step>
-          </i-steps> -->
           <div v-for="(item1,idx1) in item.WeekList" :key="idx1">
             <div v-for="(item2,idx2) in item1.DayList" :key="idx2" v-if="item1.DayList!=''">
               <div class="steps" v-for="(item3,idx3) in item2.ItemList" :key="idx3" @click="getDetail(item3)">
                 <div class="l">
-                    <p class="radius"></p>
+                    <p class="radius" :class="{'active':item3.RegardingObjectId!=''}"></p>
                     <p class="solid"></p>
                 </div>
                 <div class="r">
@@ -91,21 +81,45 @@
       @selectMonth="getDateInfo"
       ref="calendar"
     />
+      <div class="cont">
+        <div class="row" v-for="(item,index) in currentList" :key="index">
+          <div class="lBox">
+            <p>11:00</p>
+            <p>12:00</p>
+          </div>
+          <div class="rBox">
+            <p class="title">{{item.Subject}}</p>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="clues-add-button" v-if="!showPopup" @click="onCluesAddBtnClick">
-          +
+          <!-- <i class="iconfont icon-icon-add-3-copy"></i> -->
+          <van-icon name="plus" size="20px" color="#fff" />
       </div>
+    <vue-tab-bar
+          @fetch-index="clickIndexNav"
+          :selectNavIndex="selectNavIndex"
+          :needButton="needButton"
+          :handButton="handButton"
+          :btnText="btnText">
+      </vue-tab-bar>
   </div>
 </template>
 <script>
 import lxCalendar from '../../components/lx-calendar/lx-calendar';
 import dayTable from '../../components/luoxiao-dayTable/dayTable';
 import Calendar from 'mpvue-calendar'
+import SwiperCalendar from '../../components/schedule/swiperTime';
+import vueTabBar from '../../components/vueTabBar';
+
 export default {
   components:{
       lxCalendar,
       dayTable,
-      Calendar
+      Calendar,
+      SwiperCalendar,
+      vueTabBar
   },
   data(){
     return {
@@ -129,7 +143,39 @@ export default {
       date:"",
       listData:[],
       id:"",
-      dayList:[]
+      dayList:[],
+      currentList:[],
+      endDate:"",
+      selectNavIndex:1,
+      needButton:false,
+      handButton:'',
+      btnText:''
+    }
+  },
+  computed:{
+    weekDay(){
+      let str = '';
+      const arr = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+      let day = new Date(this.date.replace(/-/g,'/')).getDay();
+      str = arr[day];
+      return str;
+    },
+    currentDay(){
+      let myDate = new Date();
+      let y = myDate.getFullYear();
+      let m = myDate.getMonth()+1;
+      let d = myDate.getDate();
+      return `${y}-${m}-${d}`;
+    },
+    isToday() {
+      //Code goes here.
+        var d = new Date(this.date.toString().replace(/-/g,"/"));
+        var todaysDate = new Date();
+        if(d.setHours(0,0,0,0) == todaysDate.setHours(0,0,0,0)){
+            return true;
+        } else {
+            return false;
+        }
     }
   },
   onLoad(){
@@ -139,24 +185,72 @@ export default {
     let d = myDate.getDate();
     this.date = `${y}-${m}-${d}`;
     this.calDate = [y,m,d];
+    this.transformationDate(this.date,3);
     let sessionkey = wx.getStorageSync('sessionkey');
     this.sessionkey = sessionkey;
     this.getQuery();
   },
+  mounted(){
+    console.log(this.$refs.childSwiper.nowDate,'1');
+  },
+  onShow(){
+    this.getQuery();
+  },
   methods:{
+    getBackTime(){
+      console.log('1231231232132');
+      this.$refs.childSwiper.getReturn();
+    },
+    getChangeSwiper(e){
+      console.log(e);
+      this.date = e.nowDate;
+      if(this.current=='tab1'){
+        this.transformationDate(this.date,3);
+        this.getQuery();
+      }else if(this.current=='tab2'){
+        this.getDayQuery();
+      }
+    },
+      transformationDate(date,month){
+        var strDate;
+        var oldDate= this.strToDate(date.replace(/-/g,'/'));
+        var newDate = this.strToDate(date.replace(/-/g,'/'));
+        newDate.setMonth(newDate.getMonth() + month);
+        var yy1 = newDate.getFullYear();
+        var mm1 = newDate.getMonth()+1;//因为getMonth（）返回值是 0（一月） 到 11（十二月） 之间的一个整数。所以要给其加1
+        var dd1 = newDate.getDate();
+        if (mm1 < 10 ) {
+            mm1 = '0'+ mm1;
+        }
+        if (dd1 < 10) {
+          dd1 = '0' + dd1;
+        }
+        //预计结束日期=开始日期+期限
+        if(oldDate.getDate()==newDate.getDate()){  //月末,getDaysInMonth()获取该月的最后一天
+        var strDate= yy1+"-"+mm1+"-"+dd1;
+          }else{
+        var strDate= yy1+"-"+newDate.getMonth()+"-"+new Date(yy1,newDate.getMonth(),0).getDate(); 
+          }    
+        console.log(strDate);
+        this.endDate = strDate;
+    },
+    strToDate(str){
+      var val=Date.parse(str);
+      var newDate=new Date(val);
+      return newDate;
+    },
     getQuery(){
+      console.log(this.date,this.endDate,'-----')
       this.$httpWX.get({
         url:this.$api.message.queryList,
-        // method:"activity.events.group.search",
-        // Sessionkey:this.sessionkey,
-        // // date:this.date,
-        // activityTypeCode:4201,
-        // isMonthList:true
         data:{
           method:"activity.events.group.search",
           Sessionkey:this.sessionkey,
           // date:this.date,
-          isMonthList:true
+          isMonthList:true,
+          startDate:this.date,
+          endDate:this.endDate
+
         }
       }).then(res=>{
         console.log(res);
@@ -175,6 +269,7 @@ export default {
     },
     handleChange(e){
       this.current = e.mp.detail.key;
+      this.getBackTime();
       if(this.current=='tab1'){
         this.getQuery();
       }else if(this.current=='tab2'){
@@ -199,8 +294,11 @@ export default {
       })
     },
     changeDate(e){
-      console.log(e);
-      this.currentDate = e.fulldate;
+      // console.log(e);
+      // this.currentDate = e.fulldate;
+      // this.date = e.fulldate;
+      // this.transformationDate(this.date,3);
+      // this.getQuery();
     },
     bookMeeting(e){
       console.log(e,'121323');
@@ -233,7 +331,7 @@ export default {
         // })
         let list = res.listData.map(item=>({
           date:item.scheduledStart.split(' ')[0],
-          description:item.description
+          subject:item.subject
         }))
         console.log(list,'list');
         let obj = {};
@@ -245,7 +343,7 @@ export default {
           let m = date.getMonth()+1;
           let d = date.getDate();
           let keyName = `${y}-${m}-${d}`
-          obj[keyName] = list[key].description!=''?list[key].description:'暂无';
+          obj[keyName] = list[key].subject!=''?list[key].subject:'暂无';
         }
         console.log(obj,'obj');
         
@@ -283,6 +381,24 @@ export default {
     },
     selectDate(e,v){
       console.log(e,v);
+      if(v.event!=''){
+        this.$httpWX.get({
+          url:this.$api.message.queryList,
+          data:{
+            method:"activity.events.group.search",
+            Sessionkey:this.sessionkey,
+            isMonthList:false,
+            startData:v.date,
+            endData:v.date
+          }
+        }).then(res=>{
+          console.log(res);
+          this.currentList = res.data;
+          res.data.map(item=>({
+            
+          }))
+        })
+      }
     },
     getDetail(item){
       if(item.RegardingObjectId!=''){
@@ -293,6 +409,12 @@ export default {
         wx.navigateTo({url:url});
       }
     },
+    getToday(){
+      this.$refs.child.getDefault(this.currentDay);
+      this.date = this.currentDay;
+      this.transformationDate(this.date,3);
+      this.getQuery();
+    },
     onCluesAddBtnClick(){
       const url = "/pages/schedule/newSchedule/main";
       wx.navigateTo({url:url});
@@ -301,6 +423,7 @@ export default {
 }
 </script>
 <style lang="scss">
+// @import '../../../static/css/icon.css';
   .wrap{
     width: 100%;
     height: 100%;
@@ -321,16 +444,29 @@ export default {
     .calendar{
       background: #fff;
     }
+    .rowTime{
+      // text-align: center;
+      margin-top: 16rpx;
+      padding: 15rpx 31rpx;
+      font-size: 30rpx;
+      color: #333333;
+      border-bottom: 2rpx solid #e2e3e5;
+      display: flex;
+      align-items: center;
+      background: #fff;
+      p:nth-child(1){
+        i{
+          color: #3399ff;
+        }
+      }
+      p:nth-child(2){
+        flex: 1;
+        text-align: center;
+      }
+    }
     .center{
       background: #fff;
-      .rowTime{
-        text-align: center;
-        margin-top: 16rpx;
-        padding: 15rpx 0;
-        font-size: 30rpx;
-        color: #333333;
-        border-bottom: 2rpx solid #e2e3e5;
-      }
+      padding-bottom: 80px;
       .content{
         display: flex;
         padding: 10rpx 33rpx;
@@ -371,6 +507,9 @@ export default {
                 height: 20rpx;
                 border-radius: 50%;
                 background: #52b55e;
+              }
+              .radius.active{
+                background: #ee8332;
               }
               .solid{
                 width: 2rpx;
@@ -417,19 +556,57 @@ export default {
         }
       }
     }
-     .clues-add-button {
-            position: fixed;
-            right: 20px;
-            bottom: 80px;
-            background: #049bfb;
-            width: 50px;
-            height: 50px;
-            z-index: 1002;
-            border-radius: 50%;
-            color: #fff;
-            text-align: center;
-            opacity: 0.8;
-            font-size: 30px;
+    .contDate{
+      .cont{
+        width: 100%;
+        background: #fff;
+        .row:last-child{
+          border: none;
         }
+        .row{
+          display: flex;
+          padding: 10rpx 50rpx;
+          border-bottom: 2rpx solid #e2e3e5;
+          .lBox{
+            border-right: 2rpx solid #3399ff;
+            padding-right: 30rpx;
+            p{
+              font-size: 24rpx;
+              color: #666666;
+            }
+            p:nth-child(1){
+              padding-bottom: 10rpx;
+            }
+          }
+          .rBox{
+            margin-left: 30rpx;
+            .title{
+              font-size: 28rpx;
+              color: #333333;
+            }
+          }
+        }
+      }
+    }
+    .clues-add-button {
+        position: fixed;
+        right: 20px;
+        bottom: 80px;
+        background: #049bfb;
+        width: 48px;
+        height: 48px;
+        z-index: 1002;
+        border-radius: 50%;
+        color: #fff;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0rpx 5rpx 12rpx 0rpx rgba(0, 0, 0, 0.3);
+        i{
+            font-size: 35rpx;
+        }
+
+    }
   }
 </style>

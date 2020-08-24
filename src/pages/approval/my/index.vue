@@ -61,7 +61,7 @@
         </div>
         <div class="center">
             <NavShow v-if="isBlock" ref="childs" @childFn="getChildFn" :childShow="childShow" />
-            <div class="content" v-if="!isBlock" v-for="(item,index) in list" :key="index" @click="getDetail(item)">
+            <div class="content" v-if="!isBlock||isBlock&&childShow==0" v-for="(item,index) in list" :key="index" @click="getDetail(item)">
                 <div class="row">
                     <div class="lBox">
                         <p>{{item.createdByName}}</p>
@@ -81,7 +81,13 @@
                         </div>
                         <!-- <p class="text">标题:{{item.name}}</p>
                         <p class="text">级别:{{item.priority==0?'普通':item.priority==1?'中级':'高级'}}</p> -->
-                        <p class="status">{{item.createdOn}} · 来自审批</p>
+                        <!-- <p class="status">{{item.createdOn}} · 来自审批</p> -->
+                        <div class="statusBottom">
+                            <p class="time">{{item.createdOn}} · 来自{{item.createdByName}} {{item.businessUnitIdName}}</p>
+                            <div class="tag" :class="item.className">
+                                {{item.stateCode==1?'审批中':item.stateCode==3?'已通过':item.stateCode==5?'已拒绝':item.stateCode==4?'已撤销':item.stateCode==0?'草稿':item.stateCode==2?'挂起':''}}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,10 +134,11 @@ export default {
             show:false,
             sessionkey:"",
             list:[],
-            isBlock:false,
+            isBlock:false, // 
             timeSort:['时间排序','优先级排序'],
             timeSortIdx:0,
-            isBook:false
+            isBook:false,
+            childShow:''
         }
     },
     computed:{
@@ -144,6 +151,7 @@ export default {
         }
     },
     onLoad(){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync("sessionkey");
         this.sessionkey = sessionkey;
         this.getQuery();
@@ -170,6 +178,8 @@ export default {
             }
         },
         getQuery(){
+            console.log(this.isBook?this.$refs.childs.statusCode:'','-----');
+            // return;
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
@@ -178,13 +188,18 @@ export default {
                     sort:this.sort,
                     search:this.isBook?this.$refs.childs.searchValue:'',
                     processId:this.isBook?this.$refs.childs.processId:'',
-                    stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    // stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    stateCode:this.isBook?this.$refs.childs.statusCode:'',
                     deptIds:this.isBook?this.$refs.childs.deptIds.join(','):'',
                     createdByIds:this.isBook?(this.$refs.childs.designee.hasOwnProperty('id')?this.$refs.childs.designee.id:''):""
                 }
             }).then(res=>{
-                console.log(res);
                 this.list = res.listData;
+                this.list.forEach(item=>{
+                    let className = item.stateCode==1?'approvalIng':item.stateCode==3?'tag':item.stateCode==5?'error':item.stateCode==4?'revoke'
+                    :item.stateCode==0?'draft':item.stateCode==2?'挂起':'';
+                    this.$set(item,'className',className);
+                })
             })
         },
         ...mapMutations([
@@ -198,6 +213,7 @@ export default {
             })
         },
         getAlreadyQuery(){
+            console.log(this.isBook?this.$refs.childs.statusCode:'','-----');
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
@@ -206,12 +222,12 @@ export default {
                     sort:this.sort,
                     search:this.isBook?this.$refs.childs.searchValue:'',
                     processId:this.isBook?this.$refs.childs.processId:'',
-                    stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    // stateCode:this.isBook?this.$refs.childs.statusNum:'',
+                    stateCode:this.isBook?this.$refs.childs.statusCode:'',
                     deptIds:this.isBook?this.$refs.childs.deptIds.join(','):'',
                     createdByIds:this.isBook?(this.$refs.childs.designee.hasOwnProperty('id')?this.$refs.childs.designee.id:''):""
                 }
             }).then(res=>{
-                console.log(res);
                 this.list = res.listData;
             })
         },
@@ -345,6 +361,41 @@ export default {
                                 font-size: 28rpx;
                                 color: #333333;
                                 margin-left: 20rpx;
+                            }
+                        }
+                        .statusBottom{
+                            display: flex;
+                            justify-content: space-between;
+                            margin-top: 20rpx;
+                            .time{
+                                color: #999999;
+                                font-size: 12px;
+                            }
+                            .tag{
+                                width: 80rpx;
+                                height: 32rpx;
+                                line-height: 32rpx;
+                                text-align: center;
+                                font-size: 20rpx;
+                                background: #e6f6f0;
+                                color: #57b987;
+                                border-radius: 7rpx;
+                            }
+                            .tag.draft{
+                                background: #e6f0f6;
+                                color: #3399ff;
+                            }
+                            .tag.error{
+                                background: #faebe9;
+                                color: #ff6666;
+                            }
+                            .tag.revoke{
+                                background: #ebecf2;
+                                color: #5b6991;
+                            }
+                            .tag.approvalIng{
+                                background: #fcf2e9;
+                                color: #f09951;
                             }
                         }
                         .text{

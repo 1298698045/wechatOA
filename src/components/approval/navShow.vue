@@ -7,7 +7,7 @@
         </p>
         <p @click="getCancelBlock">取消</p>
       </div>
-      <div class="history">
+      <!-- <div class="history">
         <div class="text">
           <p>搜索历史</p>
           <p>
@@ -18,8 +18,8 @@
           <p>崔曼</p>
           <p>补卡申请</p>
         </div>
-      </div>
-      <div class="activeCenter">
+      </div> -->
+      <!-- <div class="activeCenter">
         <div class="box">
           <van-divider contentPosition="center">在这里可以搜索到</van-divider>
           <div class="iconWrap">
@@ -43,17 +43,44 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
     <div class="screenWrap" v-if="childShow==1">
-      <div class="navs">
+      <!-- <div class="navs">
         <p>
           <van-search background="#f4f4f4" :value="searchValue" placeholder="请输入搜索关键词" />
         </p>
         <p @click="getCancelScreen">取消</p>
-      </div>
+      </div> -->
       <div class="contWrap">
-        <van-collapse :value="activeStatus" @change="changeCollapseStatus">
+        <div class="rowWrap" v-if="!isStatus">
+          <div class="status">
+            <span class="radius"></span>
+            <span class="text">状态</span>
+          </div>
+          <div class="rowCont">
+            <p class="tag" :class="{'active':statusIdx==index}" v-for="(item,index) in tagList" :key="index" @click="getChoiceStatus(index)">{{item}}</p>
+          </div>
+        </div>
+        <div class="rowWrap">
+          <div class="status">
+            <span class="radius success"></span>
+            <span class="text">类型</span>
+          </div>
+          <div class="collapse" v-for="(item,index) in optionList" :key="index">
+            <div class="title" v-if="item.lengths>0" @click="item.lengths>4?getOpen(item,index):''">
+              <p class="name">{{item.Name}}</p>
+              <p class="text" v-if="item.lengths>4">{{item.isBook?'展开':'收起'}}</p>
+            </div>
+            <div class="contentWrap">
+              <!-- <p class="item" :class="{'active':item.num==i}" v-for="(v,i) in item.isBook?item.array:item.Items" :key="i" @click="getOptions(item,index,v,i)">{{v.Name}}</p> -->
+              <p class="item" :class="{'active':v.isBook}" v-for="(v,i) in item.isBook?item.array:item.Items" :key="i" @click="getOptions(item,index,v,i)">{{v.Name}}</p>
+            </div>
+          </div>  
+        </div>
+
+        
+        <!-- <van-collapse :value="activeStatus" @change="changeCollapseStatus">
             <van-collapse-item :name="item.Id" v-for="(item,index) in statusList" :key="index">
                 <view slot="title" class="title">{{item.Name}}</view>
                 <div class="rowBox">
@@ -76,7 +103,7 @@
           <van-collapse-item name="2">
             <view slot="title" class="title">审计处</view>
           </van-collapse-item>
-        </van-collapse>
+        </van-collapse> -->
       </div>
       <div class="time">
           <van-field
@@ -124,7 +151,7 @@
           />
         </picker>
       </div>
-      <div class="bottom">
+      <div class="bottom"  :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
         <van-button type="primary" color="#3399ff" block @click="getSubmit">确定</van-button>
       </div>
     </div>
@@ -134,7 +161,7 @@
 import {mapState,mapMutations} from 'vuex';
 export default {
   name: "NavShow",
-  props:['childShow'],
+  props:['childShow','isStatus'],
   data() {
     return {
       num:"",
@@ -213,7 +240,12 @@ export default {
             statusNum:-1,
             startTime:"",
             endTime:"",
-            processId:""
+            // processId:"",
+            tagList:[
+              '全部','审批通过','审批拒绝','审批中','已撤销','草稿'
+            ],
+            statusIdx:0,
+            paramsData:[]
     };
   },
   onLoad(){
@@ -235,7 +267,27 @@ export default {
                   return item.id;
               })
           }
-      })
+      }),
+      processId(){
+        let temp = [];
+        let str = '';
+        this.paramsData.forEach(item=>{
+          item.Items.forEach(v=>{
+            temp.push(v)
+          })
+        })
+        str = temp.join(',');
+        return str;
+      },
+      statusCode(){
+        let idx = '';
+        idx = this.statusIdx==0?'-1':this.statusIdx==1?'3':this.statusIdx==2?'5':this.statusIdx==3?'1'
+        :this.statusIdx==4?'4':'0';
+        return idx;
+      },
+      isModelmes(){
+            return wx.getStorageSync('isModelmes');
+        },
   },
   methods: {
     changeSearch(e){
@@ -256,6 +308,13 @@ export default {
       changeEndTime(e){
           this.endTime = e.mp.detail.value;
       },
+      getChoiceStatus(index){
+        this.statusIdx = index;
+      },
+      getOpen(item,index){
+        console.log(item,index);
+        item.isBook = !item.isBook;
+      },
     // 筛选查询折叠面板列表
     getProcess(){
         this.$httpWX.get({
@@ -268,14 +327,61 @@ export default {
         }).then(res=>{
             console.log(res);
             this.optionList = res.data;
+            this.optionList.forEach(item=>{
+              this.$set(item,'isBook',true);
+              this.$set(item,'num',0);
+              // if(item.Items.lenght>4){
+                if(item.Items.length>0){
+                  // item.Items.unshift({
+                  //   'Name':"全部"
+                  // })
+                // console.log(item.Items,'-----');
+                }
+                item.Items.forEach(v=>{
+                  if(v.Name=='全部'){
+                    this.$set(v,'isBook',true)
+                  }else {
+                    this.$set(v,'isBook',false)
+                  }
+                })
+                const lengths = item.Items.length;
+                this.$set(item,'lengths',lengths);
+                item.array = item.Items.slice(0,4);
+              // }else {
+                // item.Items = item.Items;
+              // }
+            })
+            console.log(this.optionList,'----')
+            this.paramsData = this.optionList.map(item=>({
+              Id:item.Id,
+              Items:[]
+            }));
         })
     },
     getOptions(item,index,v,i){
-      // this.num = index;
-      this.processId = this.optionList[index].Items[i].ProcessId;
+      console.log(v.ProcessId);
+      item.num = i;
+      v.isBook = !v.isBook;
+      this.paramsData.forEach(one=>{
+        if(one.Id==item.Id){
+          const row = one.Items.find(row=>row==v.ProcessId);
+          const idx = one.Items.findIndex(row=>row==v.ProcessId);
+          console.log(row,'=====')
+          if(row==undefined){
+            one.Items.push(v.ProcessId);
+          }else {
+            one.Items.splice(idx,1);
+          }
+        }
+      })
+      console.log(this.paramsData);
+      // console.log(JSON.stringify(this.paramsData),'paramsData')
+      // console.log(v.idx,this.optionList,'-------');
+      // this.processId = this.optionList[index].Items[i].ProcessId;
 
     },
     getCancelBlock() {
+      this.$parent.childShow = '';
       this.$parent.isBlock = false;
     },
     changeCollapse(e){
@@ -378,7 +484,8 @@ export default {
   }
   .screenWrap {
     // position: fixed;
-    height: 120vh;
+    // height: 120vh;
+    margin-bottom: 80px;
     .navs {
       width: 100%;
       display: flex;
@@ -398,6 +505,87 @@ export default {
     }
     .contWrap {
       background: #fff;
+      .rowWrap{
+        padding: 0 34rpx;
+          .status{
+            padding: 20rpx 0;
+            .radius{
+              display: inline-block;
+              width: 21rpx;
+              height: 21rpx;
+              background: #3399ff;
+              border-radius: 50%;
+            }
+            .success{
+              background: #39c1b3;
+            }
+            .text{
+              color: #333333;
+              font-size: 25rpx;
+              margin-left: 10rpx;
+            }
+          }
+          .rowCont{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            .tag{
+              width: 200rpx;
+              height: 69rpx;
+              line-height: 69rpx;
+              text-align: center;
+              // background: #dfeffe;
+              background: #f4f4f4;
+              font-size: 28rpx;
+              color: #666666;
+              border-radius: 7rpx;
+              margin-bottom: 20rpx;
+            }
+            .active{
+              background: #dfeffe;
+              color: #3399ff;
+            }
+          }
+          .collapse{
+            .title{
+              display: flex;
+              justify-content: space-between;
+              padding: 20rpx 0;
+              .name{
+                font-size: 33rpx;
+                color: #333333;
+                font-weight: bold;
+              }
+              .text{
+                font-size: 26rpx;
+                color: #999999;
+              }
+            }
+            .contentWrap{
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+              .item{
+                width: 321rpx;
+                height: 69rpx;
+                line-height: 69rpx;
+                border-radius: 7rpx;
+                background: #f4f4f4;
+                font-size: 28rpx;
+                color: #333333;
+                margin-bottom: 20rpx;
+                padding-left: 20rpx;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+              .item.active{
+                background: #dbf5ec;
+                color: #39c1b3;
+              }
+            }
+          }
+      }
       .title {
         font-size: 28rpx;
         font-weight: bold;
@@ -435,6 +623,7 @@ export default {
       position: fixed;
       bottom: 0;
       z-index: 999;
+      background: #fff;
     }
   }
 }

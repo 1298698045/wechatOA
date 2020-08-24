@@ -6,7 +6,7 @@
                     显示我的手机号
                 </p>
                 <p>
-                    <van-switch :checked="checked" @change="changeSwitch" size="30rpx" />
+                    <van-switch :checked="checked" @change="changeSwitch" size="25px" />
                 </p>
             </div>
             <div class="box" @click="getEditPass">
@@ -28,14 +28,18 @@
                 </p>
             </div>
         </div>
-        <div class="btnWrap">
+        <!-- 暂且不用 -->
+        <!-- <div class="btnWrap">
             <van-button type="default" @click="getSwitchNumber" block>切换账号</van-button>
-        </div>
-        <div class="btnWrap">
+        </div> -->
+        <!-- <div class="btnWrap">
             <van-button type="default" @click="getReplaceCode" block>更换code</van-button>
-        </div>
-        <div class="btnWrap">
-            <van-button type="default" block>退出登录</van-button>
+        </div> -->
+        <div class="btnOut" @click="getSignOut">
+            退出登录
+            <!-- <van-button type="default"  @click="getSignOut" block>
+                <span style="color:#ff6666">退出登录</span>
+            </van-button> -->
         </div>
         <van-popup
             :show="isShow"
@@ -61,13 +65,13 @@
                     <p class="describe">为了保障你的账号安全，修改密码前请填写原密码</p>
                     <div class="inps">
                         <p>
-                            <input type="password" v-model="oldPwd" placeholder="原密码">
+                            <input placeholder-class="placeholder" type="password" v-model="oldPwd" placeholder="原密码">
                         </p>
                         <p>
-                            <input type="password" v-model="newPassword" placeholder="新密码">
+                            <input placeholder-class="placeholder" type="password" v-model="newPassword" placeholder="新密码">
                         </p>
                         <p>
-                            <input type="password" v-model="confirmPwd" placeholder="新密码">
+                            <input placeholder-class="placeholder" type="password" v-model="confirmPwd" placeholder="重复新密码">
                         </p>
                     </div>
                 </div>
@@ -124,6 +128,11 @@ export default {
             }).then(res=>{
                 console.log(res);
             })
+        },
+        getSignOut(){
+            wx.clearStorage();
+            const url = '/pages/login/main';
+            wx.reLaunch({url:url});
         },
         getAbout(){
             const url = '/pages/my/aboutWe/main';
@@ -216,7 +225,7 @@ export default {
     .wrap{
         .header{
             background: #fff;
-            margin-top: 35rpx;
+            margin-top: 16rpx;
             .box{
                 display: flex;
                 justify-content: space-between;
@@ -224,13 +233,24 @@ export default {
                 align-items: center;
                 border-bottom: 1rpx solid #eaebeb;
                 .text{
-                    font-size: 32rpx;
+                    font-size: 35rpx;
                     color: #666666;
                 }
             }
         }
-        .btnWrap{
-            margin-top: 34rpx;
+        // .btnWrap{
+        //     margin-top: 34rpx;
+        // }
+        .btnOut{
+            margin-top: 16rpx;
+            display: flex;
+            justify-content: center;
+            padding: 20rpx 33rpx;
+            align-items: center;
+            border-bottom: 1rpx solid #eaebeb;
+            background: #fff;
+            font-size: 35rpx;
+            color: #ff6666;
         }
         .popup{
             padding: 33rpx;
@@ -253,6 +273,11 @@ export default {
                         font-size: 24rpx;
                         border: 1rpx solid #a6a6a6;
                         padding: 0 10rpx;
+                        height: 30px;
+                        line-height: 30px;
+                    }
+                    .placeholder{
+                        line-height: 30px;
                     }
                 }
             }

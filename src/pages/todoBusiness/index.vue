@@ -10,7 +10,7 @@
             <div class="nav" v-if="!isBlock">
                 <div class="lBox">
                     <picker @change="bindPickerChange" :value="timeSortIdx" :range="timeSort">
-                        <p>{{timeSort[timeSortIdx]}}<i-icon type="enter" color="#999999" /></p>
+                        <p>{{timeSort[timeSortIdx]}}<i-icon type="unfold" color="#999999" /></p>
                     </picker>
                 </div>
                 <div class="rBox">
@@ -21,15 +21,13 @@
                         <i class="iconfont icon-xuankeshaixuantubiaoimg-copy"></i>
                     </p>
                 </div>
-                <!-- <p @click="getSearch"><i-icon type="search" size="20" />搜索</p>
-                <p @click="getScreen"><i-icon type="search" size="20" />筛选</p> -->
             </div>
-            <div class="navs" v-if="isBlock">
+            <!-- <div class="navs" v-if="isBlock">
                 <p>
                     <van-search background="#f4f4f4" :value="searchValue" @change="changeSearch" placeholder="请输入搜索关键词" />
                 </p>
                 <p @click="getCancelBlock">取消</p>
-            </div>
+            </div> -->
             <!-- <div class="history" v-if="isBlock">
                 <div class="text">
                     <p>搜索历史</p>
@@ -41,32 +39,58 @@
                 </div>
             </div> -->
         </div>
-        <div class="container" :class="isBlock?'mar':''" v-if="!screenShow">
+        <NavShow v-if="isBlock" ref="childs" :isStatus="isStatus" @childFn="getChildFn" :childShow="childShow" />
+        <div class="imgNull" v-if="!isBlock&&list==''">
+            <img :src="imgUrl+'04.9.1.Notice.png'" alt="">
+            <p class="text">暂无审批单</p>
+        </div>
+        <div class="container" :class="isBlock?'mar':''" v-if="!isBlock&&list!=''">
             <div class="radio" v-if="current=='tab4'&&!isBatch">
                 <div class="row">
                     <p>
-                        <van-checkbox :value="checked" @change="changeRadio">只看未读  3</van-checkbox>
+                        <van-checkbox :value="checked" @change="changeRadio">仅查看未读传阅  3</van-checkbox>
                     </p>
-                    <p @click="getBatchOperation">批量操作</p>
+                    <p @click="getSign">全部标为已读</p>
+                    <!-- <p @click="getBatchOperation">批量操作</p> -->
                 </div>
             </div>
             <div class="center padding"  v-for="(item,index) in list" :key="index">
                 <van-checkbox-group :value="result" @change="onChangeCheck">
                     <div class="boxWrap">
                         <van-checkbox v-if="current=='tab4'&&isBatch" :name="item.instanceId" custom-class="check"></van-checkbox>
+                        <div class="dian" v-if="current=='tab4'&&item.isRead==0">
+                            <span></span>
+                        </div>
                         <div>
-                            <p class="radius">{{item.createdByName}}</p>
+                            <p class="radius">{{item.activeName}}</p>
                         </div>
                         <div class="cont" @click="getDetail(item)">
                             <h3>{{item.createdByName}}提交的流程申请表</h3>
-                            <p class="title">标题：<span>{{item.name}}</span></p>
-                            <p class="title">级别：<span>{{item.priority==0?'普通':item.priority==1?'紧急':'非常紧急'}}</span></p>
-                            <p class="time">{{item.createdOn}} · 来自{{item.createdByName}} {{item.businessUnitIdName}}</p>
+                            <div class="level">
+                                <p>
+                                    <i class="iconfont icon-jinji2 icon" :class="item.priority==0?'icon':item.priority==1?'zhongji':'jinji'"></i>
+                                </p>
+                                <p class="name">{{item.name}}</p>
+                            </div>
+                            <!-- <p class="title">标题：<span>{{item.name}}</span></p>
+                            <p class="title">级别：<span>{{item.priority==0?'普通':item.priority==1?'紧急':'非常紧急'}}</span></p> -->
+                            <div class="status">
+                                <p class="time">{{item.createdOn}} · 来自{{item.createdByName}} {{item.businessUnitIdName}}</p>
+                                <div class="right">
+                                    <div class="tag" :class="item.className" v-if="current!='tab2'">
+                                        {{item.stateCode==1?'审批中':item.stateCode==3?'已通过':item.stateCode==5?'已拒绝':item.stateCode==4?'已撤销':item.stateCode==0?'草稿':item.stateCode==2?'挂起':''}}
+                                    </div>
+                                    <div class="icon" v-if="item.stateCode==1" @click.stop="getUrging(item)">
+                                        <img :src="imgUrl+'urging.png'" alt="">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="more">
+                        <!-- 更多 -->
+                        <!-- <div class="more">
                             <p><i-icon type="more" size="20" color="#a4a4a4" @click="getMore(item)" v-if="current!='tab4'" /></p>
                             <p v-if="item.StateCode" class="sp" :class="item.StateCode==0?'blue':item.StateCode==3?'success':item.StateCode==5?'error':''">{{item.StateCode==0?'草稿':item.StateCode==1?'审批中':item.StateCode==3?'已完成':'已拒绝'}}</p>
-                        </div>
+                        </div> -->
                     </div>
                 </van-checkbox-group>
             </div>
@@ -81,7 +105,7 @@
             </div> -->
             <div class="contWrap">
                 <van-collapse :value="activeStatus" @change="changeCollapseStatus">
-                    <van-collapse-item :name="item.Id" v-for="(item,index) in statusList" :key="index">
+                    <van-collapse-item :is-link="false" :name="item.Id" v-for="(item,index) in statusList" :key="index">
                         <view slot="title" class="title">{{item.Name}}</view>
                         <div class="rowBox">
                             <p :class="{'active':statusNum==i}" v-for="(v,i) in item.Items" :key="i" @click="getOptionsStatus(v,i)">{{v.Name}}</p>
@@ -195,6 +219,16 @@
                 <p>
                     <textarea class="textarea" v-model="message" placeholder="请输入留言" name="" id="" cols="30" rows="10"></textarea>
                 </p>
+                <div class="rowCheck">
+                    <div class="notice">通知方式：</div>
+                    <van-checkbox-group :value="resultTag" @change="changeTag">
+                        <div class="checkboxGroup">
+                            <van-checkbox :name="item" v-for="(item,index) in tagList" :key="index" custom-class="check" label-class="labels"  shape="square">
+                                {{item}}
+                            </van-checkbox>
+                        </div>
+                    </van-checkbox-group>
+                </div>
             </div>
         </van-dialog>
         <!-- <div class="footer" v-if="!isBlock&&!screenShow&&!isBatch">
@@ -228,7 +262,11 @@
 <script>
 import { mapState,mapMutations,mapActions,mapGetters } from 'vuex';
 import Notify from '../../../static/vant/notify/notify';
+import NavShow from '@/components/approval/navShow';
 export default {
+    components:{
+        NavShow
+    },
     data(){
         return {
             searchValue:"",
@@ -342,19 +380,35 @@ export default {
             // stateCode:-1,
             processId:"",
             createdByIds:"",
-            linkUrl:"flow.mytasks.getlist"
+            linkUrl:"flow.mytasks.getlist",
+            childShow:"",
+            isBook:false,
+            totalNum:"",
+            isStatus:false,
+            tagList:['短信','应用内'],
+            resultTag:[]
         }
     },
     onLoad(){
+        Object.assign(this.$data,this.$options.data());
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
         this.getQuery();
     },
     computed:{
+        // ValueIds(){
+        //     let temp = [];
+        //     this.result.forEach(item=>{
+        //         temp.push(item);
+        //     })
+        //     return temp.join(',');
+        // },
         ValueIds(){
             let temp = [];
-            this.result.forEach(item=>{
-                temp.push(item);
+            this.list.forEach(item=>{
+                if(item.isRead==0){
+                    temp.push(item.id);
+                }
             })
             return temp.join(',');
         },
@@ -377,6 +431,17 @@ export default {
         sort(){
             let sort = this.timeSortIdx==0?'CreatedOn':'Priority';
             return sort;
+        },
+        imgUrl(){
+            return this.$api.photo.url;
+        },
+        notifySms(){
+           let isBol = this.resultTag.indexOf('短信')!==-1?true:false;
+           return isBol;
+        },
+        notifyMessager(){
+            let isBol = this.resultTag.indexOf('应用内')!==-1?true:false;
+            return isBol;
         }
     },
     methods:{
@@ -451,18 +516,22 @@ export default {
                 }
             }).then(res=>{
                 console.log(res);
+                this.getQuery();
                 this.result = [];
                 this.isBatch = false;
             })
         },
         getUrgeSubmit(){
+            debugger
             this.$httpWX.get({
                 url:this.$api.message.queryList,
                 data:{
                     method:"flow.instance.pushmessage",
                     SessionKey:this.sessionkey,
                     processInstanceId:this.processInstanceId,
-                    Message:this.message
+                    Message:this.message,
+                    notifySms:this.notifySms,
+                    notifyMessager:this.notifyMessager
                 }
             }).then(res=>{
                 Notify({ type: 'primary', message: res.msg });
@@ -470,6 +539,10 @@ export default {
         },
         getSubSearch(){
             this.screenShow = false;
+            this.getQuery();
+        },
+        getChildFn(isBook){
+            this.isBook = isBook;
             this.getQuery();
         },
         // 获取待办事务
@@ -487,19 +560,42 @@ export default {
                     data:{
                         method:this.linkUrl,
                         SessionKey:this.sessionkey,
-                        search:this.searchValue,
+                        // search:this.searchValue,
+                        search:this.isBook?this.$refs.childs.searchValue:'',
                         sort:this.sort,
                         readState:this.readState,
-                        stateCode:this.statusNum,
-                        processId:this.processId,
-                        deptIds:this.deptIds!=''?this.deptIds.join(','):'',
-                        createdByIds:this.designee.hasOwnProperty('id')?this.designee.id:'',
-                        startTime:this.startTime,
-                        endTime:this.endTime
+                        processId:this.isBook?this.$refs.childs.processId:'',
+                        stateCode:this.isBook?this.$refs.childs.statusCode:'',
+                        deptIds:this.isBook?this.$refs.childs.deptIds.join(','):'',
+                        createdByIds:this.isBook?(this.$refs.childs.designee.hasOwnProperty('id')?this.$refs.childs.designee.id:''):"",
+                        startTime:this.isBook?this.$refs.childs.startTime:'',
+                        endTime:this.isBook?this.$refs.childs.endTime:'',
+                        // stateCode:this.statusNum,
+                        // processId:this.processId,
+                        // deptIds:this.deptIds!=''?this.deptIds.join(','):'',
+                        // createdByIds:this.designee.hasOwnProperty('id')?this.designee.id:'',
+                        // startTime:this.startTime,
+                        // endTime:this.endTime
                     }
                 }).then(res=>{
                     console.log(res);
                     this.list = res.listData;
+                    let total = 0;
+                    this.list.forEach(item=>{
+                        let nameLength = item.createdByName.lenght;
+                        if(item.createdByName.lenght<=3){
+                            this.$set(item,'activeName',item.createdByName.substring(1));
+                        }else {
+                            this.$set(item,'activeName',item.createdByName);
+                        }
+                        let className = item.stateCode==1?'approvalIng':item.stateCode==3?'tag':item.stateCode==5?'error':item.stateCode==4?'revoke'
+                        :item.stateCode==0?'draft':item.stateCode==2?'挂起':'';
+                        this.$set(item,'className',className);
+                        if(item.isRead==0){
+                            total ++;
+                        }
+                        this.totalNum = total;
+                    })
                 })
             }else {
                 this.$httpWX.get({
@@ -507,22 +603,44 @@ export default {
                     data:{
                         method:this.linkUrl,
                         SessionKey:this.sessionkey,
-                        search:this.searchValue,
+                        // search:this.searchValue,
+                        search:this.isBook?this.$refs.childs.searchValue:'',
                         sort:this.sort,
-                        stateCode:this.statusNum,
-                        processId:this.processId,
-                        deptIds:this.deptIds!=''?this.deptIds.join(','):'',
-                        createdByIds:this.designee.hasOwnProperty('id')?this.designee.id:'',
-                        startTime:this.startTime,
-                        endTime:this.endTime
+                        // stateCode:this.statusNum,
+                        // processId:this.processId,
+                        processId:this.isBook?this.$refs.childs.processId:'',
+                        stateCode:this.isBook?this.$refs.childs.statusCode:'',
+                        deptIds:this.isBook?this.$refs.childs.deptIds.join(','):'',
+                        createdByIds:this.isBook?(this.$refs.childs.designee.hasOwnProperty('id')?this.$refs.childs.designee.id:''):"",
+                        startTime:this.isBook?this.$refs.childs.startTime:'',
+                        endTime:this.isBook?this.$refs.childs.endTime:''
+                        // deptIds:this.deptIds!=''?this.deptIds.join(','):'',
+                        // createdByIds:this.designee.hasOwnProperty('id')?this.designee.id:'',
+                        // startTime:this.startTime,
+                        // endTime:this.endTime
                     }
                 }).then(res=>{
                     console.log(res);
                     this.list = res.listData;
+                    console.log(this.list,'123123');
+                    this.list.forEach(item=>{
+                        let nameLength = item.createdByName.lenght;
+                        // debugger
+                        if(item.createdByName.lenght<=3){
+                            this.$set(item,'activeName',item.createdByName.substring(1));
+                        }else {
+                            this.$set(item,'activeName',item.createdByName);
+                        }
+                        let className = item.stateCode==1?'approvalIng':item.stateCode==3?'tag':item.stateCode==5?'error':item.stateCode==4?'revoke'
+                        :item.stateCode==0?'draft':item.stateCode==2?'挂起':'';
+                        this.$set(item,'className',className);
+                    })
+                    console.log('-------',this.list);
                 })
             }
         },
         handleChange(e){
+            this.isBlock = false;
             this.current = e.mp.detail.key;
             this.searchValue = '';
             this.statusNum = -1;
@@ -546,6 +664,7 @@ export default {
                     }
                 ]
                 this.linkUrl = 'flow.mytasks.getlist';
+                this.isStatus = false;
             }else if(this.current == 'tab2'){
                 this.actions = [
                     {
@@ -562,6 +681,7 @@ export default {
                     }
                 ]
                 this.linkUrl = 'flow.waitingtasks.getlist';
+                this.isStatus = true;
             }else if(this.current == 'tab3'){
                 this.actions = [
                     {
@@ -574,24 +694,30 @@ export default {
                     }
                 ]
                 this.linkUrl = 'flow.finishedtasks.getlist';
+                this.isStatus = false;
             }else if(this.current == 'tab4'){
                 // let url = 'flow.waitingread.getlist';
                 // let url = 'flow.process.read.getlist';
                 this.linkUrl = 'flow.readtasks.getlist';
+                this.isStatus = false;
             }
+            this.isBook = false;
             this.getQuery();
             
         },
         // 搜索
         getSearch(){
+            this.childShow = 0;
             this.isBlock = true;
-            this.screenShow = false;
+            // this.screenShow = false;
         },
         // 筛选
         getScreen(){
-            this.getProcess();
-            this.isBlock = false;
-            this.screenShow = true;
+            this.childShow = 1;
+            this.isBlock = true;
+            // this.getProcess();
+            // this.isBlock = false;
+            // this.screenShow = true;
         },
         // 筛选查询折叠面板列表
         getProcess(){
@@ -718,12 +844,28 @@ export default {
             this.updateInstanceId(item.instanceId);
             const url = '/pages/todoBusiness/detail/main?id='+item.processInstanceId+'&name='+item.name;
             wx.navigateTo({url:url});
+        },
+        // 催办
+        getUrging(item){
+            console.log(item);
+            this.processInstanceId = item.processInstanceId;
+            this.cbShow = true;
+        },
+        changeTag(e){
+            this.resultTag = e.mp.detail;
         }
     }
 }
 </script>
 <style lang="scss">
     @import '../../../static/css/public.scss';
+    @import '../../../static/css/schedule.css';
+    // .wraps .searchWrap .navs{
+    //     margin-top: 100px;
+    // }
+    .wraps .searchWrap{
+        top: 50px;
+    }
     .wrap{
         .header.active{
             position: relative;
@@ -802,7 +944,27 @@ export default {
             }
         }
         .container.mar{
-            margin: 0;
+            margin-top: 150rpx;
+        }
+        .container.active{
+            margin-top:130px;
+        }
+        .imgNull{
+            width: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            text-align: center;
+            img{
+                width: 156rpx;
+                height: 156rpx;
+            }
+            .text{
+                font-size: 32rpx;
+                color: #999999;
+                margin-top:20rpx;
+            }
         }
         .container{
             margin-top: 100px;
@@ -817,8 +979,14 @@ export default {
                         font-size: 12px;
                     }
                     p:nth-child(2){
+                        width: 200rpx;
+                        height: 44rpx;
+                        line-height: 44rpx;
+                        text-align: center;
                         color: #3399ff;
-                        font-size: 12px;
+                        font-size: 27rpx;
+                        border-radius: 23rpx;
+                        border: 1rpx solid #3399ff;
                     }
                 }
             }
@@ -830,6 +998,19 @@ export default {
                     display: flex;
                     .check{
                         padding: 20rpx 20rpx 0 0;
+                    }
+                    .dian{
+                        height: 68rpx;
+                        display: flex;
+                        align-items: center;
+                        margin-right: 10rpx;
+                        span{
+                            display: inline-block;
+                            width: 10rpx;
+                            height: 10rpx;
+                            background: #ff6666;
+                            border-radius: 50%;
+                        }
                     }
                     div:nth-child(1){
                         
@@ -850,10 +1031,72 @@ export default {
                                 color: #333333;
                             }
                         }
-                        .time{
-                            color: #999999;
-                            font-size: 12px;
-                            margin-top: 20px;
+                        .level{
+                            display: flex;
+                            align-items: center;
+                            margin: 20rpx 0;
+                            .icon{
+                                color: #74b48c;
+                            }
+                            .icon.jinji{
+                                color: #ec746c;
+                            }
+                            .icon.zhongji{
+                                color: #e49c5c;
+                            }
+                            .name{
+                                font-size: 28rpx;
+                                color: #333333;
+                                margin-left: 20rpx;
+                            }
+                        }
+                        .status{
+                            display: flex;
+                            justify-content: space-between;
+                            .time{
+                                color: #999999;
+                                font-size: 12px;
+                                // margin-top: 20px;
+                            }
+                            .right{
+                                display: flex;
+                                align-items: center;
+                                .tag{
+                                    width: 80rpx;
+                                    height: 32rpx;
+                                    line-height: 32rpx;
+                                    text-align: center;
+                                    font-size: 20rpx;
+                                    background: #e6f6f0;
+                                    color: #57b987;
+                                    border-radius: 7rpx;
+                                }
+                                .tag.draft{
+                                    background: #e6f0f6;
+                                    color: #3399ff;
+                                }
+                                .tag.error{
+                                    background: #faebe9;
+                                    color: #ff6666;
+                                }
+                                .tag.revoke{
+                                    background: #ebecf2;
+                                    color: #5b6991;
+                                }
+                                .tag.approvalIng{
+                                    background: #fcf2e9;
+                                    color: #f09951;
+                                }
+                                .icon{
+                                    width: 27rpx;
+                                    height: 27rpx;
+                                    margin-left: 20rpx;
+                                    img{
+                                        width: 100%;
+                                        height: 100%;
+                                    }
+                                }
+                            }
                         }
                     }
                     .more{
@@ -1028,9 +1271,28 @@ export default {
                 .textarea{
                     width: 100%;
                     height: 100px;
-                    background: #e4e4e4;
+                    background: #fff;
                     border-radius: 10rpx;
+                    color: #333333;
+                    border: 1rpx solid #a6a6a6;
+                    border-radius: 2rpx;
+                    padding: 10rpx;
+                }
+            }
+            .rowCheck{
+                display: flex;
+                align-items: center;
+                padding: 0 30rpx 30rpx 30rpx;
+                .notice{
                     color: #999999;
+                    font-size: 25rpx;
+                }
+                .checkboxGroup{
+                    display: flex;
+                    .check{
+                        margin-right: 20rpx;
+                        font-size: 28rpx;
+                    }
                 }
             }
         }

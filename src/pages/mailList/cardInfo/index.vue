@@ -2,7 +2,7 @@
     <div class="wrap">
         <div class="header padding">
             <p>
-                {{info.fullName}}
+                {{info.newFullName}}
             </p>
             <h3>{{info.fullName}}</h3>
         </div>
@@ -10,7 +10,7 @@
             <ul class="uls">
                 <li>
                     <p>单位名称</p>
-                    <p>{{info.orgnizationIdName}}</p>
+                    <p>{{organizationName}}</p>
                 </li>
                 <li>
                     <p>部门</p>
@@ -20,7 +20,12 @@
                     <p>职位</p>
                     <p>{{info.jobTitle}}</p>
                 </li>
-                <li class="flex">
+                <li>
+                    <p>姓名</p>
+                    <p>{{info.fullName}}</p>
+                </li>
+                <!-- 下一期 -->
+                <!-- <li class="flex">
                     <div class="box">
                         <p>工作状态(TA还没有加入考勤组)</p>
                         <p>今日未排班</p>
@@ -28,11 +33,11 @@
                     <div class="icon">
                         <i-icon type="enter" color="#999999" size="20" />
                     </div>
-                </li>
+                </li> -->
             </ul>
             <ul class="uls">
                 <li class="flex">
-                    <div class="box">
+                    <div class="box" @click="getCopy(info.mobile)">
                         <p>手机</p>
                         <p>{{info.mobile}}</p>
                     </div>
@@ -41,7 +46,7 @@
                     </div>
                 </li>
                 <li class="flex">
-                    <div class="box">
+                    <div class="box" @click="getCopy(info.emailAddress)">
                         <p>邮箱</p>
                         <p>{{info.emailAddress}}</p>
                     </div>
@@ -51,14 +56,14 @@
                 </li>
             </ul>
         </div>
-        <div class="footer">
+        <div class="footer" :class="{'bottomActive':isModelmes,'footImt':!isModelmes}">
             <div class="box">
-                <div class="imgWrap">
+                <!-- <div class="imgWrap">
                     <p>
                         <img src="https://wx.phxinfo.com.cn/img/wechat/05.3.1.Message.png" alt="">
                     </p>
                     <p>发消息</p>
-                </div>
+                </div> -->
                  <div class="imgWrap" @click="getPhone">
                     <p>
                         <img src="https://wx.phxinfo.com.cn/img/wechat/05.3.1.Call.png" alt="">
@@ -71,12 +76,12 @@
                     </p>
                     <p>邮件</p>
                 </div>
-                 <div class="imgWrap">
+                 <!-- <div class="imgWrap">
                     <p>
                         <img src="https://wx.phxinfo.com.cn/img/wechat/05.3.1.Share.png" alt="">
                     </p>
                     <p>分享</p>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
@@ -87,12 +92,19 @@ export default {
         return {
             info:{},
             id:"",
-            sessionkey:""
+            sessionkey:"",
+            organizationName:""
+        }
+    },
+    computed:{
+        isModelmes(){
+            return wx.getStorageSync('isModelmes');
         }
     },
     onLoad(options){
         let sessionkey = wx.getStorageSync('sessionkey');
         this.sessionkey = sessionkey;
+        this.organizationName = wx.getStorageSync('organizationName');
         this.id = options.id;
         this.getQueryInfo();
     },
@@ -108,6 +120,23 @@ export default {
             }).then(res=>{
                 console.log(res);
                 this.info = res.data[0];
+                if(this.info.fullName.length>2){
+                    this.info.newFullName = this.info.fullName.substr(1);
+                }else {
+                    this.info.newFullName = this.info.fullName;
+                }
+            })
+        },
+        getCopy(data){
+            wx.setClipboardData({
+                data: data,
+                success (res) {
+                    wx.getClipboardData({
+                        success (res) {
+                            console.log(res.data) // data
+                        }
+                    })
+                }
             })
         },
         getPhone(){
@@ -188,19 +217,18 @@ export default {
             .box{
                 display: flex;
                 padding-bottom: 20rpx;
-                .imgWrap:nth-child(1) p{
-                    color: #999999;
-                }
+                // .imgWrap:nth-child(1) p{
+                //     color: #999999;
+                // }
                 .imgWrap{
-                    width: 25%;
+                    width: 50%;
                     p:nth-child(1){
                         width: 80rpx;
                         height: 80rpx;
                         display: flex;
                         justify-content: center;
                         align-items: center;
-                        margin: 0 auto;
-                        padding: 10rpx 0;
+                        margin: 10rpx auto;
                         img{
                             width: 100%;
                             height: 100%;

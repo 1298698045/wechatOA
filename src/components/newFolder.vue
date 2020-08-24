@@ -7,7 +7,8 @@
             @close="getOnClose"
         >
             <div class="popupContent">
-                <h3 class="overflow">{{sign==1?fileName:'新建文件夹'}}</h3>
+                <!-- <h3 class="overflow">{{sign==1?fileName:'新建文件夹'}}</h3> -->
+                <h3 class="overflow">{{str=='folders'?'修改文件夹名':str=='files'?'修改文件名':'新建文件夹'}}</h3>
                 <p class="tips">{{sign==1?'请输入新命名':'请输入文件夹名称'}}</p>
                 <div class="inpWrap">
                     <input class="inp" v-model="name" type="text" selection-start="10">
@@ -61,6 +62,8 @@ export default {
                        icon:'none',
                        duration:2000
                    })
+                   this.newFolderShow = false;
+                   this.$emit('changeShow',false);
                })
             }else if(this.sign==1){//重命名
                 if(this.str=='folders'){
@@ -73,12 +76,14 @@ export default {
                            Id:this.fileId                  
                        }
                    }).then(res=>{
-                       console.log(res);
-                       wx.showToast({
-                           title:res.msg,
-                           icon:'none',
-                           duration:2000
-                       })
+                        console.log(res);
+                        wx.showToast({
+                            title:res.msg,
+                            icon:'none',
+                            duration:2000
+                        })
+                        this.newFolderShow = false;
+                        this.$emit('changeShow',false);
                    })
                 }else if(this.str=='files'){
                     this.$httpWX.get({
@@ -90,17 +95,18 @@ export default {
                            Id:this.fileId                  
                        }
                    }).then(res=>{
-                       console.log(res);
-                       wx.showToast({
-                           title:res.msg,
-                           icon:'none',
-                           duration:2000
-                       })
+                        console.log(res);
+                        wx.showToast({
+                            title:res.msg,
+                            icon:'none',
+                            duration:2000
+                        })
+                        this.newFolderShow = false;
+                        this.$emit('changeShow',false);
                    })
                 }
             }
-            this.newFolderShow = false;
-            this.$emit('changeShow',false);
+            
         }
     }
 }

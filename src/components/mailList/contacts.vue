@@ -179,6 +179,7 @@ export default {
                 })
             })
             console.log(selectData,listName,'selectData');
+            // debugger
             if(this.cc=='cc'){
                 this.getListNameCC(listName);
             }else {
@@ -242,7 +243,7 @@ export default {
                     })
                 })
                 this.result = temp;
-                if(this.cc='cc'){
+                if(this.cc=='cc'){
                     this.getListNameCC(listName);
                 }else {
                     this.getSelectId(this.result);

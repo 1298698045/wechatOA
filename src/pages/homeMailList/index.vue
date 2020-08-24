@@ -37,8 +37,8 @@
                 <div class="center">
                     <div class="row">
                         <p><img src="https://wx.phxinfo.com.cn/img/wechat/Organization.png" alt=""></p>
-                        <p>绍兴第二医院</p>
-                        <p><i-icon type="setup" size="20" />管理</p>
+                        <p>{{organizationName}}</p>
+                        <!-- <p><i-icon type="setup" size="20" />管理</p> -->
                     </div>
                     <div class="rowWrap">
                         <div class="box">
@@ -47,20 +47,20 @@
                             </div>
                             <div class="name" @click="getGroup">
                                 <p>组织架构</p>
-                                <p><i-icon type="message" size="20" color="#229bfa" />全员群</p>
+                                <!-- <p><i-icon type="message" size="20" color="#229bfa" />全员群</p> -->
                             </div>
                         </div>
-                        <div class="box">
+                        <!-- <div class="box">
                             <div class="icon">
                                 <img src="https://wx.phxinfo.com.cn/img/wechat/External_Contacts.png" alt="">
                             </div>
                             <div class="name">
                                 <p>外部联系人</p>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
-                <div class="establish">
+                <!-- <div class="establish">
                     <div class="wimg">
                         <img src="https://wx.phxinfo.com.cn/img/wechat/Create_team.png" alt="">
                     </div>
@@ -70,9 +70,9 @@
                     <div>
                         <p><i-icon type="enter" size="18" /></p>
                     </div>
-                </div>
+                </div> -->
                 <div class="contWrap">
-                    <div class="box">
+                    <!-- <div class="box">
                         <div class="imgs">
                             <img src="https://wx.phxinfo.com.cn/img/wechat/05.Phone.png" alt="">
                         </div>
@@ -82,8 +82,8 @@
                         <div>
                             <p><i-icon type="enter" size="18" color="#999999" /></p>
                         </div>
-                    </div>
-                    <div class="box">
+                    </div> -->
+                    <!-- <div class="box">
                         <div class="imgs">
                             <img src="https://wx.phxinfo.com.cn/img/wechat/05.Myfriend.png" alt="">
                         </div>
@@ -93,7 +93,7 @@
                         <div>
                             <p><i-icon type="enter" size="18" color="#999999" /></p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="box">
                         <div class="imgs">
                             <img src="https://wx.phxinfo.com.cn/img/wechat/05.MyGroup.png" alt="">
@@ -120,19 +120,38 @@
             </div>
         </div>
         <SearchCom v-if="isShow" />
+        <vue-tab-bar
+          @fetch-index="clickIndexNav"
+          :selectNavIndex="selectNavIndex"
+          :needButton="needButton"
+          :handButton="handButton"
+          :btnText="btnText">
+      </vue-tab-bar>
     </div>
 </template>
 <script>
 import SearchCom from '@/components/mailList/searchCom';
+import vueTabBar from '../../components/vueTabBar';
+
 export default {
     components:{
-        SearchCom
+        SearchCom,
+        vueTabBar
     },
     data(){
         return {
             list:[],
             sessionkey:"",
-            isShow:false
+            isShow:false,
+            selectNavIndex:3,
+            needButton:false,
+            handButton:'',
+            btnText:''
+        }
+    },
+    computed:{
+        organizationName(){
+            return wx.getStorageSync('organizationName');
         }
     },
     onLoad(){
@@ -195,6 +214,7 @@ export default {
 <style lang="scss">
     @import '../../../static/css/public.scss';
     .container{
+        padding-bottom: 80px;
         .search{
             background: #fff;
             padding: 30rpx;
@@ -255,6 +275,7 @@ export default {
             .rowWrap{
                 .box{
                     display: flex;
+                    align-items: center;
                     .icon{
                         width: 80rpx;
                         height: 80rpx;
@@ -346,8 +367,9 @@ export default {
             padding: 30rpx 30rpx 0 30rpx;
             margin: 20px 0;
             h3{
-                font-size: 30rpx;
+                font-size: 35rpx;
                 font-weight: bold;
+                padding-bottom: 30rpx;
             }
             .rowMail{
                 .flex{
@@ -360,13 +382,13 @@ export default {
                         line-height: 80rpx;
                         border-radius: 50%;
                         text-align: center;
-                        font-size: 24rpx;
+                        font-size: 26rpx;
                         color: #fff;
                         background: #229bfa;
                     }
                     .text{
                         width: 100%;
-                        font-size: 30rpx;
+                        font-size: 34rpx;
                         line-height: 80rpx;
                         margin-left: 10px;
                         border-bottom: 1rpx solid #e2e4e3;
